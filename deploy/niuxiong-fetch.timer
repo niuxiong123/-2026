@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Niuxiong daily job at 18:30 (Mon-Fri)
+
+[Timer]
+OnCalendar=Mon..Fri 18:30
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target
