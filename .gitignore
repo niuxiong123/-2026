@@ -1,0 +1,10 @@
+# 运行时私密/本地数据：不进仓库
+config.env
+niuxiong.db
+*.db
+/logs/
+/backups/
+/venv/
+__pycache__/
+# 只忽略根目录这份运行时快照；docs/macro.json 由 Actions 自动生成并提交，必须保留
+/macro.json

@@ -1,0 +1,7 @@
+# 不想用 systemd timer 就用 crontab（工作日 18:30 收盘后跑）
+# crontab -e 粘贴下面两行，路径改成你的安装目录
+
+30 18 * * 1-5 cd /opt/niuxiong && /opt/niuxiong/venv/bin/python daily_job.py >> /opt/niuxiong/logs/cron.log 2>&1
+
+# 每周日凌晨备份数据库
+0 3 * * 0 cd /opt/niuxiong && bash deploy/backup.sh >> /opt/niuxiong/logs/backup.log 2>&1

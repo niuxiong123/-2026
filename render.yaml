@@ -1,0 +1,24 @@
+# Render.com 一键部署蓝图（免费、免备案、海外节点）
+# 用法：在 render.com 点 "New" → "Blueprint" → 连 GitHub 选本仓库 → Apply
+# 密码由 Render 自动生成（随机），部署后在 Dashboard 的 Environment 里看 NX_PASSWORD
+services:
+  - type: web
+    name: niuxiong
+    runtime: python
+    plan: free
+    region: oregon          # 离国内近一点；也可改 singapore/frankfurt
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 app.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: NX_PASSWORD
+        generateValue: true   # 自动生成随机密码（第一次打开会要你输）
+      - key: BIND
+        value: "0.0.0.0"
+      - key: PORT
+        sync: false
+      - key: NX_AUTO_REFRESH
+        value: "1"             # 数据过期时后端自己补抓（免配定时任务）
+      - key: NX_ALLOW_TOKEN
+        value: "0"             # 正式部署关闭 ?token 通道，只留 Basic Auth

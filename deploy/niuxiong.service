@@ -1,0 +1,23 @@
+[Unit]
+Description=Niuxiong Self-Check Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__DIR__
+EnvironmentFile=-__DIR__/config.env
+Environment=BIND=127.0.0.1
+Environment=PORT=8000
+ExecStart=__DIR__/venv/bin/python __DIR__/app.py
+Restart=always
+RestartSec=5
+# 安全加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__DIR__
+
+[Install]
+WantedBy=multi-user.target

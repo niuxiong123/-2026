@@ -1,0 +1,15 @@
+[Unit]
+Description=Niuxiong Daily Fetch & Alert
+After=network.target
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=__DIR__
+EnvironmentFile=-__DIR__/config.env
+ExecStart=__DIR__/venv/bin/python __DIR__/daily_job.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__DIR__

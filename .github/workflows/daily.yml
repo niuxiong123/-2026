@@ -1,0 +1,41 @@
+name: 每日抓取宏观数据
+
+# 无需服务器、无需备案、永久免费：GitHub 的电脑每天帮你跑一次脚本
+# 时间：UTC 10:30 = 北京时间 18:30（周一到周五，收盘后）
+on:
+  schedule:
+    - cron: "30 10 * * 1-5"
+  workflow_dispatch:        # 允许在网页上点按钮手动跑一次
+
+permissions:
+  contents: write           # 需要写回仓库（提交 macro.json）
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      - name: 装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 装依赖
+        run: pip install --quiet akshare
+
+      - name: 抓数据
+        run: python3 fetch_macro.py --out docs/macro.json
+
+      - name: 把新数据存回仓库
+        run: |
+          git config user.name  "niuxiong-bot"
+          git config user.email "niuxiong-bot@users.noreply.github.com"
+          git add docs/macro.json
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "数据无变化，不提交"
+          else
+            git commit -m "data: $(date -u +%F)"
+            git push
+          fi
