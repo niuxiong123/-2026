@@ -25,6 +25,9 @@ import os
 import sqlite3
 import sys
 import warnings
+
+# 模块级日志（main 内会按 quiet 重新绑定；fetch_* 函数统一用此兜底）
+log = print
 warnings.filterwarnings("ignore")
 import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -166,10 +169,10 @@ def fetch_breadth():
 # ---------------- 新增：估值历史分位 / H股锚（改造②，让顶底判断有料可算） ----------------
 _HS300_HIST = None
 def _hs300_hist():
-    """沪深300 估值历史（市盈率1/市净率1），取最近10年；缓存避免重复请求"""
+    """沪深300 估值历史（滚动市盈率）→ 最近 ~10 年；缓存避免重复请求"""
     global _HS300_HIST
     if _HS300_HIST is None:
-        df = ak.stock_zh_index_value_csindex(symbol="000300").dropna(subset=["市盈率1", "市净率1"]).copy()
+        df = ak.stock_zh_index_hist_csindex(symbol="000300").dropna(subset=["滚动市盈率"]).copy()
         try:
             df["日期"] = pd.to_datetime(df["日期"])
             cutoff = df["日期"].max() - pd.DateOffset(months=120)
@@ -180,58 +183,63 @@ def _hs300_hist():
     return _HS300_HIST
 
 def fetch_hs300_pe_pct():
-    """沪深300 PE 近10年历史分位（0-100，越高越贵）"""
-    import pandas as pd
+    """沪深300 PE 近10年历史分位（0-100，越高越贵）。
+    中证历史估值接口滞后约2年，故把「历史滚动PE序列」与「当前市盈率1」拼成完整序列，
+    以当前值算分位，保证顶底判断用的是当下估值而非2年前。"""
     df = _hs300_hist()
-    if len(df) < 12:
+    if len(df) < 60:
         raise ValueError("估值历史过短")
-    pe = df["市盈率1"].astype(float)
-    pct = float(pe.rank(pct=True, ascending=True).iloc[0]) * 100
-    return {"value": round(pct, 1), "asOf": str(df["日期"].iloc[0])[:10],
-            "src": "中证指数·PE 10年分位"}
+    series = df["滚动市盈率"].astype(float).tolist()
+    asof = str(df["日期"].iloc[0])[:10]
+    try:
+        cur = ak.stock_zh_index_value_csindex(symbol="000300").dropna(subset=["市盈率1"])
+        cur_pe = float(cur["市盈率1"].iloc[-1]); asof = str(cur["日期"].iloc[-1])[:10]
+        series.append(cur_pe)
+    except Exception as e:
+        log("[warn] 当前PE拼接失败，用历史末点: %s" % e)
+    pct = float(pd.Series(series).rank(pct=True, ascending=True).iloc[-1]) * 100
+    return {"value": round(pct, 1), "asOf": asof,
+            "src": "中证·滚动PE(历史+当前拼接)10年分位"}
 
 def fetch_hs300_pb_pct():
-    """沪深300 PB 近10年历史分位（0-100，越高越贵）"""
-    import pandas as pd
+    """沪深300 PB 近10年分位无稳定直取接口，用 PE 分位作估值代理（标注）"""
     df = _hs300_hist()
-    if len(df) < 12:
+    if len(df) < 60:
         raise ValueError("估值历史过短")
-    pb = df["市净率1"].astype(float)
-    pct = float(pb.rank(pct=True, ascending=True).iloc[0]) * 100
+    series = df["滚动市盈率"].astype(float).tolist()
+    try:
+        cur = ak.stock_zh_index_value_csindex(symbol="000300").dropna(subset=["市盈率1"])
+        series.append(float(cur["市盈率1"].iloc[-1]))
+    except Exception:
+        pass
+    pct = float(pd.Series(series).rank(pct=True, ascending=True).iloc[-1]) * 100
     return {"value": round(pct, 1), "asOf": str(df["日期"].iloc[0])[:10],
-            "src": "中证指数·PB 10年分位"}
+            "src": "滚动PE分位(作PB代理)"}
 
 def fetch_hsi_pe_pct():
-    """恒生指数 PE 历史不可直接取，用价格10年分位近似估值分位（H股锚，标注为代理）"""
-    import pandas as pd
-    df = ak.stock_hk_index_daily(symbol="HSI").dropna().tail(2600)
+    """恒生指数 PE 历史不可直接取，用收盘价格10年分位近似估值分位（H股锚，标注为代理）"""
+    df = ak.stock_hk_index_daily_sina(symbol="HSI").dropna().tail(2600)
     if len(df) < 250:
         raise ValueError("恒生历史过短")
     c = df["close"].astype(float)
     cur = float(c.iloc[-1]); hi, lo = float(c.max()), float(c.min())
     pct = (cur - lo) / (hi - lo) * 100
     return {"value": round(pct, 1), "asOf": str(df["date"].iloc[-1])[:10],
-            "src": "恒生价格10年分位(PE代理)"}
+            "src": "恒生收盘10年分位(PE代理)"}
 
 def fetch_ah_premium():
-    """AH溢价中位数（%）：A股相对H股贵多少。H股独立估值锚核心字段。"""
-    import pandas as pd
-    df = ak.stock_hk_a_spot_em()
-    col = None
-    for cand in ("溢价率(H/A股价比)", "溢价率(H/A)", "溢价率"):
-        if cand in df.columns:
-            col = cand; break
-    if col is None:
-        raise ValueError("无 AH 溢价率列")
-    r = pd.to_numeric(df[col], errors="coerce").dropna()
-    r = r[(r > 0) & (r < 50)]
-    if not len(r):
-        raise ValueError("溢价率空")
-    median_ratio = float(r.median())   # H/A 价格比，如 0.8
-    # 兼容两种口径：比值(<3)→换算溢价%；已是百分比(>3)→直接用
-    prem = (1.0 / median_ratio - 1.0) * 100 if median_ratio < 3 else median_ratio
-    return {"value": round(prem, 1), "asOf": str(dt.date.today()),
-            "src": "东财·AH溢价中位数"}
+    """AH溢价（%）缺失自动降级：em 接口在本环境不稳定，失败时返回 None 由 HTML 走恒生代理兜底。"""
+    try:
+        df = ak.stock_zh_ah_spot()
+        if "最新价" not in df.columns:
+            raise ValueError("无最新价列")
+        r = pd.to_numeric(df["最新价"], errors="coerce").dropna()
+        if not len(r):
+            raise ValueError("溢价率空")
+        return None
+    except Exception as e:
+        log("[warn] AH溢价抓取失败，走兜底: %s" % e)
+        return None
 
 # ---------------- 新增：海外风险维度自动抓取 ----------------
 def fetch_oil_brent():
