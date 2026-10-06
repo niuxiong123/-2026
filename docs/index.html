@@ -99,6 +99,18 @@
   .score0{color:var(--green)} .score1{color:var(--yellow)} .score2{color:var(--red)}
   .rv{font-size:13px;line-height:1.7}
   .rv b{font-size:15px}
+  /* ===== 统一模块卡片：标题 + 下拉 + 联动内容（牛熊钟 / 赢家四阶段 / 应变分支 共用） ===== */
+  .mod{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px}
+  .mod .k{font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.5px}
+  .mod .sub{margin:4px 0 8px}
+  .mod-sel{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap}
+  .mod-sel label{font-size:12.5px;color:var(--sub);white-space:nowrap}
+  .mod-sel select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;min-width:210px;max-width:100%}
+  .mod-body{font-size:13px;line-height:1.8;color:var(--txt)}
+  .mod-sub{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;vertical-align:middle}
+  .mod-sub.on{background:rgba(78,161,255,.18);color:var(--acc)}
+  .mod-sub.off{background:rgba(128,128,128,.16);color:var(--sub)}
+  .mod-sub.done{background:rgba(39,174,96,.18);color:var(--green)}
   @media(max-width:560px){.panel,.resgrid,.quad,.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -162,10 +174,20 @@
   </div>
 </div>
 
-<div class="box" style="margin-top:12px">
+<div class="mod">
   <div class="k">牛熊钟定位（趋势 × 估值）</div>
   <div class="quad" id="quad"></div>
-  <div class="why sub" id="quadWhy" style="margin-top:8px"></div>
+  <div class="mod-sel">
+    <label>定位聚焦</label>
+    <select id="selQuad" onchange="renderQuadFocus(this.value)">
+      <option value="auto" selected>自动（当前落点）</option>
+      <option value="LU">低估 + 趋势向上（牛初 / 牛中）</option>
+      <option value="LD">低估 + 趋势向下（熊末·黄金坑）</option>
+      <option value="HU">高估 + 趋势向上（牛顶 / 过热）</option>
+      <option value="HD">高估 + 趋势向下（下跌中继）</option>
+    </select>
+  </div>
+  <div class="why sub" id="quadWhy" style="margin-top:4px"></div>
 </div>
 
 <div class="box" style="margin-top:12px">
@@ -182,13 +204,20 @@
 </div>
 
 <!-- ===================== 一、赢家四阶段 ===================== -->
-<h2>一、赢家四阶段定位（C）· 当前动作</h2>
-<div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
-<div class="grid2" style="margin-top:6px">
-  <div class="contig"><div class="t">① 退出 / 降杠杆</div>提前12–18月识别泡沫、独立判断。✅ 已完成（八信号全暗即退出）</div>
-  <div class="contig on"><div class="t">② 买波动保险 🔄</div>进行中：持现金/短债/黄金，小仓股指认沽对冲持仓beta</div>
-  <div class="contig off"><div class="t">③ 做空特定板块 ⏳</div>仅小仓试探：高估AI/科技用认沽对冲，不主动重仓做空</div>
-  <div class="contig off"><div class="t">④ 最大恐惧时抄底 🔒</div>未到：没崩盘不接飞刀，等2028水木大运年</div>
+<div class="mod">
+  <div class="k">一、赢家四阶段定位（C）· 当前动作</div>
+  <div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
+  <div class="mod-sel">
+    <label>当前阶段</label>
+    <select id="selStage" onchange="renderStage(this.value)">
+      <option value="all">全部（总览）</option>
+      <option value="1">① 退出 / 降杠杆</option>
+      <option value="2" selected>② 买波动保险</option>
+      <option value="3">③ 做空特定板块</option>
+      <option value="4">④ 最大恐惧时抄底</option>
+    </select>
+  </div>
+  <div class="mod-body" id="stageBody"></div>
 </div>
 
 <h2>二、市场温度 · 四维打分（每项 0-10，越红越危险）</h2>
@@ -261,12 +290,19 @@
   </tbody>
 </table></div>
 
-<h2 style="margin-top:18px">九-B、应变分支（若踏空 / 信号提前亮）</h2>
-<div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
-<div class="grid2" style="margin-top:6px">
-  <div class="contig" id="cg_def"><div class="t">🔴 防御（温度≥6）</div>维持3–4成：消费/红利/利率债▲，科技/地产/美元▼，现金为王。等2028。</div>
-  <div class="contig" id="cg_neu"><div class="t">🟡 中性（温度4–6）</div>均衡5成：权益(沪深300ETF 510300/红利)与防御各半，观望不加杠杆。</div>
-  <div class="contig" id="cg_atk"><div class="t">🟢 进攻（温度&lt;4，信号提前亮）</div>加到7–8成：沪深300ETF(510300)/创业板(159915)/成长科技加回，纳指100回补，现金降至5成内；分步建仓不追高。</div>
+<div class="mod">
+  <div class="k">九-B、应变分支（若踏空 / 信号提前亮）</div>
+  <div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
+  <div class="mod-sel">
+    <label>应变档位</label>
+    <select id="selBranch" onchange="renderBranch(this.value)">
+      <option value="auto" selected>自动（按当前温度）</option>
+      <option value="def">🔴 防御（温度≥6）</option>
+      <option value="neu">🟡 中性（温度4–6）</option>
+      <option value="atk">🟢 进攻（温度&lt;4）</option>
+    </select>
+  </div>
+  <div class="mod-body" id="branchBody"></div>
 </div>
 
 <h2>十、快照与历史</h2>
@@ -1011,6 +1047,46 @@ function renderQuad(r){
     '<br>当前落点：<b>'+items[idx].t+'</b>';
 }
 
+// ===== 统一模块：牛熊钟聚焦 / 赢家四阶段 / 应变分支（含下拉联动） =====
+const QUADINFO={
+  LU:{t:'牛初 / 牛中（趋势热 + 估值冷）',d:'持有为主，可随盈利加仓；不追高。'},
+  LD:{t:'熊末·黄金坑（趋势冷 + 估值冷）',d:'可分批建仓，左侧小仓，不追涨。'},
+  HU:{t:'牛顶 / 过热（趋势热 + 估值热）',d:'逐步减仓，警惕反转。'},
+  HD:{t:'下跌中继（趋势冷 + 估值热）',d:'便宜没到位，等；不接飞刀。'}
+};
+function renderQuadFocus(v){
+  if(v==='auto') return; // 由 renderQuad 写入的当前落点说明保持
+  const q=QUADINFO[v]; const el=document.getElementById('quadWhy');
+  if(el) el.innerHTML='聚焦查看：<b>'+q.t+'</b><br>'+q.d;
+}
+const STAGES={
+  1:{cls:'done',sub:'已完成',ttl:'① 退出 / 降杠杆',body:'提前12–18月识别泡沫、独立判断。<b>已完成</b>（八信号全暗即退出）。'},
+  2:{cls:'on',sub:'进行中',ttl:'② 买波动保险',body:'持现金/短债/黄金，小仓股指认沽对冲持仓beta。'},
+  3:{cls:'off',sub:'待启动',ttl:'③ 做空特定板块',body:'仅小仓试探：高估AI/科技用认沽对冲，不主动重仓做空。'},
+  4:{cls:'off',sub:'未到',ttl:'④ 最大恐惧时抄底',body:'没崩盘不接飞刀，等2028水木大运年。'}
+};
+function renderStage(v){
+  const b=document.getElementById('stageBody'); if(!b) return;
+  if(v==='all'){
+    b.innerHTML=[1,2,3,4].map(k=>{const s=STAGES[k];return '<div class="contig '+(s.cls==='on'?'on':s.cls==='off'?'off':'')+'"><div class="t">'+s.ttl+' <span class="mod-sub '+s.cls+'">'+s.sub+'</span></div>'+s.body+'</div>';}).join('');
+    return;
+  }
+  const s=STAGES[v];
+  b.innerHTML='<div class="contig '+(s.cls==='on'?'on':s.cls==='off'?'off':'')+'"><div class="t">'+s.ttl+' <span class="mod-sub '+s.cls+'">'+s.sub+'</span></div>'+s.body+'</div>';
+}
+const BRANCHES={
+  def:{t:'🔴 防御（温度≥6）',body:'维持3–4成：消费/红利/利率债▲，科技/地产/美元▼，现金为王。等2028。'},
+  neu:{t:'🟡 中性（温度4–6）',body:'均衡5成：权益(沪深300ETF 510300/红利)与防御各半，观望不加杠杆。'},
+  atk:{t:'🟢 进攻（温度&lt;4，信号提前亮）',body:'加到7–8成：沪深300ETF(510300)/创业板(159915)/成长科技加回，纳指100回补，现金降至5成内；分步建仓不追高。'}
+};
+function branchFromTemp(t){ return (t>=6)?'def':(t>=4?'neu':'atk'); }
+function renderBranch(v){
+  const b=document.getElementById('branchBody'); if(!b) return;
+  const key=(v==='auto')?branchFromTemp(window.__lastTempAdj!=null?window.__lastTempAdj:5):v;
+  const s=BRANCHES[key];
+  b.innerHTML='<div class="contig on"><div class="t">'+s.t+'</div>'+s.body+'</div>';
+}
+
 // 数据源表格
 function srcRows(){
   const q=Q&&Q.ok?Q:null;
@@ -1292,9 +1368,13 @@ function recalc(){
   document.getElementById('bannerBand').textContent=tag.txt;
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
   renderActionList(r);
-  document.getElementById('cg_def').className='contig'+(r.tempAdj>=6?' on':' off');
-  document.getElementById('cg_neu').className='contig'+((r.tempAdj>=4&&r.tempAdj<6)?' on':' off');
-  document.getElementById('cg_atk').className='contig'+(r.tempAdj<4?' on':' off');
+  // 统一模块联动：九-B 应变分支（auto 档跟随温度）；牛熊钟聚焦非 auto 时保持说明；四阶段内容静态由 renderStage 维护
+  window.__lastTempAdj=r.tempAdj;
+  if(document.getElementById('selBranch') && document.getElementById('selBranch').value==='auto') renderBranch('auto');
+  if(document.getElementById('selQuad')){
+    const sq=document.getElementById('selQuad');
+    if(sq.value!=='auto') renderQuadFocus(sq.value);
+  }
   renderStatus();
   renderBacktest();
 }
@@ -1525,6 +1605,7 @@ function init(){
   ['in_oil','in_ai','in_hormuz','in_usd','in_job','in_path','in_win','in_china']
     .forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',recalc);});
   recalc();
+  renderStage('2'); renderBranch('auto'); renderQuadFocus('auto');
   renderHist(); renderReview();
   pullAll().then(startAutoRefresh);
 }
