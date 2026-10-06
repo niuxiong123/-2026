@@ -26,6 +26,7 @@ import sqlite3
 import sys
 import time
 import warnings
+import requests
 
 # 模块级日志（main 内会按 quiet 重新绑定；fetch_* 函数统一用此兜底）
 log = print
@@ -228,34 +229,55 @@ def fetch_hsi_pe_pct():
     return {"value": round(pct, 1), "asOf": str(df["date"].iloc[-1])[:10],
             "src": "恒生收盘10年分位(PE代理)"}
 
+def _fetch_ah_premium_index():
+    """兜底源：恒生AH溢价指数(HSAHP)，点位 X = A比H贵 (X-100)%。直连东财kline API。"""
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"}
+    for secid in ("100.HSAHP", "100.AHPREMIUM"):
+        for attempt in range(3):
+            try:
+                url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
+                params = {"secid": secid, "fields1": "f1,f2", "fields2": "f51,f53",
+                          "klt": 101, "fqt": 0, "end": "20500101", "lmt": 3}
+                r = requests.get(url, params=params, headers=headers, timeout=20)
+                d = r.json()
+                if d.get("data") and d["data"].get("klines"):
+                    lvl = float(d["data"]["klines"][-1].split(",")[1])
+                    return lvl - 100.0   # 溢价%
+            except Exception:
+                time.sleep(5); continue
+    return None
+
 def fetch_ah_premium():
     """AH溢价中位数（%）：A股相对H股贵多少。H股独立估值锚核心字段。
-    用东财 AH 比价接口（stock_zh_ah_spot_em），带重试（该接口偶发网络抖动）。
-    失败则返回 None，由 HTML 走恒生代理兜底，绝不写脏数。"""
+    主源：东财 AH 比价接口（stock_zh_ah_spot_em），502等为瞬时错误→重试5次抗抖动。
+    兜底：恒生AH溢价指数点位(HSAHP)-100。仍失败返回 None，由 HTML 走恒生代理，绝不写脏数。"""
     df = None
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             df = ak.stock_zh_ah_spot_em()
             break
         except Exception as e:
-            if attempt < 2:
-                time.sleep(6); continue
-            log("[warn] AH溢价抓取失败，走兜底: %s" % e); return None
-    if df is None or not len(df):
-        log("[warn] AH溢价返回空，走兜底"); return None
-    # 找到溢价率列（东财返回 '溢价率(H/A股价比)' 等）
-    prem_col = next((c for c in df.columns if "溢价" in c), None)
-    if prem_col is None:
-        log("[warn] AH溢价无溢价率列，走兜底"); return None
-    r = pd.to_numeric(df[prem_col], errors="coerce").dropna()
-    r = r[(r > 0) & (r < 60)]
-    if not len(r):
-        log("[warn] AH溢价率为空，走兜底"); return None
-    median_ratio = float(r.median())   # H/A 价格比，如 0.83
-    # 比值(<3)→换算溢价%；已是百分比(>3)→直接用
-    prem = (1.0 / median_ratio - 1.0) * 100 if median_ratio < 3 else median_ratio
-    return {"value": round(prem, 1), "asOf": str(dt.date.today()),
-            "src": "东财·AH溢价中位数"}
+            if attempt < 4:
+                time.sleep(10); continue
+            log("[warn] AH溢价主源失败: %s" % e)
+    if df is not None and len(df):
+        prem_col = next((c for c in df.columns if "溢价" in c), None)
+        if prem_col is not None:
+            r = pd.to_numeric(df[prem_col], errors="coerce").dropna()
+            r = r[(r > 0) & (r < 60)]
+            if len(r):
+                median_ratio = float(r.median())   # H/A 价格比，如 0.83
+                # 比值(<3)→换算溢价%；已是百分比(>3)→直接用
+                prem = (1.0 / median_ratio - 1.0) * 100 if median_ratio < 3 else median_ratio
+                return {"value": round(prem, 1), "asOf": str(dt.date.today()),
+                        "src": "东财·AH溢价中位数"}
+    # 主源无果 → 恒生AH溢价指数兜底
+    idx = _fetch_ah_premium_index()
+    if idx is not None:
+        return {"value": round(idx, 1), "asOf": str(dt.date.today()),
+                "src": "恒生AH溢价指数(点位-100)"}
+    log("[warn] AH溢价抓取失败，走兜底(None)")
+    return None
 
 # ---------------- 新增：海外风险维度自动抓取 ----------------
 def fetch_oil_brent():
