@@ -32,7 +32,7 @@ jobs:
         run: |
           git config user.name  "niuxiong-bot"
           git config user.email "niuxiong-bot@users.noreply.github.com"
-          git add docs/macro.json niuxiong.db
+          git add -f docs/macro.json niuxiong.db
           if git diff --quiet && git diff --staged --quiet; then
             echo "数据无变化，不提交"
           else
