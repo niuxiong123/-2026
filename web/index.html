@@ -75,13 +75,35 @@
   .hist-del{background:transparent;border:1px solid var(--red);color:var(--red);border-radius:6px;padding:3px 8px;font-size:11.5px;cursor:pointer}
   textarea{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;min-height:80px}
   .up{color:var(--red);font-weight:700} .down{color:var(--green);font-weight:700}
-  @media(max-width:560px){.panel,.resgrid,.quad{grid-template-columns:1fr}}
+  /* ===== 新增：赢家四阶段 / 海外风险 / 危机预警 / 资产配置 ===== */
+  .banner{background:linear-gradient(90deg,rgba(240,88,75,.18),rgba(227,179,65,.10));border:1px solid var(--red);border-radius:12px;padding:13px 16px;margin-top:14px}
+  .banner .bt{font-size:12px;color:var(--red);font-weight:800;letter-spacing:1px}
+  .banner .bb{font-size:19px;font-weight:800;margin:5px 0;color:var(--txt)}
+  .banner .bl{font-size:13.5px;color:var(--sub);line-height:1.85}
+  .act-up{color:var(--green);font-weight:800}
+  .act-hold{color:var(--acc);font-weight:700}
+  .act-down{color:var(--red);font-weight:800}
+  .act-short{color:var(--yellow);font-weight:800}
+  .contig{background:var(--card2);border-radius:10px;padding:10px;font-size:12.5px;margin-top:8px}
+  .contig.on{border:2px solid var(--acc);box-shadow:0 0 10px rgba(78,161,255,.3)}
+  .contig .t{font-weight:800;font-size:13.5px;margin-bottom:4px}
+  .contig.off{opacity:.6}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .links{font-size:12.5px;color:var(--acc)}
+  .clockbar{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));position:relative;margin-top:10px}
+  .clockbar .pin{position:absolute;top:-5px;width:5px;height:24px;background:#fff;border-radius:3px;transform:translateX(-2px)}
+  .clocklab{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:5px}
+  .dim .row{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0}
+  .dim .row .lab{flex:1;text-align:left}
+  .dim .row .w{color:var(--sub);font-size:11px;width:62px;text-align:right}
+  .score0{color:var(--green)} .score1{color:var(--yellow)} .score2{color:var(--red)}
+  @media(max-width:560px){.panel,.resgrid,.quad,.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<h1>牛熊每日自查 v2 · 自动数据版</h1>
-<div class="sub">四维打分（趋势 / 估值 / 流动性 / 情绪）+ 多重仓位约束。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
+<h1>牛熊每日自查 v2+ · 真实数据整合版</h1>
+<div class="sub">四维打分 + 海外风险 + 危机预警 → 综合温度与建议仓位 → 赢家四阶段操作。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
 
 <div class="topbar">
   <div><label>日期</label><input type="date" id="dt"></div>
@@ -113,16 +135,64 @@
 </div>
 <div class="warn off" id="dataWarn"></div>
 
+<div class="banner">
+  <div class="bt">最终结论 · 当前操作建议</div>
+  <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
+  <div class="bl">
+    1.<span class="act-up">加大</span> 消费 / 红利 / 利率债 ▲<br>
+    2.<span class="act-down">减少</span> 科技 / 地产 / 美元 ▼<br>
+    3.<span class="act-hold">持有</span> 现金 + 现有组合 + 黄金 ●<br>
+    4.做空仅小仓股指认沽对冲、不空原油 ｜<br>
+    5.<b>三不原则：不重仓 · 不抄底 · 不加杠杆</b>
+  </div>
+</div>
+
 <div class="box" style="margin-top:12px">
   <div class="k">牛熊钟定位（趋势 × 估值）</div>
   <div class="quad" id="quad"></div>
   <div class="why sub" id="quadWhy" style="margin-top:8px"></div>
 </div>
 
-<h2>一、四维打分（每项 0-10，越红越危险）</h2>
+<!-- ===================== 一、赢家四阶段 ===================== -->
+<h2>一、赢家四阶段定位（C）· 当前动作</h2>
+<div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
+<div class="grid2" style="margin-top:6px">
+  <div class="contig"><div class="t">① 退出 / 降杠杆</div>提前12–18月识别泡沫、独立判断。✅ 已完成（八信号全暗即退出）</div>
+  <div class="contig on"><div class="t">② 买波动保险 🔄</div>进行中：持现金/短债/黄金，小仓股指认沽对冲持仓beta</div>
+  <div class="contig off"><div class="t">③ 做空特定板块 ⏳</div>仅小仓试探：高估AI/科技用认沽对冲，不主动重仓做空</div>
+  <div class="contig off"><div class="t">④ 最大恐惧时抄底 🔒</div>未到：没崩盘不接飞刀，等2028水木大运年</div>
+</div>
+
+<h2>二、市场温度 · 四维打分（每项 0-10，越红越危险）</h2>
 <div id="dimList"></div>
 
-<h2>二、数据源明细（自动值 + 新鲜度 + 可手动覆盖）</h2>
+<!-- ===================== 三、海外风险维度 ===================== -->
+<h2>三、海外风险维度 · 新增打分（A）</h2>
+<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。</div>
+<div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
+  <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number"><span class="w">权重25%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">AI/美股估值</div><div class="sc" id="sc_ai">—</div></div><div class="bar"><i id="bar_ai"></i></div>
+  <div class="row"><span class="lab">AI资本开支仅花少量，泡沫高危</span><input id="in_ai" step="0.1" type="number"><span class="w">权重25%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">霍尔木兹/曼德海峡</div><div class="sc" id="sc_hormuz">—</div></div><div class="bar"><i id="bar_hormuz"></i></div>
+  <div class="row"><span class="lab">航道受威胁→供应链风险</span><input id="in_hormuz" step="0.1" type="number"><span class="w">权重20%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">美元指数</div><div class="sc" id="sc_usd">—</div></div><div class="bar"><i id="bar_usd"></i></div>
+  <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number"><span class="w">权重15%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">美国就业</div><div class="sc" id="sc_job">—</div></div><div class="bar"><i id="bar_job"></i></div>
+  <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number"><span class="w">权重15%</span></div></div>
+<div class="sub" id="out_overseas">→ 海外风险分 —</div>
+
+<!-- ===================== 四、金融危机预警 ===================== -->
+<h2>四、金融危机预警 · 新增打分（B）</h2>
+<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。</div>
+<div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
+  <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number"><span class="w">权重35%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">高危窗口临近度</div><div class="sc" id="sc_win">—</div></div><div class="bar"><i id="bar_win"></i></div>
+  <div class="row"><span class="lab">2026底–2027上为高危窗（按日期算）</span><input id="in_win" step="0.1" type="number"><span class="w">权重35%</span></div></div>
+<div class="dim"><div class="hd"><div class="nm">中国脆弱点</div><div class="sc" id="sc_china">—</div></div><div class="bar"><i id="bar_china"></i></div>
+  <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number"><span class="w">权重30%</span></div></div>
+<div class="sub" id="out_crisis">→ 危机预警分 —</div>
+
+<h2>五、数据源明细（自动值 + 新鲜度 + 可手动覆盖）</h2>
 <div class="sub" style="margin-bottom:6px">🟢今日/近期 · 🟡略陈旧 · 🔴缺失已降级为基线 · ⚪纯手动。点「改」可覆盖自动值。</div>
 <div style="overflow-x:auto"><table id="srcTable">
 <thead><tr><th>指标</th><th>最新值</th><th>来源</th><th>数据截止</th><th>新鲜度</th><th>手动覆盖</th></tr></thead>
@@ -132,19 +202,46 @@
   <span class="sub" id="ovMsg"></span>
 </div>
 
-<h2>三、长牛八大信号（自动推导 + 可改）</h2>
+<h2>六、长牛八大信号（自动推导 + 可改）</h2>
 <div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。带「自」字的是由真实数据自动判定的。</div>
 <div class="resgrid" id="resEight"></div>
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
-<h2>四、定性项（机器判不了，手动打）</h2>
+<h2>七、定性项（机器判不了，手动打）</h2>
 <div id="qualList"></div>
 
-<h2>五、仓位换钱 · 操作建议</h2>
+<h2>八、仓位换钱 · 操作建议</h2>
 <div class="srcbox" id="moneyBox"></div>
 
-<h2>六、快照与历史</h2>
+<!-- ===================== 九、资产配置建议 + 应变分支 ===================== -->
+<h2>九、资产配置建议（D）· 加大 / 持有 / 减少 / 对冲（细化标的）</h2>
+<div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
+<div style="overflow-x:auto"><table>
+  <thead><tr><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
+  <tbody>
+    <tr><td class="act-up">加大 ▲</td><td><b>必需消费</b>：主要消费ETF(159928)/必选消费(512600)</td><td>防御属性强、现金流稳</td><td>S-S稀缺+索洛确定性</td></tr>
+    <tr><td class="act-up">加大 ▲</td><td><b>高股息红利</b>：红利ETF(510880)/中证红利(515080)</td><td>底仓防御对冲波动</td><td>机构共识+用神水木</td></tr>
+    <tr><td class="act-up">加大 ▲</td><td><b>利率债/货基</b>：国债ETF(511010)/货币ETF(511880)</td><td>随时可动</td><td>S-S：流动性最稀缺=赢家</td></tr>
+    <tr><td class="act-up">加大 ▲</td><td><b>黄金</b>：黄金ETF(518880)</td><td>逢回调小仓</td><td>中东+通胀避险</td></tr>
+    <tr><td class="act-hold">持有 ●</td><td><b>现金/短债</b>：覆盖18–24个月开支</td><td>不动</td><td>命门：保本金第一</td></tr>
+    <tr><td class="act-down">减少 ▼</td><td><b>科技/AI</b>：纳指100降仓、半导体ETF(512480)</td><td>降低权益里的科技暴露</td><td>AI估值泡沫高危</td></tr>
+    <tr><td class="act-down">减少 ▼</td><td><b>地产链</b>：地产ETF(512200)</td><td>低配/回避</td><td>地产降幅扩大</td></tr>
+    <tr><td class="act-down">减少 ▼</td><td><b>美元/金属</b></td><td>低配</td><td>非稀缺要素</td></tr>
+    <tr><td class="act-short">对冲</td><td><b>股指认沽</b>：50ETF沽/300ETF认沽</td><td>小仓保护权益beta</td><td>阶段③动作，仅对冲</td></tr>
+    <tr><td class="act-short">不空</td><td><b>原油</b></td><td>战争推升供需缺口，不空</td><td>油价是风险源</td></tr>
+  </tbody>
+</table></div>
+
+<h2 style="margin-top:18px">九-B、应变分支（若踏空 / 信号提前亮）</h2>
+<div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
+<div class="grid2" style="margin-top:6px">
+  <div class="contig" id="cg_def"><div class="t">🔴 防御（温度≥6）</div>维持3–4成：消费/红利/利率债▲，科技/地产/美元▼，现金为王。等2028。</div>
+  <div class="contig" id="cg_neu"><div class="t">🟡 中性（温度4–6）</div>均衡5成：权益(沪深300ETF 510300/红利)与防御各半，观望不加杠杆。</div>
+  <div class="contig" id="cg_atk"><div class="t">🟢 进攻（温度&lt;4，信号提前亮）</div>加到7–8成：沪深300ETF(510300)/创业板(159915)/成长科技加回，纳指100回补，现金降至5成内；分步建仓不追高。</div>
+</div>
+
+<h2>十、快照与历史</h2>
 <div class="row">
   <button class="btn sm" onclick="saveToday()">保存今日快照</button>
   <button class="btn ghost sm" onclick="exportCSV()">导出CSV</button>
@@ -159,9 +256,10 @@
 
 <div class="note">
   <b>仓位算法（连续、可查）：</b><br>
-  ① 温度→基础仓位（分段线性）：0分→9成，2.5分→8成，5分→5.5成，7.5分→3成，10分→1成。<br>
-  ② 四道硬约束取最小值：趋势（跌破年线且空头排列→上限5.5成）｜信用（M1&lt;5%或信贷同比负→上限6成）｜海外（美债10Y≥4.5%：A股7成/H股5.5成）｜共振（八大信号达成&lt;50%→上限5.5成）。<br>
-  ③ 最终 = min(基础仓位, 四道约束) × 保守系数（默认0.85，对应你风险厌恶 + 2026-27财杀流年）。<br>
+  ① 综合温度 = 市场四维×0.55 + 海外风险×0.225 + 危机预警×0.225（海外/危机可手动调）。<br>
+  ② 温度→基础仓位（分段线性）：0分→9成，2.5分→8成，5分→5.5成，7.5分→3成，10分→1成。<br>
+  ③ 四道硬约束取最小值：趋势（跌破年线且空头排列→上限5.5成）｜信用（M1&lt;5%或信贷同比负→上限6成）｜海外（美债10Y≥4.5%：A股7成/H股5.5成）｜共振（八大信号达成&lt;50%→上限5.5成）。<br>
+  ④ 最终 = min(基础仓位, 四道约束) × 保守系数（默认0.85，对应你风险厌恶 + 2026-27财杀流年）。<br>
   <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
 </div>
 
@@ -192,6 +290,17 @@ const BASELINE = {
   northbound:{value:0,asOf:"2026-09-28",src:"基线(港交所)"},
   breadth_up:{value:50,asOf:"2026-09-28",src:"基线(占位)"},
   amt_yi:{value:17028,asOf:"2026-09-28",src:"基线(两市)"},
+  // ===== 海外风险 + 危机预警（fetch_macro.py 自动抓取/推导）=====
+  oil_brent:{value:82.5,asOf:"2026-10-03",src:"基线(油价)"},
+  dxy:{value:102.3,asOf:"2026-10-03",src:"基线(美元指数)"},
+  us_unemploy:{value:4.2,asOf:"2026-09-01",src:"基线(BLS)"},
+  nasdaq_pct:{value:3.2,asOf:"2026-10-03",src:"基线(纳指20日)"},
+  re_yoy:{value:-1.2,asOf:"2025-12-01",src:"基线(国房景气指数)"},
+  ai_bubble:{value:7.0,asOf:"2026-10-03",src:"推导(纳指+美债)"},
+  hormuz_risk:{value:4.7,asOf:"2026-10-03",src:"推导(油价)"},
+  paths_lit:{value:6.8,asOf:"2026-10-03",src:"推导(综合)"},
+  win_proximity:{value:9.5,asOf:"2026-10-06",src:"计算(日期)"},
+  china_fragile:{value:6.8,asOf:"2025-12-01",src:"推导(景气指数)"},
 };
 
 // 定性项（机器判不了）
@@ -201,6 +310,13 @@ const QUAL = [
   {k:'信用风险', def:'地产债/企业违约/信用利差', def5:5},
   {k:'政策力度', def:'稳市政策加码程度，越大越利好', def5:6, reverse:true},
 ];
+
+// 海外风险维度权重 + 危机预警维度权重
+const W_OV = {oil:.25, ai:.25, hormuz:.20, usd:.15, job:.15};
+const W_CR = {path:.35, win:.35, china:.30};
+// 海外/危机默认基线值（无自动数据源，手动可调）
+const OV_DEFAULTS = {oil:7.5, ai:7.5, hormuz:8.5, usd:6.0, job:4.0};
+const CR_DEFAULTS = {path:6.5, win:6.6, china:9.0};
 
 // 长牛八大信号
 const EIGHT = [
@@ -318,6 +434,7 @@ async function loadServerState(){
     applyMacro({data:j.data, generated_at:j.generated_at});
     M.generated = j.generated_at || '';
     statusFlags.macro=true; statusFlags.api=true;
+    fillOvCrDefaults(true);
     // 行情（后端给的是扁平结构，转成页面用的形式）
     const q=j.quote||{}; if(q.ok){
       const P=q.prices||{}, C=q.pcts||{};
@@ -352,7 +469,7 @@ async function loadQuoteApi(){
 
 function applyMacro(j){
   const d=j.data;
-  if(d.northbound && (d.northbound.value===0||d.northbound.value==null)) d.northbound.noData=true;  // 北向已无实时披露
+  if(d.northbound && (d.northbound.value===0||d.northbound.value==null)) d.northbound.noData=true;
   if(d.breadth && d.breadth.value==null) d.breadth.noData=true;
   const put=(k,obj,fmt)=>{ if(!obj) return; M[k]={value:fmt?fmt(obj.value):obj.value, asOf:obj.asOf||obj.as_of||'', src:obj.src||'macro.json', stale:!!obj.stale}; };
   put('pmi',d.pmi); put('m1_yoy',d.m1_yoy); put('credit_yoy',d.credit_yoy);
@@ -360,7 +477,12 @@ function applyMacro(j){
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
   put('northbound',d.northbound);
   if(d.breadth) put('breadth_up',d.breadth);
-  if(d.hs300&&d.hs300.extra) M.tech=d.hs300.extra;      // 均线/回撤/位置
+  if(d.hs300&&d.hs300.extra) M.tech=d.hs300.extra;
+  // ===== 海外风险 + 危机预警 =====
+  put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);
+  put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy);
+  put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
+  put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
 }
 
 /* ---------- 4. 定性项持久化 ---------- */
@@ -480,7 +602,16 @@ function basePosition(t){
 function computeAll(){
   const tr=scoreTrend(), va=scoreVal(), lq=scoreLiq(), em=scoreEmo();
   const w = mode==='A' ? {tr:.25,va:.25,lq:.25,em:.25} : {tr:.2,va:.2,lq:.3,em:.3};
-  const temp = tr.v*w.tr + va.v*w.va + lq.v*w.lq + em.v*w.em;
+  const mkt = tr.v*w.tr + va.v*w.va + lq.v*w.lq + em.v*w.em;
+  // 海外风险维度
+  const iv=id=>{const e=document.getElementById(id);const v=e?parseFloat(e.value):NaN;return isNaN(v)?5:v;};
+  const oil=iv('in_oil'),aiv=iv('in_ai'),hm=iv('in_hormuz'),usd=iv('in_usd'),job=iv('in_job');
+  const ov=clamp(oil*W_OV.oil+aiv*W_OV.ai+hm*W_OV.hormuz+usd*W_OV.usd+job*W_OV.job);
+  // 金融危机预警维度
+  const pa=iv('in_path'),wn=iv('in_win'),cn=iv('in_china');
+  const cr=clamp(pa*W_CR.path+wn*W_CR.win+cn*W_CR.china);
+  // 综合温度 = 市场×0.55 + 海外×0.225 + 危机×0.225
+  const temp = mkt*0.55 + ov*0.225 + cr*0.225;
   // 定性项微调：地缘/监管/信用越大越危险
   const qAdj = ((qualVal['地缘波动']-5)*0.06 + (qualVal['监管打压']-5)*0.04 + (qualVal['信用风险']-5)*0.05 - (qualVal['政策力度']-5)*0.05);
   const tempAdj = clamp(temp + qAdj);
@@ -489,8 +620,8 @@ function computeAll(){
   const cs=[];
   const t=M.tech||{};
   if(t.above_ma250!=null){ cs.push({n:'趋势约束', v:(!t.above_ma250 && !t.ma20_gt_ma60)?5.5:(t.above_ma250&&t.ma20_gt_ma60?10:7), r:''}); }
-  const m1=isReal('m1_yoy')?get('m1_yoy'):null, cr=isReal('credit_yoy')?get('credit_yoy'):null;
-  cs.push({n:'信用约束', v:((m1!=null&&m1<5)||(cr!=null&&cr<0))?6:10, r:'M1 '+m1+'% / 信贷 '+cr+'%'});
+  const m1=isReal('m1_yoy')?get('m1_yoy'):null, crd=isReal('credit_yoy')?get('credit_yoy'):null;
+  cs.push({n:'信用约束', v:((m1!=null&&m1<5)||(crd!=null&&crd<0))?6:10, r:'M1 '+m1+'% / 信贷 '+crd+'%'});
   const u=isReal('us10y')?get('us10y'):null;
   if(u!=null) cs.push({n:'海外约束', v:(u>=4.5)?(mode==='A'?7:5.5):(u>=4?(mode==='A'?8.5:7):10), r:'美债10Y '+u+'%'});
   const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
@@ -500,7 +631,8 @@ function computeAll(){
   const tight=cs.filter(c=>c.v===cap).map(c=>c.n);
   const konserv=document.getElementById('baziSwitch').checked?0.85:1;
   const final=clamp(Math.min(bp,cap)*konserv,1,9);
-  return {tr,va,lq,em,temp,tempAdj,bp,cap,cs,final,p,konserv,tight};
+  return {tr,va,lq,em,mkt,ov,cr,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,
+          ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
 }
 /* =========================================================
    渲染层
@@ -565,6 +697,14 @@ function srcRows(){
    ['两融余额','margin_yi','亿'],['北向净买(已无实时披露)','northbound','亿'],['上涨家数占比','breadth_up','%'],
    ['美元/人民币','usdcny','']].forEach(([label,k,u])=>{
     const o=m(k,u); add(label, o.v, u, o.src, o.asOf, k, true, o.base);
+  });
+  // ===== 海外风险 + 危机预警原始数据 =====
+  [['布伦特油价','oil_brent','美元/桶'],['美元指数DXY','dxy',''],['美国失业率','us_unemploy','%'],
+   ['纳指20日涨跌','nasdaq_pct','%'],['国房景气指数1Y涨跌','re_yoy','%'],
+   ['AI泡沫分(推导)','ai_bubble',''],['海峡风险分(推导)','hormuz_risk',''],
+   ['四路径点燃度(推导)','paths_lit',''],['高危窗临近度(计算)','win_proximity',''],
+   ['中国脆弱点(推导)','china_fragile','']].forEach(([label,k,u])=>{
+    const o=m(k,u); add(label, o.v, u, o.src, o.asOf, k, false, o.base);
   });
   if(M.tech){
     const t=M.tech;
@@ -656,6 +796,43 @@ function renderStatus(){
   if(lost.length){ warn.classList.remove('off'); warn.innerHTML='⚠️ '+lost.join('；')+'。请把 fetch_macro.py 跑一次生成 macro.json 放在本页同目录，或粘贴 JSON 到页面底部。'; }
   else warn.classList.add('off');
 }
+// 原始宏观值 → 0-10 风险分（与后端 fetch_macro.py 推导逻辑对齐）
+function scoreOil(p){ if(p==null) return 5; return clamp(2 + (p-60)*0.12); }     // 60→2, 100→6.8, 120→9.2
+function scoreDxy(d){ if(d==null) return 5; return clamp((d-90)*0.4); }            // 95→2, 100→4, 105→6, 110→8
+function scoreJob(u){ if(u==null) return 5; return clamp((u-3.5)*4); }             // 3.5→0, 4→2, 4.5→4, 5→6, 6→10
+function ovCrReal(k){ return M[k] && !M[k].baseline && !M[k].stale && !M[k].noData ? M[k].value : null; }
+
+function fillOvCrDefaults(force){
+  const set=(id,v)=>{const e=document.getElementById(id);if(e&&(force||!e.value||isNaN(parseFloat(e.value))))e.value=Math.round(v*10)/10;};
+  // 海外风险：优先用 macro.json 真实值推导，失败用基线
+  const oil = ovCrReal('oil_brent');
+  set('in_oil', oil!=null ? scoreOil(oil) : OV_DEFAULTS.oil);
+  const ai = ovCrReal('ai_bubble');
+  set('in_ai', ai!=null ? ai : OV_DEFAULTS.ai);
+  const hm = ovCrReal('hormuz_risk');
+  set('in_hormuz', hm!=null ? hm : OV_DEFAULTS.hormuz);
+  const dxy = ovCrReal('dxy');
+  set('in_usd', dxy!=null ? scoreDxy(dxy) : OV_DEFAULTS.usd);
+  const job = ovCrReal('us_unemploy');
+  set('in_job', job!=null ? scoreJob(job) : OV_DEFAULTS.job);
+  // 危机预警：直接取 macro.json 推导的 0-10 分
+  const path = ovCrReal('paths_lit');
+  set('in_path', path!=null ? path : CR_DEFAULTS.path);
+  const win = ovCrReal('win_proximity');
+  set('in_win', win!=null ? win : CR_DEFAULTS.win);
+  const cn = ovCrReal('china_fragile');
+  set('in_china', cn!=null ? cn : CR_DEFAULTS.china);
+}
+function renderOvCr(r){
+  const setSc=(id,v)=>{const e=document.getElementById(id);if(!e)return;e.textContent=v.toFixed(1);e.className='sc '+(v<3.5?'score0':(v<6.5?'score1':'score2'));};
+  const setBar=(id,v)=>{const e=document.getElementById(id);if(e)e.style.width=(v*10)+'%';};
+  const o=r.ovItems; setSc('sc_oil',o.oil);setSc('sc_ai',o.aiv);setSc('sc_hormuz',o.hm);setSc('sc_usd',o.usd);setSc('sc_job',o.job);
+  setBar('bar_oil',o.oil);setBar('bar_ai',o.aiv);setBar('bar_hormuz',o.hm);setBar('bar_usd',o.usd);setBar('bar_job',o.job);
+  document.getElementById('out_overseas').innerHTML='→ 海外风险分 <b>'+r.ov.toFixed(1)+'</b>（油价×0.25 + AI×0.25 + 海峡×0.20 + 美元×0.15 + 就业×0.15）';
+  const c=r.crItems; setSc('sc_path',c.pa);setSc('sc_win',c.wn);setSc('sc_china',c.cn);
+  setBar('bar_path',c.pa);setBar('bar_win',c.wn);setBar('bar_china',c.cn);
+  document.getElementById('out_crisis').innerHTML='→ 危机预警分 <b>'+r.cr.toFixed(1)+'</b>（四路径×0.35 + 高危窗×0.35 + 脆弱点×0.30）';
+}
 function recalc(){
   const r=computeAll();
   if(SRV && SRV[mode]){                       // 服务端算好的：直接采用，保证前后端一致
@@ -667,7 +844,7 @@ function recalc(){
     r.quad={idx:d.quad.idx,name:d.quad.name};
     EIGHT.forEach(e=>{ if(d.eight[e.k]!=null) eightState[e.k]=d.eight[e.k]; });
   }
-  renderDims(r); renderQuad(r); renderSrcTable(); renderEight(); renderQual(); renderMoney(r);
+  renderDims(r); renderQuad(r); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
   const tag=tempTagOf(r.tempAdj);
   document.getElementById('tempVal').textContent=r.tempAdj.toFixed(2);
   document.getElementById('tempPin').style.left=(r.tempAdj*10)+'%';
@@ -675,10 +852,18 @@ function recalc(){
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:20px">成</span>';
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
   document.getElementById('posReason').innerHTML=
-    '温度仓位 '+r.bp.toFixed(1)+'成 → 硬约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
+    '市场'+r.mkt.toFixed(2)+'×0.55 + 海外'+r.ov.toFixed(1)+'×0.225 + 危机'+r.cr.toFixed(1)+'×0.225 → 综合温度 '+r.tempAdj.toFixed(2)+
+    '<br>温度仓位 '+r.bp.toFixed(1)+'成 → 硬约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
     (r.konserv<1?' → 保守系数×0.85':'')+'<br><span style="font-size:11.5px">'+csTxt+'</span>';
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
+  // banner + 应变分支
+  document.getElementById('bannerPos').textContent=r.final.toFixed(1)+'成';
+  document.getElementById('bannerBand').textContent=tag.txt;
+  document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
+  document.getElementById('cg_def').className='contig'+(r.tempAdj>=6?' on':' off');
+  document.getElementById('cg_neu').className='contig'+((r.tempAdj>=4&&r.tempAdj<6)?' on':' off');
+  document.getElementById('cg_atk').className='contig'+(r.tempAdj<4?' on':' off');
   renderStatus();
 }
 
@@ -689,7 +874,7 @@ async function pullAll(){
   document.getElementById('srcBadge').innerHTML='⏳ 正在拉取：行情 / 宏观 / 汇率 …';
   if(await loadServerState()){ recalc(); await loadFx().then(fx=>{ if(fx){ M.usdcny={value:fx.usdcny,asOf:todayStr(),src:'open.er-api.com'}; recalc(); } }); return; }
   const mj=await loadMacroJson();
-  if(mj){ applyMacro(mj); M.generated=mj.generated_at; }
+  if(mj){ applyMacro(mj); M.generated=mj.generated_at; fillOvCrDefaults(true); }
   const fx=await loadFx();
   if(fx){ M.usdcny={value:fx.usdcny, asOf:todayStr(), src:'open.er-api.com'}; }
   const byApi = await loadQuoteApi();
@@ -715,6 +900,7 @@ function loadPasted(){
     const j=JSON.parse(document.getElementById('jsonPaste').value);
     if(!j.data) throw new Error('缺少 data 字段');
     applyMacro(j); statusFlags.macro=true;
+    fillOvCrDefaults(true);
     document.getElementById('pasteMsg').innerHTML='<span class="ok">已载入 ✓</span>';
     recalc();
   }catch(e){ document.getElementById('pasteMsg').textContent='解析失败：'+e.message; }
@@ -774,6 +960,10 @@ function copySummary(){
 function init(){
   document.getElementById('dt').value=todayStr();
   loadLocal();
+  fillOvCrDefaults();
+  // 海外/危机输入框变动时重算
+  ['in_oil','in_ai','in_hormuz','in_usd','in_job','in_path','in_win','in_china']
+    .forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',recalc);});
   recalc();
   renderHist();
   pullAll();
