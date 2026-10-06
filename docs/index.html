@@ -154,7 +154,7 @@
   <div class="bt">最终结论 · 当前操作建议</div>
   <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
   <div class="bl" id="actionList">
-    1.<span class="act-up">加大</span> 消费 / 红利 / 利率债 ▲<br>
+    1.<span class="act-hold">持有</span> 消费 / 红利（③建议弱化：估值不便宜，不追加大仓） · <span class="act-up">加大</span> 利率债 ▲<br>
     2.<span class="act-down">减少</span> 科技 / 地产 / 美元 ▼<br>
     3.<span class="act-hold">持有</span> 现金 + 现有组合 + 黄金 ●<br>
     4.做空仅小仓股指认沽对冲、不空原油 ｜<br>
@@ -166,6 +166,19 @@
   <div class="k">牛熊钟定位（趋势 × 估值）</div>
   <div class="quad" id="quad"></div>
   <div class="why sub" id="quadWhy" style="margin-top:8px"></div>
+</div>
+
+<div class="box" style="margin-top:12px">
+  <div class="k">😱 恐贪指数（0-100 · 反向读法：别人恐惧我贪婪）</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+    <div id="fgScore" style="font-size:30px;font-weight:700;min-width:58px;text-align:center">—</div>
+    <div style="flex:1">
+      <div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#27ae60,#f1c40f,#e74c3c);position:relative">
+        <i id="fgPin" style="position:absolute;top:-3px;width:4px;height:16px;background:#2c3e50;border-radius:2px;left:50%"></i>
+      </div>
+      <div class="why sub" id="fgWhy" style="margin-top:6px">等待数据…</div>
+    </div>
+  </div>
 </div>
 
 <!-- ===================== 一、赢家四阶段 ===================== -->
@@ -235,8 +248,8 @@
 <div style="overflow-x:auto"><table>
   <thead><tr><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
   <tbody>
-    <tr><td class="act-up">加大 ▲</td><td><b>必需消费</b>：主要消费ETF(159928)/必选消费(512600)</td><td>防御属性强、现金流稳</td><td>S-S稀缺+索洛确定性</td></tr>
-    <tr><td class="act-up">加大 ▲</td><td><b>高股息红利</b>：红利ETF(510880)/中证红利(515080)</td><td>底仓防御对冲波动</td><td>机构共识+用神水木</td></tr>
+    <tr><td class="act-hold">持有 ●</td><td><b>必需消费</b>：主要消费ETF(159928)/必选消费(512600)</td><td>防御属性强、现金流稳；估值不便宜，不加仓</td><td>S-S稀缺+索洛确定性</td></tr>
+    <tr><td class="act-hold">持有 ●<br><small style="color:var(--sub)">回调小仓左侧</small></td><td><b>高股息红利</b>：红利ETF(510880)/中证红利(515080)</td><td>底仓防御对冲波动；仅在显著回调时分批</td><td>机构共识+用神水木</td></tr>
     <tr><td class="act-up">加大 ▲</td><td><b>利率债/货基</b>：国债ETF(511010)/货币ETF(511880)</td><td>随时可动</td><td>S-S：流动性最稀缺=赢家</td></tr>
     <tr><td class="act-up">加大 ▲</td><td><b>黄金</b>：黄金ETF(518880)</td><td>逢回调小仓</td><td>中东+通胀避险</td></tr>
     <tr><td class="act-hold">持有 ●</td><td><b>现金/短债</b>：覆盖18–24个月开支</td><td>不动</td><td>命门：保本金第一</td></tr>
@@ -289,17 +302,21 @@
   <div class="contig" style="margin-top:10px"><div class="t">📊 仓位-温度一致性检验</div><div id="rv_consistency" class="rv"></div></div>
 </div>
 
-<div class="note">
+<details style="margin-top:12px">
+  <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:6px 0">📖 仓位算法 / 方法说明（点击展开，全文默认收起）</summary>
+<div class="note" style="margin-top:6px">
   <b>仓位算法（数学建模版 · 顶底/仓位/温度三表同步）：</b><br>
   ① 市场温度 = 趋势/估值/流动性/情绪 四维合成（A股各0.25，H股 0.2/0.2/0.3/0.3），是顶底判断主信号；海外风险+危机预警仅作「仓位叠加层」(核心仓位×1−风险/20)，不再污染顶底温度。<br>
   ② 四维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
   ③ 温度→基础仓位用 <b>tanh</b> 平滑：bp(t) = 5.5 − 4.2·tanh(0.38·(t−5))，t=0→9.5成，t=5→5.5成，t=10→1.5成。<br>
   ④ 【同步核心】<b>顶底概率进入仓位公式</b>：核心仓位 = tanh温度仓位 × 顶底联动系数(1±4%×底顶分差，范围0.6~1.4)。三大面板共用同一根信号，不再各算各的。<br>
-  ⑤ 【共振硬闸门】底≥7且顶≤3 → 仓位下限6成（底部允许左侧建仓，解除"趋势好才买"的悖论）；顶≥7且底≤3 → 仓位上限3成。风险叠加层与保守系数只在该区间内活动。<br>
+  ⑤ 【共振硬闸门】底≥7且顶≤3 → 仓位下限6.5成（月线空头时降至4.5成，只许左侧小仓）；顶≥7且底≤3 → 仓位上限2.5成。风险叠加层与保守系数只在该区间内活动。<br>
   ⑥ 最终 = 核心仓位 × 风险叠加(×1−风险/20) × 保守系数(默认0.85)。<br>
+  ⑦ 【本轮迭代】①月线方向过滤：月线向下（大级别空头）时底部闸门下限6.5→4.5成，不逆势重仓；②6历史极点相似度以0.20权重并入顶底概率（ERP高斯核σ=1.2+背离方向匹配）；⑧恐贪指数显性化（宽度30%+VIX25%+估值分位20%+5日动量15%+当日10%，反向读法）；⑨情绪维度当日涨跌降权0.7→0.25、5日动量0.45补位（防单日噪声让仓位跳变）。<br>
   <b>为何删除原"四道软约束"：</b>趋势/M1/信贷/共振已占温度四维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
   <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
 </div>
+</details>
 
 <div class="srcbox">
   <div class="dt1">macro.json 手动兜底（当页面读不到后端文件时粘贴）</div>
@@ -316,32 +333,37 @@
 
 // 内置基线：2026-09-28 实抓结果，仅在自动拉取失败时使用
 const BASELINE = {
-  pmi:{value:49.8,asOf:"2026-08-01",src:"基线(统计局)"},
+  // #3 BASELINE 同步（2026-10-06）：兜底值=当日线上真实值，macro.json 加载失败时回退显示不跳变
+  // baseline 标记的值不参与打分（isReal 排除），仅作展示锚点
+  pmi:{value:50.1,asOf:"2026-09-01",src:"基线(统计局)"},
   m1_yoy:{value:4.1,asOf:"2026-08-01",src:"基线(央行)"},
-  credit_yoy:{value:-20.9,asOf:"2026-08-01",src:"基线(央行累计同比)"},
+  credit_yoy:{value:8.18,asOf:"2026-04-01",src:"基线(央行·社融存量同比)"},
   lpr1y:{value:3.0,asOf:"2026-09-20",src:"基线(LPR)"},
-  cn10y:{value:1.679,asOf:"2026-09-28",src:"基线(中债)"},
-  us10y:{value:5.18,asOf:"2026-09-24",src:"基线(FRED)"},
-  hs300_pe:{value:14.28,asOf:"2026-09-28",src:"基线(中证)"},
-  erp:{value:5.324,asOf:"2026-09-28",src:"基线(计算)"},
-  margin_yi:{value:25995,asOf:"2026-09-24",src:"基线(交易所)"},
-  northbound:{value:0,asOf:"2026-09-28",src:"基线(港交所)"},
-  breadth_up:{value:50,asOf:"2026-09-28",src:"基线(占位)"},
-  ah_premium:{value:140,asOf:"2026-09-28",src:"基线(AH溢价)"},  // H 股独立估值锚用
-  amt_yi:{value:17028,asOf:"2026-09-28",src:"基线(两市)"},
+  cn10y:{value:1.6822,asOf:"2026-09-30",src:"基线(中债)"},
+  us10y:{value:5.31,asOf:"2026-10-05",src:"基线(FRED)"},
+  hs300_pe:{value:14.34,asOf:"2026-09-30",src:"基线(中证)"},
+  hs300_pe_pct:{value:82.5,asOf:"2026-09-03",src:"基线(中证·PE 10年分位)"},
+  hs300_pb_pct:{value:37.8,asOf:"2026-09-30",src:"基线(乐咕·PB 10年分位)"},
+  hsi_pe_pct:{value:50.6,asOf:"2026-10-05",src:"基线(恒生 10年分位代理)"},
+  erp:{value:5.291,asOf:"2026-09-30",src:"基线(计算)"},
+  margin_yi:{value:25485,asOf:"2026-09-30",src:"基线(交易所)"},
+  northbound:{value:0,asOf:"2026-10-06",src:"基线(港交所)"},
+  breadth_up:{value:46.4,asOf:"2026-09-30",src:"基线(乐咕乐股)"},
+  ah_premium:{value:140,asOf:"2026-10-06",src:"基线(AH溢价)"},  // H 股独立估值锚用
+  amt_yi:{value:17028,asOf:"2026-09-30",src:"基线(两市)"},
   // ===== 海外风险 + 危机预警（fetch_macro.py 自动抓取/推导）=====
-  oil_brent:{value:82.5,asOf:"2026-10-03",src:"基线(油价)"},
-  dxy:{value:102.3,asOf:"2026-10-03",src:"基线(美元指数)"},
-  us_unemploy:{value:4.2,asOf:"2026-09-01",src:"基线(BLS)"},
-  nasdaq_pct:{value:3.2,asOf:"2026-10-03",src:"基线(纳指20日)"},
-  re_yoy:{value:-1.2,asOf:"2025-12-01",src:"基线(国房景气指数)"},
-  vix:{value:22.0,asOf:"2026-10-03",src:"基线(CBOE VIX)"},
-  trade_balance:{value:980,asOf:"2025-08-01",src:"基线(贸易帐)"},
-  ai_bubble:{value:7.0,asOf:"2026-10-03",src:"推导(纳指+美债)"},
-  hormuz_risk:{value:4.7,asOf:"2026-10-03",src:"推导(油价)"},
-  paths_lit:{value:6.8,asOf:"2026-10-03",src:"推导(综合)"},
-  win_proximity:{value:4.0,asOf:"2026-10-06",src:"中性(已去日期硬算)"},
-  china_fragile:{value:6.8,asOf:"2025-12-01",src:"推导(景气指数)"},
+  oil_brent:{value:97.82,asOf:"2026-10-06",src:"基线(布伦特油价)"},
+  dxy:{value:101.87,asOf:"2026-10-06",src:"基线(美元指数)"},
+  us_unemploy:{value:4.2,asOf:"2026-09-01",src:"基线(BLS/FRED·最新官方)"},
+  nasdaq_pct:{value:3.66,asOf:"2026-10-05",src:"基线(纳指20日)"},
+  re_yoy:{value:-2.15,asOf:"2026-08-01",src:"基线(统计局·70城二手房同比)"},
+  vix:{value:21.67,asOf:"2026-10-03",src:"基线(CBOE VIX)"},
+  trade_balance:{value:982.4,asOf:"2025-08-07",src:"基线(贸易帐·源滞后仅展示)"},
+  ai_bubble:{value:7.1,asOf:"2026-10-05",src:"推导(纳指+美债)"},
+  hormuz_risk:{value:6.5,asOf:"2026-10-06",src:"推导(油价)"},
+  paths_lit:{value:6.2,asOf:"2026-10-06",src:"推导(综合)"},
+  win_proximity:{value:4.1,asOf:"2026-10-06",src:"推导(真实压力:油价+VIX+纳指+美债)"},
+  china_fragile:{value:8.2,asOf:"2026-08-01",src:"推导(70城二手房同比)"},
 };
 
 // 定性项（尽量由真实数据数学推导，可手动覆盖）
@@ -519,6 +541,7 @@ function applyMacro(j){
   put('pmi',d.pmi); put('m1_yoy',d.m1_yoy); put('credit_yoy',d.credit_yoy);
   put('lpr1y',d.lpr1y); put('cn10y',d.cn10y); put('us10y',d.us10y);
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
+  put('hs300_pe_pct',d.hs300_pe_pct); put('hs300_pb_pct',d.hs300_pb_pct); put('hsi_pe_pct',d.hsi_pe_pct);
   put('northbound',d.northbound);
   if(d.m1_yoy&&d.m1_yoy.extra) M.m2_yoy={value:d.m1_yoy.extra.m2_yoy, asOf:d.m1_yoy.asOf, src:d.m1_yoy.src};
   if(d.breadth_up) put('breadth_up',d.breadth_up);
@@ -530,6 +553,17 @@ function applyMacro(j){
   put('vix',d.vix); put('trade_balance',d.trade_balance);
   put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
   put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
+  // #1 stale 自动生效：前端兜底闸门——asOf 距今 >180 天强制 noData（旧缓存/旧兜底 macro.json 也无害）
+  const STALE_DAYS=180;
+  Object.keys(M).forEach(k=>{
+    const o=M[k];
+    if(o && !o.baseline && o.asOf && !o.noData && o.value!=null && typeof o.value==='number'){
+      const d=new Date(String(o.asOf).slice(0,10));
+      if(!isNaN(d) && (Date.now()-d.getTime())/86400000>STALE_DAYS){
+        o.noData=true; o.src=(o.src||'')+' · 过期已隔离(前端闸门)';
+      }
+    }
+  });
 }
 
 /* ---------- 4. 定性项持久化 ---------- */
@@ -711,10 +745,17 @@ function scoreEmo(){
     parts.push({s:s,w:1}); whys.push('VIX '+vix.toFixed(1)+'→z='+z.toFixed(2));
   }
   if(pct!=null&&!isNaN(pct)){
-    // 当日涨跌：每1%对应 z 变化 0.5；涨→高温
+    // #8 当日降权：0.7→0.25，防单日噪声让仓位跳变；缺口由5日动量补位
     const z = pct * 0.5;
     const s = 10 * sigmoid(z);
-    parts.push({s:clamp(s),w:0.7}); whys.push('当日 '+(pct>0?'+':'')+pct.toFixed(2)+'%→z='+z.toFixed(2));
+    parts.push({s:clamp(s),w:0.25}); whys.push('当日 '+(pct>0?'+':'')+pct.toFixed(2)+'%→z='+z.toFixed(2)+'(降权)');
+  }
+  const t5=(M.tech&&M.tech.chg_5d!=null)?Number(M.tech.chg_5d):null;
+  if(t5!=null&&!isNaN(t5)){
+    // 5日动量：μ=0, σ=3%；比单日涨跌更能代表短期情绪方向
+    const z = t5 / 3;
+    const s = 10 * sigmoid(z);
+    parts.push({s:clamp(s),w:0.45}); whys.push('5日动量 '+t5.toFixed(1)+'%→z='+z.toFixed(2));
   }
   if(nb!=null&&isReal('northbound')){
     // 北向净流入：μ=0, σ=40亿；流入→高温
@@ -826,9 +867,31 @@ function topBottomProb(ctx){
   const divSum = (ctx.mDiv||0) + (ctx.wDiv||0);
   const divB = clamp((divSum + 2)/4, 0, 1);
   const divT = clamp((-divSum + 2)/4, 0, 1);
-  const pB = 100 * sigmoid(2.6 * (1.1*valB + 0.5*brdB + 0.8*divB - 1.0));
-  const pT = 100 * sigmoid(2.6 * (1.1*valT + 0.5*brdT + 0.8*divT - 1.0));
+  // ② 6历史极点相似度(0-1, 权重0.20)：当前读数越像历史大顶/大底，概率向该侧温和抬升
+  const sim = poleSim(ctx);
+  const pB = 100 * sigmoid(2.6 * (1.1*valB + 0.5*brdB + 0.8*divB + 0.2*sim.B - 1.0));
+  const pT = 100 * sigmoid(2.6 * (1.1*valT + 0.5*brdT + 0.8*divT + 0.2*sim.T - 1.0));
   return {pBottom: Math.round(clamp(pB,0,99)), pTop: Math.round(clamp(pT,0,99))};
+}
+
+// ② 相似度：与6个历史极点(3顶3底)做高斯核相似(σ_erp=1.2)，取同侧最大值；背离方向不匹配则打折到0.3
+const POLES=[
+  {t:'T', erp:1.8}, {t:'T', erp:2.3}, {t:'T', erp:2.9},
+  {t:'B', erp:6.5}, {t:'B', erp:7.2}, {t:'B', erp:6.8},
+];
+function poleSim(ctx){
+  const erpRaw = ctx.erpRaw;
+  let B=0, T=0;
+  if(erpRaw!=null && !isNaN(erpRaw)){
+    POLES.forEach(p=>{
+      const g = Math.exp(-0.5 * Math.pow((erpRaw - p.erp)/1.2, 2));      // ERP 高斯核
+      const dirOk = (p.t==='B') ? (ctx.mDiv>0?1:0.3) : (ctx.mDiv<0?1:0.3); // 背离方向须匹配
+      const s = g * dirOk;
+      if(p.t==='B' && s>B) B=s;
+      if(p.t==='T' && s>T) T=s;
+    });
+  }
+  return {B:B, T:T};
 }
 
 // 顶/底概率(%) → 1-10 信号强度分（便于读数）
@@ -862,7 +925,7 @@ function computeAll(){
   const bu=get('breadth_up');
   const brdT = (isReal('breadth_up')&&bu>65)? sigmoid((bu-65)/10) : 0;   // 广度亢奋→顶
   const brdB = (isReal('breadth_up')&&bu<35)? sigmoid((35-bu)/10) : 0;   // 广度恐慌→底
-  const tb = topBottomProb({erpPct:erpP, pePct:peP, mDiv:tr.div.mDiv, wDiv:tr.div.wDiv, brdB, brdT, mode});
+  const tb = topBottomProb({erpPct:erpP, pePct:peP, mDiv:tr.div.mDiv, wDiv:tr.div.wDiv, brdB, brdT, mode, erpRaw:(erp!=null?erp:null)});
   // 主温度 = 市场温度 + 定性微调（定性项降权，仅微调，不决定顶底）
   const qf=qualFinal();
   const qAdj = ((qf['地缘波动']-5)*0.04 + (qf['监管打压']-5)*0.03 + (qf['信用风险']-5)*0.04 - (qf['政策力度']-5)*0.04);
@@ -877,15 +940,19 @@ function computeAll(){
   // 共振硬闸门：极端信号时，温度/风险/保守层不得违背顶底方向
   const strongBottom = (tb.pBottom >= 70 && tb.pTop <= 30);
   const strongTop    = (tb.pTop    >= 70 && tb.pBottom <= 30);
+  // ① 月线方向过滤器：月线向下（大级别空头）时，底部闸门下限 6.5→4.5 成——只许左侧小仓，不逆势重仓
+  const mT=(M.tech||{});
+  const mUp = (mT.m_above_ma!=null)? !!mT.m_above_ma : (mT.m_ma_cross!=null? !!mT.m_ma_cross : null);
+  const bottomFloor = (mUp===false)? 4.5 : 6.5;
   let gateTxt = '';
-  if(strongBottom){ core = Math.max(core, 6.5); gateTxt = '底部共振闸门：仓位下限6.5成'; }
+  if(strongBottom){ core = Math.max(core, bottomFloor); gateTxt = '底部共振闸门：仓位下限'+bottomFloor+'成'+(mUp===false?'（月线空头→仅左侧小仓）':''); }
   if(strongTop){    core = Math.min(core, 2.5); gateTxt = '顶部共振闸门：仓位上限2.5成'; }
   const overlayScale = clamp(1 - riskOverlay/20, 0.5, 1);   // 海外+危机叠加层，0.5~1.0
   const konserv = document.getElementById('baziSwitch').checked ? 0.85 : 1;
   // 风险叠加层与保守系数只在闸门区间内活动（乘法后再兜底一次）
   let final = clamp(core * overlayScale * konserv, 1, 9.5);
   let gate2 = '';
-  if(strongBottom && final < 6.0){ final = 6.0; gate2 = ' · 闸门保底6成'; }
+  if(strongBottom && final < bottomFloor-0.5){ final = bottomFloor-0.5; gate2 = ' · 闸门保底'+(bottomFloor-0.5).toFixed(1)+'成'; }
   if(strongTop    && final > 3.0){ final = 3.0; gate2 = ' · 闸门封顶3成'; }
   // 展示链路（同一根信号，不再互相独立）
   const cs=[
@@ -898,7 +965,7 @@ function computeAll(){
   const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p = sc / EIGHT.length;
   return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
-          probMult,sb,st,gateTxt,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
+          probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
 }
 /* =========================================================
    渲染层
@@ -930,8 +997,14 @@ function renderQuad(r){
     {t:'牛初/牛中',  d:'趋势热 + 估值冷<br><span style="color:var(--green)">持有为主</span>'},
     {t:'牛顶/过热',  d:'趋势热 + 估值热<br><span style="color:var(--red)">逐步减仓</span>'},
   ];
-  document.getElementById('quad').innerHTML=items.map((it,i)=>
-    '<div class="q'+(i===idx?' on':'')+'"><b>'+it.t+'</b><br>'+it.d+'</div>').join('');
+  // ④ 只显当前落点（大卡），其余三种状态折叠收起，一眼聚焦
+  const cur=items[idx];
+  const rest=items.filter((_,i)=>i!==idx).map(it=>
+    '<div class="q" style="opacity:.55"><b>'+it.t+'</b><br>'+it.d+'</div>').join('');
+  document.getElementById('quad').innerHTML=
+    '<div class="q on" style="grid-column:1/-1;font-size:15px"><b>'+cur.t+'</b><br>'+cur.d+'</div>'+
+    '<details style="grid-column:1/-1"><summary style="cursor:pointer;font-size:11.5px;color:var(--sub);margin-top:4px">其余三种状态（点击展开）</summary>'+
+    '<div class="quad" style="margin-top:6px">'+rest+'</div></details>';
   const pct=Q&&Q.ok?Q.hs300.pct:null;
   document.getElementById('quadWhy').innerHTML=
     '趋势 '+r.tr.v.toFixed(1)+'（'+(coldTr?'冷':'热')+'） × 估值 '+r.va.v.toFixed(1)+'（'+(coldVa?'冷':'贵')+'）'+
@@ -1138,6 +1211,45 @@ function renderActionList(r){
   if(el) el.innerHTML=html;
 }
 
+// #7 显性恐贪指数（0-100）：宽度+VIX+当日+5日动量+估值分位 加权合成，反向读法
+function fearGreed(){
+  const parts=[];
+  const bu=isReal('breadth_up')?get('breadth_up'):null;
+  if(bu!=null&&!isNaN(bu)) parts.push({v:clamp((bu-20)/60,0,1)*100, w:0.30, why:'宽度'+bu.toFixed(0)+'%'});
+  const vix=(Q&&Q.ok&&!isNaN(Q.vix.price))?Q.vix.price:(isReal('vix')?get('vix'):null);
+  if(vix!=null&&!isNaN(vix)&&vix>0) parts.push({v:clamp((40-vix)/25,0,1)*100, w:0.25, why:'VIX'+vix.toFixed(1)});
+  const peP=isReal('hs300_pe_pct')?Number(M.hs300_pe_pct.value):null;
+  if(peP!=null&&!isNaN(peP)) parts.push({v:clamp(peP,0,100), w:0.20, why:'估值分位'+peP.toFixed(0)+'%'});
+  const t5=(M.tech&&M.tech.chg_5d!=null)?Number(M.tech.chg_5d):null;
+  if(t5!=null&&!isNaN(t5)) parts.push({v:clamp(50+t5*2.5,0,100), w:0.15, why:'5日动量'+t5.toFixed(1)+'%'});
+  const pct=(Q&&Q.ok)?(mode==='A'?Q.hs300.pct:Q.hsi.pct):null;
+  if(pct!=null&&!isNaN(pct)) parts.push({v:clamp(50+pct*6.25,0,100), w:0.10, why:'当日'+pct.toFixed(1)+'%'});
+  if(!parts.length) return null;
+  const sw=parts.reduce((a,b)=>a+b.w,0);
+  return {v:Math.round(parts.reduce((a,b)=>a+b.v*b.w,0)/sw), parts:parts.map(p=>p.why)};
+}
+function renderFG(){
+  const fg=fearGreed(), box=document.getElementById('fgScore');
+  if(!box) return;
+  if(fg==null){
+    box.textContent='—'; box.style.color='var(--sub)';
+    document.getElementById('fgPin').style.left='50%';
+    document.getElementById('fgWhy').innerHTML='恐贪数据不足（需宽度/VIX/估值分位至少一项）';
+    return;
+  }
+  const v=fg.v;
+  box.textContent=v;
+  box.style.color = v<20?'var(--green)':(v<40?'#27ae60':(v<60?'var(--yellow)':(v<80?'#e67e22':'var(--red)')));
+  document.getElementById('fgPin').style.left='calc('+v+'% - 2px)';
+  const band = v<20? '<b style="color:var(--green)">极度恐惧 · 机会区（分批建仓）</b>'
+    : (v<40? '恐惧 · 左侧试探区'
+    : (v<60? '中性 · 按仓位纪律执行'
+    : (v<80? '<b style="color:#e67e22">贪婪 · 收紧仓位</b>'
+    : '<b style="color:var(--red)">极度贪婪 · 风险区（逐步减仓）</b>')));
+  document.getElementById('fgWhy').innerHTML='当前 <b>'+band+'</b> ｜ 构成：'+fg.parts.join(' + ')+
+    '<br>反向读法：众人恐惧=便宜筹码出现，众人贪婪=风险累积。极值区才是顶底信号，中间区跟仓位走。';
+}
+
 function recalc(){
   const r=computeAll();
   if(SRV && SRV[mode]){                       // 服务端算好的：直接采用，保证前后端一致
@@ -1149,7 +1261,7 @@ function recalc(){
     r.quad={idx:d.quad.idx,name:d.quad.name};
     EIGHT.forEach(e=>{ if(d.eight[e.k]!=null) eightState[e.k]=d.eight[e.k]; });
   }
-  renderDims(r); renderQuad(r); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
+  renderDims(r); renderQuad(r); renderFG(); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
   const tag=tempTagOf(r.tempAdj);
   document.getElementById('tempVal').textContent=r.tempAdj.toFixed(2);
   document.getElementById('tempPin').style.left=(r.tempAdj*10)+'%';
@@ -1168,7 +1280,11 @@ function recalc(){
   document.getElementById('scTop').textContent=probScore(r.tb.pTop);
   const pr=probRead(r.tb.pBottom, r.tb.pTop);
   const neutralNote = (Math.abs(r.tb.pBottom-50)<6 && r.tb.pTop<25)? ' ｜ <span style="color:var(--sub)">注：50%为logistic中性点(信号未共振)，≠五五开</span>' : '';
-  document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt+neutralNote;
+  const mDirTxt = (r.mUp===true)? '<span style="color:var(--red)">月线多头·右侧持有为主</span>'
+               : (r.mUp===false)? '<span style="color:var(--green)">月线空头·只许左侧小仓(闸门下限'+r.bottomFloor+'成)</span>'
+               : '<span style="color:var(--sub)">月线方向未知(tech缺失·不启用过滤器)</span>';
+  document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt+neutralNote+
+    '<br>①月线方向过滤：'+mDirTxt;
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支
@@ -1287,7 +1403,7 @@ function renderBacktest(){
   BACKTEST.forEach(b=>{
     const erpP=erpPercentile(b.erp), peP=valPctFromPe(b.pe);
     const mDiv=b.divB>0?1:(b.divT>0?-1:0), wDiv=mDiv;
-    const r=topBottomProb({erpPct:erpP, pePct:peP, mDiv, wDiv, brdB:b.divB, brdT:b.divT, mode:'A'});
+    const r=topBottomProb({erpPct:erpP, pePct:peP, mDiv, wDiv, brdB:b.divB, brdT:b.divT, mode:'A', erpRaw:b.erp});
     const isTop=b.date.includes('顶'), isBot=b.date.includes('底');
     let concl;
     if(isTop){ concl = r.pTop>60?'✅ 顶确认':'❌ 漏顶('+r.pTop+'%)'; if(r.pTop<=60) failTop++; }
