@@ -138,7 +138,7 @@
 <div class="banner">
   <div class="bt">最终结论 · 当前操作建议</div>
   <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
-  <div class="bl">
+  <div class="bl" id="actionList">
     1.<span class="act-up">加大</span> 消费 / 红利 / 利率债 ▲<br>
     2.<span class="act-down">减少</span> 科技 / 地产 / 美元 ▼<br>
     3.<span class="act-hold">持有</span> 现金 + 现有组合 + 黄金 ●<br>
@@ -504,6 +504,21 @@ function saveLocal(){
    ========================================================= */
 function lerp(x,x1,y1,x2,y2){ if(x2===x1) return y1; const t=(x-x1)/(x2-x1); return y1+(y2-y1)*Math.max(0,Math.min(1,t)); }
 
+// 陈旧数据降权：距今天数 >5 天开始衰减，>30 天降到 0.3
+function ageDays(key){
+  const asOf = M[key]?.asOf;
+  if(!asOf) return 0;
+  const d = new Date(String(asOf).slice(0,10));
+  if(isNaN(d)) return 0;
+  return Math.max(0, Math.floor((Date.now()-d.getTime())/86400000));
+}
+function decayW(key, fresh=5, old=30, minW=0.3){
+  const age = ageDays(key);
+  if(age <= fresh) return 1;
+  if(age >= old) return minW;
+  return minW + (1-minW) * (old-age)/(old-fresh);
+}
+
 function scoreTrend(){
   const t=M.tech||{};
   let s, why=[];
@@ -545,15 +560,16 @@ function scoreLiq(){
         mg=M.margin_yi&&M.margin_yi.extra?M.margin_yi.extra['周变化%']:null,
         amt=(Q&&Q.ok)?Q.amtTotalYi:get('amt_yi');
   if(isReal('m1_yoy')){ let s; if(m1>=8)s=8; else if(m1>=6)s=lerp(m1,6,6,8,8); else if(m1>=4)s=lerp(m1,4,4.5,6,6); else if(m1>=3)s=lerp(m1,3,3.5,4,4.5); else s=2.5;
-    parts.push({s:s,w:1.2}); whys.push('M1 '+m1+'%'); }
+    parts.push({s:s,w:1.2*decayW('m1_yoy')}); whys.push('M1 '+m1+'%'); }
   if(isReal('credit_yoy')){ let s; if(cr<-20)s=1; else if(cr<0)s=lerp(cr,-20,1,0,3); else if(cr<=20)s=lerp(cr,0,3,20,5); else s=7;
-    parts.push({s:s,w:1}); whys.push('信贷同比 '+cr.toFixed(1)+'%'); }
+    parts.push({s:s,w:1*decayW('credit_yoy')}); whys.push('信贷同比 '+cr.toFixed(1)+'%'); }
   if(isReal('cn10y')){ let s; if(cn<1.5)s=2; else if(cn<2.5)s=lerp(cn,1.5,2,2.5,4); else if(cn<3.5)s=lerp(cn,2.5,4,3.5,6); else s=8;
-    parts.push({s:s,w:0.8}); whys.push('中债10Y '+cn+'%'); }
+    parts.push({s:s,w:0.8*decayW('cn10y')}); whys.push('中债10Y '+cn+'%'); }
   if(mg!=null&&isReal('margin_yi')){ let s; if(mg>3)s=8; else if(mg>1)s=lerp(mg,1,6.5,3,8); else if(mg>=-1)s=lerp(mg,-1,5,1,6.5); else s=3.5;
-    parts.push({s:s,w:0.8}); whys.push('两融周变化 '+mg.toFixed(2)+'%'); }
+    parts.push({s:s,w:0.8*decayW('margin_yi')}); whys.push('两融周变化 '+mg.toFixed(2)+'%'); }
   if(amt!=null){ let s; if(amt>=30000)s=8; else if(amt>=20000)s=lerp(amt,20000,6.5,30000,8); else if(amt>=12000)s=lerp(amt,12000,5,20000,6.5); else if(amt>=8000)s=lerp(amt,8000,3.5,12000,5); else s=2.5;
-    parts.push({s:s,w:1.2}); whys.push('两市成交额 '+(amt/10000).toFixed(2)+'万亿'); }
+    const amtKey=(Q&&Q.ok)?null:'amt_yi';
+    parts.push({s:s,w:1.2*(amtKey?decayW(amtKey):1)}); whys.push('两市成交额 '+(amt/10000).toFixed(2)+'万亿'); }
   if(!parts.length) return {v:5,why:'流动性数据缺失→中性'};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
   return {v:clamp(sv/sw), why:whys.join(' · ')};
@@ -565,12 +581,12 @@ function scoreEmo(){
         pct=(Q&&Q.ok)?(mode==='A'?Q.hs300.pct:Q.hsi.pct):null,
         nb=get('northbound');
   if(isReal('breadth_up')){ let s; if(bu>70)s=8; else if(bu>55)s=lerp(bu,55,6.5,70,8); else if(bu>=45)s=lerp(bu,45,5,55,6.5); else if(bu>=30)s=lerp(bu,30,3.5,45,5); else s=2;
-    parts.push({s:s,w:1.3}); whys.push('上涨家数占比 '+bu.toFixed(0)+'%'); }
+    parts.push({s:s,w:1.3*decayW('breadth_up')}); whys.push('上涨家数占比 '+bu.toFixed(0)+'%'); }
   if(vix!=null&&!isNaN(vix)&&vix>0){ let s; if(vix<15)s=8; else if(vix<20)s=lerp(vix,15,8,20,6.5); else if(vix<25)s=lerp(vix,20,6.5,25,5); else if(vix<30)s=lerp(vix,25,5,30,3.5); else s=2;
     parts.push({s:s,w:1}); whys.push('VIX '+vix.toFixed(1)); }
   if(pct!=null&&!isNaN(pct)){ let s=5-pct*1.5; parts.push({s:clamp(s),w:0.7}); whys.push('当日 '+(pct>0?'+':'')+pct.toFixed(2)+'%'); }
   if(nb!=null&&isReal('northbound')){ let s; if(nb>80)s=8; else if(nb>20)s=lerp(nb,20,6.5,80,8); else if(nb>-20)s=lerp(nb,-20,5,20,6.5); else s=3.5;
-    parts.push({s:s,w:0.6}); whys.push('北向 '+nb.toFixed(0)+'亿'); }
+    parts.push({s:s,w:0.6*decayW('northbound')}); whys.push('北向 '+nb.toFixed(0)+'亿'); }
   if(!parts.length) return {v:5,why:'情绪数据缺失→中性'};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
   return {v:clamp(sv/sw), why:whys.join(' · ')};
@@ -834,6 +850,39 @@ function renderOvCr(r){
   setBar('bar_path',c.pa);setBar('bar_win',c.wn);setBar('bar_china',c.cn);
   document.getElementById('out_crisis').innerHTML='→ 危机预警分 <b>'+r.cr.toFixed(1)+'</b>（四路径×0.35 + 高危窗×0.35 + 脆弱点×0.30）';
 }
+
+// 根据温度区间+约束类型动态生成买卖建议
+function renderActionList(r){
+  const t=r.tempAdj, tight=r.tight||[];
+  const up='<span class="act-up">加大</span>', down='<span class="act-down">减少</span>', hold='<span class="act-hold">持有</span>';
+  let add=[], cut=[], keep=[], extra='';
+
+  if(t>=7){ // 热：进攻
+    add=['科技/成长ETF','周期/资源','券商']; cut=['纯债/货基','高股息(过热时)']; keep=['核心宽基(沪深300/恒生)'];
+    extra='4.趋势向上可适度进攻，但设止损 ｜ 5.<b>原则：分批加仓 · 不追高 · 不满仓</b>';
+  } else if(t>=5){ // 偏热：谨慎进攻
+    add=['消费/红利','沪深300ETF','优质成长']; cut=['高杠杆地产','纯题材股']; keep=['现有组合+部分现金'];
+    extra='4.等待回踩再加仓 ｜ 5.<b>原则：精选个股 · 控制仓位 · 不追涨</b>';
+  } else if(t>=4){ // 中性
+    add=['宽基ETF(510300)','红利ETF','利率债']; cut=['高估值科技','高负债地产']; keep=['现金+黄金对冲'];
+    extra='4.均衡配置不加杠杆 ｜ 5.<b>原则：等信号 · 不赌方向 · 保持流动性</b>';
+  } else if(t>=3){ // 偏冷：防御
+    add=['消费/红利','利率债/货基','黄金']; cut=['科技/成长','地产','美元资产']; keep=['现金+现有组合'];
+    extra='4.做空仅小仓股指认沽对冲、不空原油 ｜ 5.<b>三不原则：不重仓 · 不抄底 · 不加杠杆</b>';
+  } else { // 冷：极度防御
+    add=['货币基金','短期国债','黄金']; cut=['一切权益类','大宗商品']; keep=['现金为王'];
+    extra='4.不做空不抄底，等右侧信号 ｜ 5.<b>极端防御：保本金 · 等崩盘 · 2028再说</b>';
+  }
+  // 约束叠加修正
+  if(tight.includes('海外约束')) add.push('黄金(对冲地缘)'), cut.push('美元/原油相关');
+  if(tight.includes('信用约束')) add.push('高等级信用债'), cut.push('低评级债/杠杆品种');
+  if(tight.includes('趋势约束')) add.unshift('红利/防御'), cut.push('高Beta成长');
+
+  const html = `1.${up} ${add.join(' / ')} ▲<br>2.${down} ${cut.join(' / ')} ▼<br>3.${hold} ${keep.join(' + ')} ●<br>${extra}`;
+  const el=document.getElementById('actionList');
+  if(el) el.innerHTML=html;
+}
+
 function recalc(){
   const r=computeAll();
   if(SRV && SRV[mode]){                       // 服务端算好的：直接采用，保证前后端一致
@@ -862,6 +911,7 @@ function recalc(){
   document.getElementById('bannerPos').textContent=r.final.toFixed(1)+'成';
   document.getElementById('bannerBand').textContent=tag.txt;
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
+  renderActionList(r);
   document.getElementById('cg_def').className='contig'+(r.tempAdj>=6?' on':' off');
   document.getElementById('cg_neu').className='contig'+((r.tempAdj>=4&&r.tempAdj<6)?' on':' off');
   document.getElementById('cg_atk').className='contig'+(r.tempAdj<4?' on':' off');
@@ -967,7 +1017,31 @@ function init(){
     .forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',recalc);});
   recalc();
   renderHist();
-  pullAll();
+  pullAll().then(startAutoRefresh);
+}
+
+// 盘中每5分钟自动刷新实时行情（不重拉宏观，宏观由GitHub Actions每日更新）
+function startAutoRefresh(){
+  const isMarketHours=()=>{
+    const now=new Date();
+    const h=now.getHours(), m=now.getMinutes(), t=h*60+m;
+    const day=now.getDay();
+    if(day===0||day===6) return false; // 周末
+    // A股 9:30-11:30, 13:00-15:00；港股额外覆盖 9:30-12:00, 13:00-16:00
+    return (t>=570&&t<=690)||(t>=780&&t<=900)||(mode==='H'&&t>=900&&t<=960);
+  };
+  setInterval(async()=>{
+    if(!isMarketHours()) return;
+    const badge=document.getElementById('srcBadge');
+    if(badge) badge.innerHTML='⏳ 刷新行情…';
+    const byApi=await loadQuoteApi();
+    if(byApi){ recalc(); if(badge) badge.innerHTML='✓ 行情已刷新 '+new Date().toLocaleTimeString('zh-CN'); return; }
+    loadTencent(ok=>{
+      if(ok){ const q=parseTencent(); if(q.ok){ Q=q; M.amt_yi={value:q.amtTotalYi,asOf:(q.raw.quoteTime||'').slice(0,10)||todayStr(),src:'腾讯实时'}; } }
+      recalc();
+      if(badge) badge.innerHTML=(ok?'✓':'✗')+' 行情刷新 '+new Date().toLocaleTimeString('zh-CN');
+    });
+  }, 5*60*1000);
 }
 init();
 </script>
