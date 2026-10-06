@@ -230,21 +230,16 @@ def fetch_hsi_pe_pct():
             "src": "恒生收盘10年分位(PE代理)"}
 
 def _fetch_ah_premium_index():
-    """兜底源：恒生AH溢价指数(HSAHP)，点位 X = A比H贵 (X-100)%。直连东财kline API。"""
-    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"}
-    for secid in ("100.HSAHP", "100.AHPREMIUM"):
-        for attempt in range(3):
-            try:
-                url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
-                params = {"secid": secid, "fields1": "f1,f2", "fields2": "f51,f53",
-                          "klt": 101, "fqt": 0, "end": "20500101", "lmt": 3}
-                r = requests.get(url, params=params, headers=headers, timeout=20)
-                d = r.json()
-                if d.get("data") and d["data"].get("klines"):
-                    lvl = float(d["data"]["klines"][-1].split(",")[1])
-                    return lvl - 100.0   # 溢价%
-            except Exception:
-                time.sleep(5); continue
+    """兜底源：恒生AH溢价指数(HSAHP)，点位 X = A比H贵 (X-100)%。
+    用 akshare 的港股指数日线（内部走东财 kline 接口，与比价板 clist 不同路径）。"""
+    for attempt in range(3):
+        try:
+            df = ak.stock_hk_index_daily_em(symbol="HSAHP").dropna()
+            if len(df) and "close" in df.columns:
+                lvl = float(df["close"].iloc[-1])
+                return lvl - 100.0   # 溢价%
+        except Exception:
+            time.sleep(6); continue
     return None
 
 def fetch_ah_premium():
