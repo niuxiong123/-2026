@@ -48,6 +48,10 @@ RANGES = {
     "hs300_pe_pct": (0, 100), "hs300_pb_pct": (0, 100),
     "hsi_pe_pct": (0, 100), "ah_premium": (-30, 150),
 }
+# 过期硬失效闸门：asOf 距今超过该天数 → 标 noData（不参与打分，彻底删除「过期数据仍参与打分」）。
+# 月度宏观源（尤其社融）在 akshare 有数月的自然滞后，故对核心信用字段予以豁免，避免误杀。
+AGE_GATE_DAYS = 180
+AGE_EXEMPT = {"credit_yoy"}
 def _d(s):
     for f in ("%Y年%m月份", "%Y-%m-%d", "%Y/%m/%d", "%Y%m%d"):
         try:
@@ -55,6 +59,16 @@ def _d(s):
         except ValueError:
             continue
     return None
+def clamp01(x):
+    return max(0.0, min(1.0, x))
+def _age_days(asOf):
+    """asOf 距今天数；无法解析返回 None（不强制闸门）"""
+    if not asOf:
+        return None
+    d = _d(asOf)
+    if d is None:
+        return None
+    return (dt.date.today() - d).days
 def _ak():
     try:
         import akshare as ak
@@ -74,27 +88,40 @@ def fetch_m1():
     return {"value": float(r["货币(M1)-同比增长"]), "asOf": _d(r["月份"]).isoformat(),
             "src": "央行/东财", "extra": {"m2_yoy": float(r["货币和准货币(M2)-同比增长"])}}
 def fetch_credit():
-    """社融存量同比（%）—— 信贷/信用扩张代理。
-    权威口径：取央行《社会融资规模增量》官方数据，对月度增量做滚动12月求和，
-    再与上年同期滚动和同比，即标准「社融存量同比」推算值（平滑单月异常）。
-    注意：原 macro_china_new_financial_credit 的「累计-同比增长」=-20.9% 实为
-    「新增信贷累计值同比」，并非市场习惯的社融增速，已弃用。"""
+    """社融存量同比（%）—— 央行官方口径，信用扩张最权威增速（P1-4 修复）。
+    央行公布「社会融资规模存量」绝对额(万亿元)按月增长，存量同比 = 当年增量 / 上年同期存量。
+    方法：以央行 2024-12 社融存量(408万亿)为锚，按月累加「社会融资规模增量」(单位亿元→÷1e4成万亿)
+    构造各月存量序列，再算 存量同比 = 近12月增量 / 上年同期存量。与央行公布的「社融存量同比」(≈8%)一致。
+    注：原滚动12月增量同比(-3.21%)是「流量同比」而非「存量同比」，口径错误，已弃用。"""
     df = ak.macro_china_shrzgm()
     df["月份"] = pd.to_datetime(df["月份"], format="%Y%m", errors="coerce")
     df = df.dropna(subset=["月份"]).sort_values("月份")
     if not len(df):
         raise ValueError("社融数据为空")
     s = pd.Series(pd.to_numeric(df["社会融资规模增量"], errors="coerce").values, index=df["月份"])
-    s = s.sort_index().dropna()
-    roll = s.rolling(12).sum()
-    yoy = (roll / roll.shift(12) - 1) * 100
-    yoy = yoy.dropna()
-    if not len(yoy):
-        raise ValueError("社融存量同比推算失败（样本不足12月）")
-    last_date = yoy.index[-1]
-    return {"value": round(float(yoy.iloc[-1]), 2), "asOf": last_date.strftime("%Y-%m-%d"),
-            "src": "央行/东财·社融增量滚动12月存量同比",
-            "extra": {"近12月增量万亿": round(float(roll.iloc[-1]) / 1e4, 2)}}
+    s = s.sort_index().dropna() / 1e4   # 亿元 → 万亿
+    # 锚：央行 2024-12 社融存量(万亿元)
+    ANCHOR = 408.0
+    anchor_month = pd.Timestamp("2024-12-01")
+    cum = 0.0
+    stock = {}
+    for m in s.index:
+        if m <= anchor_month:
+            continue
+        cum += float(s.loc[m])
+        stock[m] = ANCHOR + cum
+    if not stock:
+        raise ValueError("社融存量推算样本不足(需晚于2024-12)")
+    last_m = max(stock)
+    window = s.loc[(s.index > last_m - pd.DateOffset(months=12)) & (s.index <= last_m)]
+    yoy12 = float(window.sum())                       # 近12月增量(万亿)
+    prev_stock = stock[last_m] - yoy12                # 上年同期存量(万亿)
+    if prev_stock <= 0:
+        raise ValueError("社融存量同比推算失败(存量非正)")
+    val = yoy12 / prev_stock * 100
+    return {"value": round(val, 2), "asOf": last_m.strftime("%Y-%m-%d"),
+            "src": "央行·社融存量同比(锚408万亿+月度增量)",
+            "extra": {"近12月增量万亿": round(yoy12, 2), "存量万亿": round(stock[last_m], 1)}}
 def fetch_lpr():
     r = ak.macro_china_lpr().iloc[-1]
     return {"value": float(r["LPR1Y"]), "asOf": str(r["TRADE_DATE"]),
@@ -221,19 +248,28 @@ def fetch_hs300_pe_pct():
             "src": "中证·滚动PE(历史+当前拼接)10年分位"}
 
 def fetch_hs300_pb_pct():
-    """沪深300 PB 近10年分位无稳定直取接口，用 PE 分位作估值代理（标注）"""
-    df = _hs300_hist()
-    if len(df) < 60:
-        raise ValueError("估值历史过短")
-    series = df["滚动市盈率"].astype(float).tolist()
-    try:
-        cur = ak.stock_zh_index_value_csindex(symbol="000300").dropna(subset=["市盈率1"])
-        series.append(float(cur["市盈率1"].iloc[-1]))
-    except Exception:
-        pass
-    pct = float(pd.Series(series).rank(pct=True, ascending=True).iloc[-1]) * 100
-    return {"value": round(pct, 1), "asOf": str(df["日期"].iloc[0])[:10],
-            "src": "滚动PE分位(作PB代理)"}
+    """沪深300 PB 近10年历史分位(0-100,越高越贵)（P0-2 修复）。
+    权威源：乐咕 stock_index_pb_lg 提供指数 PB 长序列，直接算分位；
+    彻底删除旧版「用 PE 分位冒充 PB 分位」的造假做法。
+    沙箱走代理不可达→优雅失败(noData)，由 Actions 每日任务(直连乐咕)补齐。"""
+    df = ak.stock_index_pb_lg(symbol="沪深300").dropna()
+    if df.empty:
+        raise ValueError("PB序列为空")
+    # 稳健定位 PB 数值列与日期列（不同 akshare 版本列名可能不同）
+    pb_col = next((c for c in df.columns if "pb" in str(c).lower()), None)
+    if pb_col is None:
+        num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+        pb_col = num[-1] if num else None
+    date_col = next((c for c in df.columns if "date" in str(c).lower() or "日期" in str(c)), None)
+    if pb_col is None:
+        raise ValueError("PB列定位失败")
+    s = pd.to_numeric(df[pb_col], errors="coerce").dropna()
+    s = s[s > 0]
+    if len(s) < 60:
+        raise ValueError("PB历史过短(%d行)" % len(s))
+    pct = float(pd.Series(s.tolist()).rank(pct=True, ascending=True).iloc[-1]) * 100
+    asof = str(df.iloc[-1][date_col])[:10] if date_col else str(dt.date.today())
+    return {"value": round(pct, 1), "asOf": asof, "src": "乐咕·沪深300 PB(10年分位)"}
 
 def fetch_hsi_pe_pct():
     """恒生指数 PE 历史不可直接取，用收盘价格10年分位近似估值分位（H股锚，标注为代理）"""
@@ -325,24 +361,23 @@ def fetch_dxy():
 
 def fetch_us_unemploy():
     """美国失业率（%）—— 就业稳健度，反向指标。
-    官方源：FRED(UNRATE, BLS 官方数据)，公开 CSV 无需密钥，实时更新且无东财接口滞后问题。
-    FRED 不可达时回退 akshare(东财)接口（可能滞后，已标注）。"""
-    import csv, io, urllib.request
-    from datetime import datetime
+    官方源：FRED(UNRATE, BLS 官方)，公开 CSV 免密钥；用 requests 多次重试增强 Actions 环境健壮性。
+    FRED 不可达时回退 akshare(东财)；回退值通常滞后，由 sanity() 过期闸门隔离(noData)。"""
     url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            text = resp.read().decode("utf-8")
-        rows = list(csv.reader(text.strip().splitlines()))
-        data = [r for r in rows[1:] if len(r) >= 2 and r[1].strip() not in ("", ".", "ND")]
-        if data:
-            last = data[-1]
-            d = datetime.strptime(last[0], "%Y-%m-%d")
-            return {"value": round(float(last[1]), 1), "asOf": d.strftime("%Y-%m-%d"), "src": "FRED/BLS·UNRATE"}
-    except Exception as e:
-        log("失业率 FRED 失败，回退东财:", e)
-    # 兜底：东财宏观经济接口
+    for attempt in range(3):
+        try:
+            r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+            r.raise_for_status()
+            rows = [ln.split(",") for ln in r.text.strip().splitlines()]
+            data = [x for x in rows[1:] if len(x) >= 2 and x[1].strip() not in ("", ".", "ND")]
+            if data:
+                last = data[-1]
+                d = dt.datetime.strptime(last[0], "%Y-%m-%d").date()
+                return {"value": round(float(last[1]), 1), "asOf": d.strftime("%Y-%m-%d"), "src": "FRED/BLS·UNRATE"}
+        except Exception as e:
+            log("失业率 FRED 失败(第%d次): %s" % (attempt + 1, e))
+            time.sleep(3)
+    # 兜底：东财宏观经济接口（可能滞后，sanity 会标 noData）
     df = ak.macro_usa_unemployment_rate()
     val_col = "今值" if "今值" in df.columns else "失业率"
     df = df.dropna(subset=[val_col])
@@ -361,12 +396,19 @@ def fetch_nasdaq_pct():
             "src": "新浪·纳斯达克", "extra": {"nasdaq_close": last}}
 
 def fetch_re_yoy():
-    """房地产景气指数近1年涨跌幅（%）—— 中国脆弱点核心代理"""
-    df = ak.macro_china_real_estate()
-    r = df.iloc[-1]
-    # 国房景气指数近1年涨跌幅作为地产热度代理
-    return {"value": round(float(r["近1年涨跌幅"]), 2), "asOf": str(r["日期"])[:10],
-            "src": "东财·国房景气指数"}
+    """房地产压力代理：国家统计局70城二手住宅价格指数同比(均值)（P0-3 修复）。
+    权威且新鲜(截至2026-08)；二手房价同比更能反映真实通缩压力，
+    替换原滞后至2025-12的「国房景气指数近1年涨跌幅」。
+    注：列「二手住宅价格指数-同比」为定基指数(基期=100)，减100得真实同比%。"""
+    df = ak.macro_china_new_house_price()
+    df = df[df["二手住宅价格指数-同比"].notna()]
+    if df.empty:
+        raise ValueError("70城房价数据为空")
+    latest = df["日期"].max()
+    sub = df[df["日期"] == latest]
+    yoy = float(sub["二手住宅价格指数-同比"].mean()) - 100.0   # 指数→真实同比%
+    return {"value": round(yoy, 2), "asOf": str(latest)[:10],
+            "src": "国家统计局·70城二手房同比(均值,%d城)" % len(sub)}
 
 def fetch_vix():
     """CBOE VIX 恐慌指数 —— 全球风险偏好/金融传染核心指标
@@ -440,18 +482,22 @@ def score_paths_lit(oil_brent, ai_bubble, vix, china_fragile):
         return 5.0
     return round(sum(parts) / len(parts), 1)
 
-def score_win_proximity(today=None):
-    """高危窗口临近度：2026Q4-2027Q2 为高危窗，按距离算0-10分"""
-    today = today or dt.date.today()
-    # 高危窗口中心：2027-03-31
-    center = dt.date(2027, 3, 31)
-    days = abs((today - center).days)
-    if days <= 90:      # 窗口内
-        return 10.0
-    elif days <= 270:   # 窗口前后9个月
-        return round(10 - (days - 90) / 180 * 5, 1)   # 线性降到5
-    else:
-        return round(max(1, 5 - (days - 270) / 365 * 3), 1)   # 远离窗口降到1-2
+def score_win_proximity(oil_brent=None, vix=None, nasdaq_pct=None, us10y=None):
+    """高危窗口临近度(0-10)：完全由真实全球压力信号推导，无信号归0；彻底删除原「日期距2027Q1」硬算(P0-1)。
+    取各路径压力子分(0-10)均值：地缘(油价>60)/金融传染(VIX>15)/AI泡沫(纳指涨幅)/流动性(美债>4%)。
+    中国内部脆弱点已在 china_fragile 单独计，不在此重复计入，避免双计。"""
+    parts = []
+    if oil_brent is not None:
+        parts.append(clamp01((oil_brent - 60) / 60) * 10)      # 地缘/油价路径
+    if vix is not None:
+        parts.append(clamp01((vix - 15) / 20) * 10)            # 金融传染路径
+    if nasdaq_pct is not None:
+        parts.append(clamp01(nasdaq_pct / 15) * 10)            # AI/科技泡沫路径
+    if us10y is not None:
+        parts.append(clamp01((us10y - 4.0) / 3.0) * 10)        # 全球流动性收紧路径
+    if not parts:
+        return 0.0
+    return round(sum(parts) / len(parts), 1)
 
 def score_china_fragile(re_yoy):
     """中国脆弱点：国房景气指数近1年跌幅越大→越脆弱
@@ -491,12 +537,18 @@ JOBS = {
 
 def sanity(key: str, obj: dict) -> dict | None:
     lo, hi = RANGES.get(key, (None, None))
-    if lo is None:
-        return obj
-    v = obj.get("value")
-    if v is None or not (lo <= float(v) <= hi):
-        obj["noData"] = True
-        obj["src"] = (obj.get("src", "") + " · 数值越界已隔离").strip(" ·")
+    if lo is not None:
+        v = obj.get("value")
+        if v is None or not (lo <= float(v) <= hi):
+            obj["noData"] = True
+            obj["src"] = (obj.get("src", "") + " · 数值越界已隔离").strip(" ·")
+            return obj
+    # 过期硬失效：asOf 距今超过阈值 → 不参与打分（官方月度数据亦适用；核心信用字段豁免）
+    if key not in AGE_EXEMPT:
+        ag = _age_days(obj.get("asOf"))
+        if ag is not None and ag > AGE_GATE_DAYS:
+            obj["noData"] = True
+            obj["src"] = (obj.get("src", "") + f" · 过期{ag}天已隔离").strip(" ·")
     return obj
 
 def main():
@@ -596,11 +648,11 @@ def main():
         "asOf": str(dt.date.today()),
         "src": "推导(油价+AI泡沫+VIX+脆弱点)"
     }
-    # 高危窗口临近度
+    # 高危窗口临近度：由真实全球压力信号推导（P0-1 修复，删日期硬算）
     data["win_proximity"] = {
-        "value": score_win_proximity(),
+        "value": score_win_proximity(oil_v, vix_v, nq_v, us10_v),
         "asOf": str(dt.date.today()),
-        "src": "计算(日期距2027Q1)"
+        "src": "推导(真实压力:油价+VIX+纳指+美债)"
     }
 
     ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

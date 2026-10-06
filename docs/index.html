@@ -202,7 +202,7 @@
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
   <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">高危窗口临近度</div><div class="sc" id="sc_win">—</div></div><div class="bar"><i id="bar_win"></i></div>
-  <div class="row"><span class="lab">2026底–2027上为高危窗（按日期算）</span><input id="in_win" step="0.1" type="number"><span class="w">权重35%</span></div></div>
+  <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">中国脆弱点</div><div class="sc" id="sc_china">—</div></div><div class="bar"><i id="bar_china"></i></div>
   <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number"><span class="w">权重30%</span></div></div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
@@ -367,7 +367,7 @@ const EIGHT = [
   {k:'住户存款放缓',  auto:'m2', hint:'M2同比<7%视为放缓'},
   {k:'消费税后移试点',auto:null, hint:'政策事件，需手动确认'},
   {k:'一带一路回款',  auto:'trade', hint:'贸易顺差>800亿视为回款充足'},
-  {k:'地产降幅收窄',  auto:'re', hint:'国房景气1Y涨跌>-0.5%视为收窄'},
+  {k:'地产降幅收窄',  auto:'re', hint:'70城二手房同比>-0.5%视为收窄'},
   {k:'A股日均3万亿',  auto:'amt'},
   {k:'海外贴现率缓和',auto:'us10y'},
 ];
@@ -409,6 +409,7 @@ function isReal(k){
   if(!M[k]) return false;
   if(M[k].baseline) return false;
   if(M[k].noData) return false;
+  if(M[k].stale) return false;
   return M[k].value!=null;
 }
 function meta(k){ if(k in override) return {src:'手动覆盖',asOf:todayStr()}; return M[k]? {src:M[k].src,asOf:M[k].asOf}:{src:'缺失',asOf:''}; }
@@ -514,7 +515,7 @@ function applyMacro(j){
   const d=j.data;
   if(d.northbound && (d.northbound.value===0||d.northbound.value==null)) d.northbound.noData=true;
   if(d.breadth && d.breadth.value==null) d.breadth.noData=true;
-  const put=(k,obj,fmt)=>{ if(!obj) return; M[k]={value:fmt?fmt(obj.value):obj.value, asOf:obj.asOf||obj.as_of||'', src:obj.src||'macro.json', stale:!!obj.stale}; };
+  const put=(k,obj,fmt)=>{ if(!obj) return; M[k]={value:fmt?fmt(obj.value):obj.value, asOf:obj.asOf||obj.as_of||'', src:obj.src||'macro.json', stale:!!obj.stale, noData:!!obj.noData}; };
   put('pmi',d.pmi); put('m1_yoy',d.m1_yoy); put('credit_yoy',d.credit_yoy);
   put('lpr1y',d.lpr1y); put('cn10y',d.cn10y); put('us10y',d.us10y);
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
@@ -575,7 +576,7 @@ function ageDays(key){
   if(isNaN(d)) return 0;
   return Math.max(0, Math.floor((Date.now()-d.getTime())/86400000));
 }
-function decayW(key, fresh=5, old=30, minW=0.3){
+function decayW(key, fresh=5, old=30, minW=0){
   const age = ageDays(key);
   if(age <= fresh) return 1;
   if(age >= old) return minW;
@@ -623,13 +624,13 @@ function scoreVal(){
   // 优先用后端给的历史分位字段，缺失时用绝对PE/PB代理推导
   const erp=get('erp');
   const erpP = erp!=null? erpPercentile(erp) : null;   // 0-1，越高越便宜
-  let peP = (M.hs300_pe_pct && M.hs300_pe_pct.value!=null)? M.hs300_pe_pct.value/100
-           : (get('hs300_pe')!=null? valPctFromPe(get('hs300_pe')) : null);
-  let pbP = (M.hs300_pb_pct && M.hs300_pb_pct.value!=null)? M.hs300_pb_pct.value/100
-           : (get('hs300_pb')!=null? valPctFromPb(get('hs300_pb')) : null);
+  let peP = (isReal('hs300_pe_pct'))? M.hs300_pe_pct.value/100
+           : (isReal('hs300_pe')? valPctFromPe(get('hs300_pe')) : null);
+  let pbP = (isReal('hs300_pb_pct'))? M.hs300_pb_pct.value/100
+           : (isReal('hs300_pb')? valPctFromPb(get('hs300_pb')) : null);
   // H 股独立估值锚（硬伤②）：恒生PE分位 + AH溢价（高=贵）
   if(mode==='H'){
-    const hP = (M.hsi_pe_pct && M.hsi_pe_pct.value!=null)? M.hsi_pe_pct.value/100 : peP;
+    const hP = (isReal('hsi_pe_pct'))? M.hsi_pe_pct.value/100 : peP;
     const ah = get('ah_premium');
     if(ah!=null){
       // ah = A相对H溢价中位数(%)；越高=H越便宜 → 降低H估值分(peP)
@@ -952,10 +953,11 @@ function srcRows(){
     add('VIX恐慌指数', isNaN(q.vix.price)?'—':q.vix.price.toFixed(2),'','腾讯实时',q.raw.vixTime||'','',false);
   }
   const m=(k,u)=>{ const v=get(k); const mm=meta(k);
-    let s=(v==null||v==='')?'—':v;
-    if(typeof v==='number'){ const a=Math.abs(v); s = a>=1000? v.toFixed(0) : (a>=1? v.toFixed(2) : v.toFixed(3)); }
+    const expired = !!(M[k] && M[k].noData);
+    let s=(v==null||v===''||expired)?'—':v;
+    if(typeof v==='number' && !expired){ const a=Math.abs(v); s = a>=1000? v.toFixed(0) : (a>=1? v.toFixed(2) : v.toFixed(3)); }
     const noReal=(M[k]&&(M[k].baseline||M[k].noData));
-    return {v:s, src:mm.src, asOf:mm.asOf, base:!!noReal&&!(k in override)};
+    return {v:s, src:(expired? mm.src+' · 已隔离':'')||mm.src, asOf:mm.asOf, base:!!noReal&&!(k in override)};
   };
   [['制造业PMI','pmi',''],['M1同比','m1_yoy','%'],['M2同比','m2_yoy','%'],['新增信贷同比','credit_yoy','%'],['LPR 1Y','lpr1y','%'],
    ['中债10Y','cn10y','%'],['美债10Y','us10y','%'],['沪深300 PE','hs300_pe',''],['ERP','erp','%'],
@@ -965,7 +967,7 @@ function srcRows(){
   });
   // ===== 海外风险 + 危机预警原始数据 =====
   [['布伦特油价','oil_brent','美元/桶'],['美元指数DXY','dxy',''],['美国失业率','us_unemploy','%'],
-   ['纳指20日涨跌','nasdaq_pct','%'],['国房景气指数1Y涨跌','re_yoy','%'],['CBOE VIX','vix',''],
+   ['纳指20日涨跌','nasdaq_pct','%'],['70城二手房同比','re_yoy','%'],['CBOE VIX','vix',''],
    ['中国贸易帐','trade_balance','亿美元'],
    ['AI泡沫分(推导)','ai_bubble',''],['海峡风险分(推导)','hormuz_risk',''],
    ['四路径点燃度(推导)','paths_lit',''],['高危窗临近度(计算)','win_proximity',''],
