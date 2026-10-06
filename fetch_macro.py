@@ -26,6 +26,7 @@ import sqlite3
 import sys
 import warnings
 warnings.filterwarnings("ignore")
+import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "niuxiong.db")
 # 合理区间：越界视为脏数据
@@ -39,6 +40,8 @@ RANGES = {
     "vix": (8, 80), "trade_balance": (-500, 2000),
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
+    "hs300_pe_pct": (0, 100), "hs300_pb_pct": (0, 100),
+    "hsi_pe_pct": (0, 100), "ah_premium": (80, 250),
 }
 def _d(s):
     for f in ("%Y年%m月份", "%Y-%m-%d", "%Y/%m/%d", "%Y%m%d"):
@@ -82,20 +85,57 @@ def fetch_rates():
     us_o = {"value": float(us.iloc[-1]["美国国债收益率10年"]), "asOf": str(us.iloc[-1]["日期"]),
             "src": "FRED/东财"} if len(us) else None
     return cn_o, us_o
+def _ema(s, n):
+    return s.ewm(span=n, adjust=False).mean()
+def _macd_line(close, fast=12, slow=26):
+    return _ema(close, fast) - _ema(close, slow)
+
 def fetch_tech(symbol="sh000300"):
-    df = ak.stock_zh_index_daily(symbol=symbol).dropna().tail(300).reset_index(drop=True)
+    df = ak.stock_zh_index_daily(symbol=symbol).dropna().tail(750).reset_index(drop=True)
     c = df["close"].astype(float)
     last = float(c.iloc[-1])
     ma = lambda n: float(c.tail(n).mean())
     hi, lo = float(c.tail(250).max()), float(c.tail(250).min())
-    return {"value": last, "asOf": str(df["date"].iloc[-1]), "src": "新浪/东财",
-            "extra": {"ma20": ma(20), "ma60": ma(60), "ma250": ma(250),
-                      "chg_5d": float((last / float(c.iloc[-6]) - 1) * 100),
-                      "chg_20d": float((last / float(c.iloc[-21]) - 1) * 100),
-                      "chg_60d": float((last / float(c.iloc[-61]) - 1) * 100),
-                      "drawdown_from_250high": float((last / hi - 1) * 100),
-                      "pos_in_250range": float((last - lo) / (hi - lo) * 100),
-                      "above_ma250": bool(last > ma(250)), "ma20_gt_ma60": bool(ma(20) > ma(60))}}
+    extra = {"ma20": ma(20), "ma60": ma(60), "ma250": ma(250),
+             "chg_5d": float((last / float(c.iloc[-6]) - 1) * 100),
+             "chg_20d": float((last / float(c.iloc[-21]) - 1) * 100),
+             "chg_60d": float((last / float(c.iloc[-61]) - 1) * 100),
+             "drawdown_from_250high": float((last / hi - 1) * 100),
+             "pos_in_250range": float((last - lo) / (hi - lo) * 100),
+             "above_ma250": bool(last > ma(250)), "ma20_gt_ma60": bool(ma(20) > ma(60))}
+    # ---- 月/周线（改造③）：位置 + 站MA + 金叉 + 价/MACD 新高新低，供背离检测 ----
+    # 任一步失败仅跳过月周线，不影响日线主指标
+    try:
+        import pandas as pd
+        d = df.copy()
+        d["date"] = pd.to_datetime(df["date"])
+        d = d.set_index("date")["close"].astype(float)
+        def period_block(rule, span, n):
+            p = d.resample(rule).last().dropna().astype(float)
+            if len(p) < span:
+                return None
+            ma_s = p.rolling(span).mean()
+            ma_l = p.rolling(span * 3).mean()
+            macd = _macd_line(p, 12, 26)
+            cur = float(p.iloc[-1])
+            win = p.tail(n)
+            pos = float((cur - float(win.min())) / (float(win.max()) - float(win.min())) * 100)
+            return {"pos": round(pos, 1),
+                    "above_ma": bool(cur > float(ma_s.iloc[-1])),
+                    "ma_cross": bool(float(ma_s.iloc[-1]) > float(ma_l.iloc[-1])),
+                    "price_high": bool(cur >= float(p.tail(span).max())),
+                    "macd_high": bool(float(macd.iloc[-1]) >= float(macd.tail(span).max())),
+                    "price_low": bool(cur <= float(p.tail(span).min())),
+                    "macd_low": bool(float(macd.iloc[-1]) <= float(macd.tail(span).min()))}
+        m = period_block("ME", 12, 24)   # 月线：近24个月区间、近12月高低
+        w = period_block("W", 12, 52)    # 周线：近52周区间、近12周高低
+        if m:
+            extra.update({f"m_{k}": v for k, v in m.items()})
+        if w:
+            extra.update({f"w_{k}": v for k, v in w.items()})
+    except Exception:
+        pass
+    return {"value": last, "asOf": str(df["date"].iloc[-1]), "src": "新浪/东财", "extra": extra}
 def fetch_valuation(code="000300"):
     r = ak.stock_zh_index_value_csindex(symbol=code).iloc[0]
     return {"value": float(r["市盈率1"]), "asOf": str(r["日期"]), "src": "中证指数官网",
@@ -122,6 +162,76 @@ def fetch_breadth():
         raise ValueError("上涨家数占比：数据为空")
     return {"value": round(up / (up + down) * 100, 2), "asOf": str(m.get("统计日期", dt.date.today()))[:10],
             "src": "乐咕乐股", "extra": {"上涨家数": up, "下跌家数": down, "涨停": float(m.get("涨停", 0))}}
+
+# ---------------- 新增：估值历史分位 / H股锚（改造②，让顶底判断有料可算） ----------------
+_HS300_HIST = None
+def _hs300_hist():
+    """沪深300 估值历史（市盈率1/市净率1），取最近10年；缓存避免重复请求"""
+    global _HS300_HIST
+    if _HS300_HIST is None:
+        df = ak.stock_zh_index_value_csindex(symbol="000300").dropna(subset=["市盈率1", "市净率1"]).copy()
+        try:
+            df["日期"] = pd.to_datetime(df["日期"])
+            cutoff = df["日期"].max() - pd.DateOffset(months=120)
+            df = df[df["日期"] >= cutoff]
+        except Exception:
+            pass
+        _HS300_HIST = df.sort_values("日期", ascending=False).reset_index(drop=True)
+    return _HS300_HIST
+
+def fetch_hs300_pe_pct():
+    """沪深300 PE 近10年历史分位（0-100，越高越贵）"""
+    import pandas as pd
+    df = _hs300_hist()
+    if len(df) < 12:
+        raise ValueError("估值历史过短")
+    pe = df["市盈率1"].astype(float)
+    pct = float(pe.rank(pct=True, ascending=True).iloc[0]) * 100
+    return {"value": round(pct, 1), "asOf": str(df["日期"].iloc[0])[:10],
+            "src": "中证指数·PE 10年分位"}
+
+def fetch_hs300_pb_pct():
+    """沪深300 PB 近10年历史分位（0-100，越高越贵）"""
+    import pandas as pd
+    df = _hs300_hist()
+    if len(df) < 12:
+        raise ValueError("估值历史过短")
+    pb = df["市净率1"].astype(float)
+    pct = float(pb.rank(pct=True, ascending=True).iloc[0]) * 100
+    return {"value": round(pct, 1), "asOf": str(df["日期"].iloc[0])[:10],
+            "src": "中证指数·PB 10年分位"}
+
+def fetch_hsi_pe_pct():
+    """恒生指数 PE 历史不可直接取，用价格10年分位近似估值分位（H股锚，标注为代理）"""
+    import pandas as pd
+    df = ak.stock_hk_index_daily(symbol="HSI").dropna().tail(2600)
+    if len(df) < 250:
+        raise ValueError("恒生历史过短")
+    c = df["close"].astype(float)
+    cur = float(c.iloc[-1]); hi, lo = float(c.max()), float(c.min())
+    pct = (cur - lo) / (hi - lo) * 100
+    return {"value": round(pct, 1), "asOf": str(df["date"].iloc[-1])[:10],
+            "src": "恒生价格10年分位(PE代理)"}
+
+def fetch_ah_premium():
+    """AH溢价中位数（%）：A股相对H股贵多少。H股独立估值锚核心字段。"""
+    import pandas as pd
+    df = ak.stock_hk_a_spot_em()
+    col = None
+    for cand in ("溢价率(H/A股价比)", "溢价率(H/A)", "溢价率"):
+        if cand in df.columns:
+            col = cand; break
+    if col is None:
+        raise ValueError("无 AH 溢价率列")
+    r = pd.to_numeric(df[col], errors="coerce").dropna()
+    r = r[(r > 0) & (r < 50)]
+    if not len(r):
+        raise ValueError("溢价率空")
+    median_ratio = float(r.median())   # H/A 价格比，如 0.8
+    # 兼容两种口径：比值(<3)→换算溢价%；已是百分比(>3)→直接用
+    prem = (1.0 / median_ratio - 1.0) * 100 if median_ratio < 3 else median_ratio
+    return {"value": round(prem, 1), "asOf": str(dt.date.today()),
+            "src": "东财·AH溢价中位数"}
 
 # ---------------- 新增：海外风险维度自动抓取 ----------------
 def fetch_oil_brent():
@@ -297,6 +407,11 @@ JOBS = {
     "re_yoy": (fetch_re_yoy, "国房景气指数1Y涨跌"),
     "vix": (fetch_vix, "CBOE VIX恐慌指数"),
     "trade_balance": (fetch_trade_balance, "中国贸易帐"),
+    # 新增：估值历史分位 + H股锚（改造②喂料）
+    "hs300_pe_pct": (fetch_hs300_pe_pct, "沪深300 PE分位"),
+    "hs300_pb_pct": (fetch_hs300_pb_pct, "沪深300 PB分位"),
+    "hsi_pe_pct": (fetch_hsi_pe_pct, "恒生PE分位(代理)"),
+    "ah_premium": (fetch_ah_premium, "AH溢价"),
 }
 
 def sanity(key: str, obj: dict) -> dict | None:
