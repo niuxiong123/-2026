@@ -74,10 +74,27 @@ def fetch_m1():
     return {"value": float(r["货币(M1)-同比增长"]), "asOf": _d(r["月份"]).isoformat(),
             "src": "央行/东财", "extra": {"m2_yoy": float(r["货币和准货币(M2)-同比增长"])}}
 def fetch_credit():
-    r = ak.macro_china_new_financial_credit().iloc[0]
-    return {"value": float(r["累计-同比增长"]), "asOf": _d(r["月份"]).isoformat(),
-            "src": "央行/东财·累计同比",
-            "extra": {"当月亿元": float(r["当月"]), "当月同比": float(r["当月-同比增长"])}}
+    """社融存量同比（%）—— 信贷/信用扩张代理。
+    权威口径：取央行《社会融资规模增量》官方数据，对月度增量做滚动12月求和，
+    再与上年同期滚动和同比，即标准「社融存量同比」推算值（平滑单月异常）。
+    注意：原 macro_china_new_financial_credit 的「累计-同比增长」=-20.9% 实为
+    「新增信贷累计值同比」，并非市场习惯的社融增速，已弃用。"""
+    df = ak.macro_china_shrzgm()
+    df["月份"] = pd.to_datetime(df["月份"], format="%Y%m", errors="coerce")
+    df = df.dropna(subset=["月份"]).sort_values("月份")
+    if not len(df):
+        raise ValueError("社融数据为空")
+    s = pd.Series(pd.to_numeric(df["社会融资规模增量"], errors="coerce").values, index=df["月份"])
+    s = s.sort_index().dropna()
+    roll = s.rolling(12).sum()
+    yoy = (roll / roll.shift(12) - 1) * 100
+    yoy = yoy.dropna()
+    if not len(yoy):
+        raise ValueError("社融存量同比推算失败（样本不足12月）")
+    last_date = yoy.index[-1]
+    return {"value": round(float(yoy.iloc[-1]), 2), "asOf": last_date.strftime("%Y-%m-%d"),
+            "src": "央行/东财·社融增量滚动12月存量同比",
+            "extra": {"近12月增量万亿": round(float(roll.iloc[-1]) / 1e4, 2)}}
 def fetch_lpr():
     r = ak.macro_china_lpr().iloc[-1]
     return {"value": float(r["LPR1Y"]), "asOf": str(r["TRADE_DATE"]),
@@ -307,15 +324,32 @@ def fetch_dxy():
     raise RuntimeError("美元指数抓取失败: 新浪DINIW不可用")
 
 def fetch_us_unemploy():
-    """美国失业率（%）—— 就业稳健度，反向指标"""
+    """美国失业率（%）—— 就业稳健度，反向指标。
+    官方源：FRED(UNRATE, BLS 官方数据)，公开 CSV 无需密钥，实时更新且无东财接口滞后问题。
+    FRED 不可达时回退 akshare(东财)接口（可能滞后，已标注）。"""
+    import csv, io, urllib.request
+    from datetime import datetime
+    url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            text = resp.read().decode("utf-8")
+        rows = list(csv.reader(text.strip().splitlines()))
+        data = [r for r in rows[1:] if len(r) >= 2 and r[1].strip() not in ("", ".", "ND")]
+        if data:
+            last = data[-1]
+            d = datetime.strptime(last[0], "%Y-%m-%d")
+            return {"value": round(float(last[1]), 1), "asOf": d.strftime("%Y-%m-%d"), "src": "FRED/BLS·UNRATE"}
+    except Exception as e:
+        log("失业率 FRED 失败，回退东财:", e)
+    # 兜底：东财宏观经济接口
     df = ak.macro_usa_unemployment_rate()
-    # 列名可能是"今值"，取最后一个非空值
     val_col = "今值" if "今值" in df.columns else "失业率"
     df = df.dropna(subset=[val_col])
     if not len(df):
         raise ValueError("美国失业率：无有效数据")
     r = df.iloc[-1]
-    return {"value": float(r[val_col]), "asOf": str(r["日期"]), "src": "BLS/东财"}
+    return {"value": float(r[val_col]), "asOf": str(r["日期"]), "src": "BLS/东财·滞后(回退)"}
 
 def fetch_nasdaq_pct():
     """纳斯达克近20日涨跌幅（%）—— AI/科技估值代理"""

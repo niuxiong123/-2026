@@ -290,13 +290,14 @@
 </div>
 
 <div class="note">
-  <b>仓位算法（数学建模版）：</b><br>
-  ① 市场温度 = 趋势/估值/流动性/情绪 四维合成（A股各0.25，H股 0.2/0.2/0.3/0.3），是顶底判断主信号；海外风险+危机预警仅作「仓位叠加层」(最终仓位×1−风险/20)，不再污染顶底温度（改造①）。<br>
+  <b>仓位算法（数学建模版 · 顶底/仓位/温度三表同步）：</b><br>
+  ① 市场温度 = 趋势/估值/流动性/情绪 四维合成（A股各0.25，H股 0.2/0.2/0.3/0.3），是顶底判断主信号；海外风险+危机预警仅作「仓位叠加层」(核心仓位×1−风险/20)，不再污染顶底温度。<br>
   ② 四维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
   ③ 温度→基础仓位用 <b>tanh</b> 平滑：bp(t) = 5.5 − 4.2·tanh(0.38·(t−5))，t=0→9.5成，t=5→5.5成，t=10→1.5成。<br>
-  ④ 四道<b>软约束</b>（softCap，避免边界摆动）：趋势/M1/信贷/海外/共振各用 sigmoid 平滑过渡，取 min。<br>
-  ⑤ 顶底概率（改造①）：脱钩综合温度，改为 logistic 合成 = 估值分位极值 + 月/周线背离 + 广度背离（带方向，需多信号共振才过50%）。详见「十一、回测校验」。<br>
-  ⑥ 最终 = min(基础仓位, 软约束) × 保守系数（默认0.85）。<br>
+  ④ 【同步核心】<b>顶底概率进入仓位公式</b>：核心仓位 = tanh温度仓位 × 顶底联动系数(1±4%×底顶分差，范围0.6~1.4)。三大面板共用同一根信号，不再各算各的。<br>
+  ⑤ 【共振硬闸门】底≥7且顶≤3 → 仓位下限6成（底部允许左侧建仓，解除"趋势好才买"的悖论）；顶≥7且底≤3 → 仓位上限3成。风险叠加层与保守系数只在该区间内活动。<br>
+  ⑥ 最终 = 核心仓位 × 风险叠加(×1−风险/20) × 保守系数(默认0.85)。<br>
+  <b>为何删除原"四道软约束"：</b>趋势/M1/信贷/共振已占温度四维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
   <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
 </div>
 
@@ -867,32 +868,36 @@ function computeAll(){
   const temp = clamp(mkt + qAdj);
   const tempAdj = temp;
   const bp = basePosition(tempAdj);
-  // 软约束（保持）
-  const cs=[];
-  const t=M.tech||{};
-  if(t.above_ma250!=null){
-    const trendScore = (t.above_ma250?1:0) + (t.ma20_gt_ma60?1:0);
-    const v = softCap(trendScore, 1, 5.5, 10, 3);
-    cs.push({n:'趋势约束', v:v, r:'年线'+(t.above_ma250?'上':'下')+' MA20'+(t.ma20_gt_ma60?'↑':'↓')+' → softCap'});
-  }
-  const m1=isReal('m1_yoy')?get('m1_yoy'):null, crd=isReal('credit_yoy')?get('credit_yoy'):null;
-  if(m1!=null) cs.push({n:'M1约束', v:softCap(m1, 5, 6, 10, 1.2), r:'M1 '+m1+'%'});
-  if(crd!=null) cs.push({n:'信贷约束', v:softCap(crd, 0, 6, 10, 0.15), r:'信贷 '+crd.toFixed(1)+'%'});
-  const u=isReal('us10y')?get('us10y'):null;
-  if(u!=null){
-    const hi = mode==='A'?7:5.5;
-    cs.push({n:'海外约束', v:softCap(u, 4.25, hi, 10, 2), r:'美债10Y '+u+'%'});
-  }
+  // ============ 顶底-仓位-温度 三表同步 ============
+  // 顶底联动系数：底分-顶分 每差1分 → 仓位 ±4%；clamp(0.6,1.4)
+  const sb = probScore(tb.pBottom), st = probScore(tb.pTop);
+  const probMult = clamp(1 + 0.04*(sb - st), 0.6, 1.4);
+  let core = bp * probMult;                       // 温度 × 顶底联动（删除重复计账的 softCap 层）
+  // 共振硬闸门：极端信号时，温度/风险/保守层不得违背顶底方向
+  const strongBottom = (tb.pBottom >= 70 && tb.pTop <= 30);
+  const strongTop    = (tb.pTop    >= 70 && tb.pBottom <= 30);
+  let gateTxt = '';
+  if(strongBottom){ core = Math.max(core, 6.5); gateTxt = '底部共振闸门：仓位下限6.5成'; }
+  if(strongTop){    core = Math.min(core, 2.5); gateTxt = '顶部共振闸门：仓位上限2.5成'; }
+  const overlayScale = clamp(1 - riskOverlay/20, 0.5, 1);   // 海外+危机叠加层，0.5~1.0
+  const konserv = document.getElementById('baziSwitch').checked ? 0.85 : 1;
+  // 风险叠加层与保守系数只在闸门区间内活动（乘法后再兜底一次）
+  let final = clamp(core * overlayScale * konserv, 1, 9.5);
+  let gate2 = '';
+  if(strongBottom && final < 6.0){ final = 6.0; gate2 = ' · 闸门保底6成'; }
+  if(strongTop    && final > 3.0){ final = 3.0; gate2 = ' · 闸门封顶3成'; }
+  // 展示链路（同一根信号，不再互相独立）
+  const cs=[
+    {n:'温度仓位(tanh)', v:bp,            r:'主温度 '+tempAdj.toFixed(2)+' → '+bp.toFixed(1)+'成'},
+    {n:'顶底联动',       v:core,          r:'底'+sb+'/顶'+st+' → ×'+probMult.toFixed(2)+(gateTxt?' ｜ '+gateTxt:'')},
+    {n:'风险叠加',       v:core*overlayScale, r:'海外'+ov.toFixed(1)+'+危机'+cr.toFixed(1)+' → ×'+overlayScale.toFixed(2)},
+    {n:'保守系数',       v:final,         r:(konserv<1?'×0.85':'×1.00')+(gate2?' ｜ '+gate2:'')}
+  ];
+  const cap = core, tight = [gateTxt || '无共振'];
   const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
-  const p=sc/EIGHT.length;
-  cs.push({n:'共振约束', v:softCap(p, 0.65, 5.5, 10, 4), r:'八大信号 '+(p*100).toFixed(0)+'%'});
-  const cap=Math.min.apply(null, cs.map(c=>c.v));
-  const tight=cs.filter(c=>Math.abs(c.v-cap)<0.01).map(c=>c.n);
-  const konserv=document.getElementById('baziSwitch').checked?0.85:1;
-  const overlayScale = clamp(1 - riskOverlay/20, 0.5, 1);     // 0.5~1.0，风险越高仓位越收
-  const final=clamp(Math.min(bp,cap)*overlayScale*konserv,1,9);
+  const p = sc / EIGHT.length;
   return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
-          ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
+          probMult,sb,st,gateTxt,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
 }
 /* =========================================================
    渲染层
@@ -1150,17 +1155,18 @@ function recalc(){
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:20px">成</span>';
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
   document.getElementById('posReason').innerHTML=
-    '市场温度(顶底主信号) '+r.mkt.toFixed(2)+' → 主温度 '+r.tempAdj.toFixed(2)+
-    '<br>风险叠加层：海外'+r.ov.toFixed(1)+' + 危机'+r.cr.toFixed(1)+' = '+r.riskOverlay.toFixed(1)+' → 仓位系数 ×'+r.overlayScale.toFixed(2)+
-    '<br>温度仓位(tanh) '+r.bp.toFixed(1)+'成 → 软约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
-    (r.konserv<1?' → 保守系数×0.85':'')+'<br><span style="font-size:11.5px">'+csTxt+'</span>';
+    '主温度 <b>'+r.tempAdj.toFixed(2)+'</b> → tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b><br>'+
+    '×顶底联动(底'+r.sb+'/顶'+r.st+'→×'+r.probMult.toFixed(2)+') = <b>'+r.cap.toFixed(1)+'成</b>'+(r.gateTxt?' ｜ '+r.gateTxt:'')+'<br>'+
+    '×风险叠加 ×'+r.overlayScale.toFixed(2)+'（海外'+r.ov.toFixed(1)+'+危机'+r.cr.toFixed(1)+'）'+(r.konserv<1?' ×保守0.85':'')+' → <b>最终 '+r.final.toFixed(1)+'成</b><br>'+
+    '<span style="font-size:11.5px">'+csTxt+'</span>';
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
   document.getElementById('scBottom').textContent=probScore(r.tb.pBottom);
   document.getElementById('scTop').textContent=probScore(r.tb.pTop);
   const pr=probRead(r.tb.pBottom, r.tb.pTop);
-  document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt;
+  const neutralNote = (Math.abs(r.tb.pBottom-50)<6 && r.tb.pTop<25)? ' ｜ <span style="color:var(--sub)">注：50%为logistic中性点(信号未共振)，≠五五开</span>' : '';
+  document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt+neutralNote;
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支
@@ -1363,17 +1369,16 @@ function renderReview(){
   }).join('');
   document.getElementById('rv_spark').innerHTML=
     spark+' <span style="font-size:11px;color:var(--sub)">（min '+mn.toFixed(1)+' ~ max '+mx.toFixed(1)+'，共 '+n+' 期）</span>';
-  // 6) 仓位-温度一致性检验：理论仓位 vs 实际建议仓位
+  // 6) 仓位-温度一致性检验：理论仓位(温度×顶底联动) vs 实际建议仓位
   let consistent=0;
   arr.forEach(r=>{
-    // 理论仓位 = basePosition(temp)，实际 = r.pos
-    const theo = 5.5 - 4.2 * Math.tanh(0.38 * (r.temp - 5));
-    if(Math.abs(r.pos-theo)<=1.2) consistent++;  // 允许约束造成的偏差
+    const theo = (r.bp!=null && r.probMult!=null)? r.bp*r.probMult : 5.5 - 4.2 * Math.tanh(0.38 * (r.temp - 5));
+    if(Math.abs(r.pos-theo)<=1.5) consistent++;  // 允许风险叠加/保守系数造成的偏差
   });
   const rate=(consistent/n*100).toFixed(0);
   document.getElementById('rv_consistency').innerHTML=
-    '理论仓位 vs 实际建议仓位 一致率 <b>'+rate+'%</b>（'+consistent+'/'+n+'）<br>'+
-    (rate>=80?'模型自洽：仓位与温度匹配良好':'偏差较大：可能被硬约束（趋势/信用/海外/共振）压低，请检查约束来源');
+    '理论仓位(温度×顶底联动) vs 实际建议仓位 一致率 <b>'+rate+'%</b>（'+consistent+'/'+n+'）<br>'+
+    (rate>=80?'模型自洽：仓位与(温度×顶底联动)匹配良好':'偏差较大：可能被风险叠加/保守系数压低，请检查堆叠系数');
 }
 function copySummary(){
   const r=computeAll();
@@ -1383,7 +1388,7 @@ function copySummary(){
     'P(底部) '+r.tb.pBottom+'% / P(顶部) '+r.tb.pTop+'%\n'+
     '四维：趋势'+r.tr.v.toFixed(1)+' 估值'+r.va.v.toFixed(1)+' 流动性'+r.lq.v.toFixed(1)+' 情绪'+r.em.v.toFixed(1)+'\n'+
     '八大信号 '+ (r.p*100).toFixed(0)+'%\n'+
-    '建议仓位 '+r.final.toFixed(1)+'成（tanh基础'+r.bp.toFixed(1)+'→软约束'+r.cap.toFixed(1)+'，卡在'+r.tight.join('/')+'）\n'+
+    '建议仓位 '+r.final.toFixed(1)+'成（温度'+r.bp.toFixed(1)+'→顶底联动×'+r.probMult.toFixed(2)+'→'+r.cap.toFixed(1)+'成，'+(r.gateTxt||'无共振闸门')+'）\n'+
     '资产 '+wan+'万 → 目标权益 '+(wan*r.final/10).toFixed(1)+'万';
   const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
   try{document.execCommand('copy');}catch(e){}
