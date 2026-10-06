@@ -23,16 +23,16 @@ jobs:
           python-version: "3.11"
 
       - name: 装依赖
-        run: pip install --quiet akshare
+        run: pip install --quiet akshare requests
 
-      - name: 抓数据
-        run: python3 fetch_macro.py --out docs/macro.json
+      - name: 抓数据+算仓位+告警
+        run: python3 daily_job.py
 
       - name: 把新数据存回仓库
         run: |
           git config user.name  "niuxiong-bot"
           git config user.email "niuxiong-bot@users.noreply.github.com"
-          git add docs/macro.json
+          git add docs/macro.json niuxiong.db
           if git diff --quiet && git diff --staged --quiet; then
             echo "数据无变化，不提交"
           else

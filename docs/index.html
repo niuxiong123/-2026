@@ -476,7 +476,8 @@ function applyMacro(j){
   put('lpr1y',d.lpr1y); put('cn10y',d.cn10y); put('us10y',d.us10y);
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
   put('northbound',d.northbound);
-  if(d.breadth) put('breadth_up',d.breadth);
+  if(d.breadth_up) put('breadth_up',d.breadth_up);
+  else if(d.breadth) put('breadth_up',d.breadth);   // 兼容旧字段名
   if(d.hs300&&d.hs300.extra) M.tech=d.hs300.extra;
   // ===== 海外风险 + 危机预警 =====
   put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);

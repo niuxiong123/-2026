@@ -86,6 +86,8 @@ def main():
 
     failed = []
     if not args.no_fetch:
+        import sys as _sys
+        _sys.argv = ["fetch_macro.py", "--out", os.path.join(BASE_DIR, "docs", "macro.json")]
         rc = fetch_macro.main()
         if rc != 0:
             failed.append("抓取整体异常")
