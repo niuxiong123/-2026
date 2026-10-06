@@ -639,7 +639,7 @@ def main():
     data["china_fragile"] = {
         "value": china_frag,
         "asOf": data.get("re_yoy", {}).get("asOf", str(dt.date.today())),
-        "src": "推导(国房景气指数)"
+        "src": "推导(70城二手房同比)"
     }
     # 四路径点燃度
     ai_b = data["ai_bubble"]["value"]
