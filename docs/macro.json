@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-06 12:46:55",
+  "generated_at": "2026-10-06 13:00:06",
   "ok_count": 21,
   "total": 22,
   "failed": [
@@ -110,12 +110,12 @@
       }
     },
     "oil_brent": {
-      "value": 97.64,
+      "value": 97.82,
       "asOf": "2026-10-06",
       "src": "akshare·布伦特原油期货"
     },
     "dxy": {
-      "value": 101.84,
+      "value": 101.87,
       "asOf": "2026-10-06",
       "src": "新浪行情·DINIW"
     },
@@ -140,7 +140,7 @@
     },
     "vix": {
       "value": 21.67,
-      "asOf": "2026-09-14",
+      "asOf": "2026-09-11",
       "src": "腾讯行情·CBOE VIX"
     },
     "trade_balance": {
@@ -189,7 +189,7 @@
     "china_fragile": {
       "value": 8.2,
       "asOf": "2026-08-01",
-      "src": "推导(国房景气指数)"
+      "src": "推导(70城二手房同比)"
     },
     "paths_lit": {
       "value": 6.2,
