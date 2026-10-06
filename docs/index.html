@@ -166,10 +166,10 @@
   <div class="bt">最终结论 · 当前操作建议</div>
   <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
   <div class="bl" id="actionList">
-    1.<span class="act-hold">持有</span> 消费 / 红利（③建议弱化：估值不便宜，不追加大仓） · <span class="act-up">加大</span> 利率债 ▲<br>
-    2.<span class="act-down">减少</span> 科技 / 地产 / 美元 ▼<br>
-    3.<span class="act-hold">持有</span> 现金 + 现有组合 + 黄金 ●<br>
-    4.做空仅小仓股指认沽对冲、不空原油 ｜<br>
+    1.<span class="act-up">加大</span> 利率债/货基 + 黄金 ▲（随时可动、逢回调小仓）｜<br>
+    2.<span class="act-short">对冲</span> 小仓股指认沽保护beta · <span class="act-short">不空</span> 原油 ｜<br>
+    3.<span class="act-hold">持有</span> 消费/红利(小仓左侧) + 现金/短债 + 现有组合 ●（保本金第一）｜<br>
+    4.<span class="act-down">减少</span> 科技/AI · 地产链 · 美元/金属 ▼（降低暴露）｜<br>
     5.<b>三不原则：不重仓 · 不抄底 · 不加杠杆</b>
   </div>
 </div>
@@ -275,19 +275,8 @@
 <h2>九、资产配置建议（D）· 加大 / 持有 / 减少 / 对冲（细化标的）</h2>
 <div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
 <div style="overflow-x:auto"><table>
-  <thead><tr><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
-  <tbody>
-    <tr><td class="act-hold">持有 ●</td><td><b>必需消费</b>：主要消费ETF(159928)/必选消费(512600)</td><td>防御属性强、现金流稳；估值不便宜，不加仓</td><td>S-S稀缺+索洛确定性</td></tr>
-    <tr><td class="act-hold">持有 ●<br><small style="color:var(--sub)">回调小仓左侧</small></td><td><b>高股息红利</b>：红利ETF(510880)/中证红利(515080)</td><td>底仓防御对冲波动；仅在显著回调时分批</td><td>机构共识+用神水木</td></tr>
-    <tr><td class="act-up">加大 ▲</td><td><b>利率债/货基</b>：国债ETF(511010)/货币ETF(511880)</td><td>随时可动</td><td>S-S：流动性最稀缺=赢家</td></tr>
-    <tr><td class="act-up">加大 ▲</td><td><b>黄金</b>：黄金ETF(518880)</td><td>逢回调小仓</td><td>中东+通胀避险</td></tr>
-    <tr><td class="act-hold">持有 ●</td><td><b>现金/短债</b>：覆盖18–24个月开支</td><td>不动</td><td>命门：保本金第一</td></tr>
-    <tr><td class="act-down">减少 ▼</td><td><b>科技/AI</b>：纳指100降仓、半导体ETF(512480)</td><td>降低权益里的科技暴露</td><td>AI估值泡沫高危</td></tr>
-    <tr><td class="act-down">减少 ▼</td><td><b>地产链</b>：地产ETF(512200)</td><td>低配/回避</td><td>地产降幅扩大</td></tr>
-    <tr><td class="act-down">减少 ▼</td><td><b>美元/金属</b></td><td>低配</td><td>非稀缺要素</td></tr>
-    <tr><td class="act-short">对冲</td><td><b>股指认沽</b>：50ETF沽/300ETF认沽</td><td>小仓保护权益beta</td><td>阶段③动作，仅对冲</td></tr>
-    <tr><td class="act-short">不空</td><td><b>原油</b></td><td>战争推升供需缺口，不空</td><td>油价是风险源</td></tr>
-  </tbody>
+  <thead><tr><th style="width:38px" title="按建议强度排序：1=最强烈(优先执行)">序</th><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
+  <tbody id="allocBody"></tbody>
 </table></div>
 
 <div class="mod">
@@ -1087,6 +1076,33 @@ function renderBranch(v){
   b.innerHTML='<div class="contig on"><div class="t">'+s.t+'</div>'+s.body+'</div>';
 }
 
+// 九-D 资产配置建议：数据驱动 + 按建议强度自动排序（1=最强烈在前）
+// prio：1 加大 ▲ → 2 对冲 → 3 持有 ● → 4 减少 ▼ → 5 不空（越强烈越靠前，清仓/减少类放最后）
+const ALLOC=[
+ {p:1, act:'加大 ▲',                    cls:'act-up',    asset:'<b>利率债/货基</b>：国债ETF(511010)/货币ETF(511880)', op:'随时可动',                logic:'S-S：流动性最稀缺=赢家'},
+ {p:1, act:'加大 ▲',                    cls:'act-up',    asset:'<b>黄金</b>：黄金ETF(518880)',                          op:'逢回调小仓',              logic:'中东+通胀避险'},
+ {p:2, act:'对冲',                      cls:'act-short', asset:'<b>股指认沽</b>：50ETF沽/300ETF认沽',                  op:'小仓保护权益beta',        logic:'阶段③动作，仅对冲'},
+ {p:3, act:'持有 ●',                    cls:'act-hold',  asset:'<b>必需消费</b>：主要消费ETF(159928)/必选消费(512600)', op:'防御属性强、现金流稳；估值不便宜，不加仓', logic:'S-S稀缺+索洛确定性'},
+ {p:3, act:'持有 ●<br><small style="color:var(--sub)">回调小仓左侧</small>', cls:'act-hold', asset:'<b>高股息红利</b>：红利ETF(510880)/中证红利(515080)', op:'底仓防御对冲波动；仅在显著回调时分批', logic:'机构共识+用神水木'},
+ {p:3, act:'持有 ●',                    cls:'act-hold',  asset:'<b>现金/短债</b>：覆盖18–24个月开支',                  op:'不动',                    logic:'命门：保本金第一'},
+ {p:4, act:'减少 ▼',                    cls:'act-down',  asset:'<b>科技/AI</b>：纳指100降仓、半导体ETF(512480)',       op:'降低权益里的科技暴露',    logic:'AI估值泡沫高危'},
+ {p:4, act:'减少 ▼',                    cls:'act-down',  asset:'<b>地产链</b>：地产ETF(512200)',                      op:'低配/回避',               logic:'地产降幅扩大'},
+ {p:4, act:'减少 ▼',                    cls:'act-down',  asset:'<b>美元/金属</b>',                                    op:'低配',                    logic:'非稀缺要素'},
+ {p:5, act:'不空',                      cls:'act-short', asset:'<b>原油</b>',                                          op:'战争推升供需缺口，不空',  logic:'油价是风险源'}
+];
+function renderAlloc(){
+  const b=document.getElementById('allocBody'); if(!b) return;
+  const sorted=ALLOC.map((it,i)=>({it,i})).sort((a,b)=> a.it.p-b.it.p || a.i-b.i);
+  b.innerHTML=sorted.map((o,idx)=>{
+    const it=o.it;
+    return '<tr><td style="text-align:center;color:var(--sub);font-weight:700">'+ (idx+1) +'</td>'
+      +'<td class="'+it.cls+'">'+it.act+'</td>'
+      +'<td>'+it.asset+'</td>'
+      +'<td>'+it.op+'</td>'
+      +'<td>'+it.logic+'</td></tr>';
+  }).join('');
+}
+
 // 数据源表格
 function srcRows(){
   const q=Q&&Q.ok?Q:null;
@@ -1368,6 +1384,7 @@ function recalc(){
   document.getElementById('bannerBand').textContent=tag.txt;
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
   renderActionList(r);
+  renderAlloc();
   // 统一模块联动：九-B 应变分支（auto 档跟随温度）；牛熊钟聚焦非 auto 时保持说明；四阶段内容静态由 renderStage 维护
   window.__lastTempAdj=r.tempAdj;
   if(document.getElementById('selBranch') && document.getElementById('selBranch').value==='auto') renderBranch('auto');
