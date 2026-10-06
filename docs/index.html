@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>牛熊每日自查 v2 · 自动数据版</title>
+<title>牛熊每日自查 v2+</title>
 <style>
   :root{
     --bg:#0f1419; --card:#1a2230; --card2:#222c3d; --line:#2e3a4d;
@@ -104,7 +104,7 @@
 </head>
 <body>
 
-<h1>牛熊每日自查 v2+ · 真实数据整合版</h1>
+<h1>牛熊每日自查 v2+</h1>
 <div class="sub">四维打分 + 海外风险 + 危机预警 → 综合温度与建议仓位 → 赢家四阶段操作。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
 
 <div class="topbar">
@@ -135,12 +135,17 @@
     <div class="reson" id="posReason">等待数据…</div>
   </div>
   <div class="box">
-    <div class="k">顶底概率（正态假设 N(5,2²)）</div>
+    <div class="k">顶底概率（市场内部信号 logistic 合成 · 1-10 信号强度分）</div>
     <div style="display:flex;gap:16px;margin-top:6px">
-      <div><div style="font-size:11px;color:var(--sub)">P(底部)</div><div class="big" id="pBottom" style="color:var(--green);font-size:28px">–%</div></div>
-      <div><div style="font-size:11px;color:var(--sub)">P(顶部)</div><div class="big" id="pTop" style="color:var(--red);font-size:28px">–%</div></div>
+      <div><div style="font-size:11px;color:var(--sub)">P(底部)</div><div class="big" id="pBottom" style="color:var(--green);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scBottom" style="color:var(--green)">–</b>/10</div></div>
+      <div><div style="font-size:11px;color:var(--sub)">P(顶部)</div><div class="big" id="pTop" style="color:var(--red);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scTop" style="color:var(--red)">–</b>/10</div></div>
     </div>
-    <div class="reson" id="probReason" style="margin-top:4px">温度越低→底部概率越高</div>
+    <div class="reson" id="probReason" style="margin-top:4px">等待数据…</div>
+    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.55">
+      1-10 分读法：<b style="color:var(--green)">底≥7 且 顶≤3</b>=强烈底部区（分批建仓）；
+      <b style="color:var(--red)">顶≥7 且 底≤3</b>=强烈顶部区（减仓）；
+      <b>双≤3</b>=中性震荡（按仓位执行，不急）；<b>双≥6</b>=信号矛盾（观望勿追）。
+    </div>
   </div>
 </div>
 <div class="warn off" id="dataWarn"></div>
@@ -625,7 +630,11 @@ function scoreVal(){
   if(mode==='H'){
     const hP = (M.hsi_pe_pct && M.hsi_pe_pct.value!=null)? M.hsi_pe_pct.value/100 : peP;
     const ah = get('ah_premium');
-    if(ah!=null){ const ahP = clamp((ah-110)/(150-110),0,1); peP = (hP!=null)? (hP*0.6+ahP*0.4) : ahP; }
+    if(ah!=null){
+      // ah = A相对H溢价中位数(%)；越高=H越便宜 → 降低H估值分(peP)
+      const ahCheap = clamp((ah - 20)/35, 0, 1);   // 20%→0(不便宜) 55%→1(很便宜)
+      peP = (hP!=null)? clamp(hP - 0.4*ahCheap) : (1 - ahCheap);
+    }
     else peP = hP;
     pbP = null; // H 股 PB 口径差异大，暂不参与
   }
@@ -818,6 +827,19 @@ function topBottomProb(ctx){
   const pB = 100 * sigmoid(2.6 * (1.1*valB + 0.5*brdB + 0.8*divB - 1.0));
   const pT = 100 * sigmoid(2.6 * (1.1*valT + 0.5*brdT + 0.8*divT - 1.0));
   return {pBottom: Math.round(clamp(pB,0,99)), pTop: Math.round(clamp(pT,0,99))};
+}
+
+// 顶/底概率(%) → 1-10 信号强度分（便于读数）
+function probScore(p){ return Math.max(1, Math.min(10, Math.round(p/10))); }
+
+// 综合读法：返回 {txt, band}。band∈{底,顶,中,弱,矛盾}
+function probRead(pB, pT){
+  const sb = probScore(pB), st = probScore(pT);
+  if(sb>=7 && st<=3) return {txt:'<b style="color:var(--green)">底部信号强（底'+sb+'/顶'+st+'）：分批建仓区</b>', band:'底'};
+  if(st>=7 && sb<=3) return {txt:'<b style="color:var(--red)">顶部信号强（顶'+st+'/底'+sb+'）：逐步减仓区</b>', band:'顶'};
+  if(sb<4 && st<4)   return {txt:'中性震荡（底'+sb+'/顶'+st+'）：按仓位建议执行，不急', band:'中'};
+  if(sb>=6 && st>=6) return {txt:'<b style="color:var(--yellow)">信号矛盾（底'+sb+'/顶'+st+'）：观望，勿追</b>', band:'矛盾'};
+  return {txt:'偏弱信号（底'+sb+'/顶'+st+'）：轻仓试探，等共振', band:'弱'};
 }
 
 function computeAll(){
@@ -1132,13 +1154,13 @@ function recalc(){
     '<br>风险叠加层：海外'+r.ov.toFixed(1)+' + 危机'+r.cr.toFixed(1)+' = '+r.riskOverlay.toFixed(1)+' → 仓位系数 ×'+r.overlayScale.toFixed(2)+
     '<br>温度仓位(tanh) '+r.bp.toFixed(1)+'成 → 软约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
     (r.konserv<1?' → 保守系数×0.85':'')+'<br><span style="font-size:11.5px">'+csTxt+'</span>';
-  // 顶底概率
+  // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
-  const pInterp = r.tb.pBottom>40?'<b style="color:var(--green)">底部区域概率较高，可分批建仓</b>'
-                 : r.tb.pTop>40?'<b style="color:var(--red)">顶部区域概率较高，逐步减仓</b>'
-                 : '中性区间，按仓位建议执行';
-  document.getElementById('probReason').innerHTML='温度 '+r.tempAdj.toFixed(2)+' → '+pInterp;
+  document.getElementById('scBottom').textContent=probScore(r.tb.pBottom);
+  document.getElementById('scTop').textContent=probScore(r.tb.pTop);
+  const pr=probRead(r.tb.pBottom, r.tb.pTop);
+  document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt;
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支

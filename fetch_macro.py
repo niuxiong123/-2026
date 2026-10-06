@@ -24,6 +24,7 @@ import json
 import os
 import sqlite3
 import sys
+import time
 import warnings
 
 # 模块级日志（main 内会按 quiet 重新绑定；fetch_* 函数统一用此兜底）
@@ -44,7 +45,7 @@ RANGES = {
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
     "hs300_pe_pct": (0, 100), "hs300_pb_pct": (0, 100),
-    "hsi_pe_pct": (0, 100), "ah_premium": (80, 250),
+    "hsi_pe_pct": (0, 100), "ah_premium": (-30, 150),
 }
 def _d(s):
     for f in ("%Y年%m月份", "%Y-%m-%d", "%Y/%m/%d", "%Y%m%d"):
@@ -228,18 +229,33 @@ def fetch_hsi_pe_pct():
             "src": "恒生收盘10年分位(PE代理)"}
 
 def fetch_ah_premium():
-    """AH溢价（%）缺失自动降级：em 接口在本环境不稳定，失败时返回 None 由 HTML 走恒生代理兜底。"""
-    try:
-        df = ak.stock_zh_ah_spot()
-        if "最新价" not in df.columns:
-            raise ValueError("无最新价列")
-        r = pd.to_numeric(df["最新价"], errors="coerce").dropna()
-        if not len(r):
-            raise ValueError("溢价率空")
-        return None
-    except Exception as e:
-        log("[warn] AH溢价抓取失败，走兜底: %s" % e)
-        return None
+    """AH溢价中位数（%）：A股相对H股贵多少。H股独立估值锚核心字段。
+    用东财 AH 比价接口（stock_zh_ah_spot_em），带重试（该接口偶发网络抖动）。
+    失败则返回 None，由 HTML 走恒生代理兜底，绝不写脏数。"""
+    df = None
+    for attempt in range(3):
+        try:
+            df = ak.stock_zh_ah_spot_em()
+            break
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(6); continue
+            log("[warn] AH溢价抓取失败，走兜底: %s" % e); return None
+    if df is None or not len(df):
+        log("[warn] AH溢价返回空，走兜底"); return None
+    # 找到溢价率列（东财返回 '溢价率(H/A股价比)' 等）
+    prem_col = next((c for c in df.columns if "溢价" in c), None)
+    if prem_col is None:
+        log("[warn] AH溢价无溢价率列，走兜底"); return None
+    r = pd.to_numeric(df[prem_col], errors="coerce").dropna()
+    r = r[(r > 0) & (r < 60)]
+    if not len(r):
+        log("[warn] AH溢价率为空，走兜底"); return None
+    median_ratio = float(r.median())   # H/A 价格比，如 0.83
+    # 比值(<3)→换算溢价%；已是百分比(>3)→直接用
+    prem = (1.0 / median_ratio - 1.0) * 100 if median_ratio < 3 else median_ratio
+    return {"value": round(prem, 1), "asOf": str(dt.date.today()),
+            "src": "东财·AH溢价中位数"}
 
 # ---------------- 新增：海外风险维度自动抓取 ----------------
 def fetch_oil_brent():
