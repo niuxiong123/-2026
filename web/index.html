@@ -97,6 +97,8 @@
   .dim .row .lab{flex:1;text-align:left}
   .dim .row .w{color:var(--sub);font-size:11px;width:62px;text-align:right}
   .score0{color:var(--green)} .score1{color:var(--yellow)} .score2{color:var(--red)}
+  .rv{font-size:13px;line-height:1.7}
+  .rv b{font-size:15px}
   @media(max-width:560px){.panel,.resgrid,.quad,.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -131,6 +133,14 @@
     <div class="k">今日建议仓位（<span id="modeName">A股</span>）</div>
     <div class="pos" id="posVal">–<span style="font-size:20px">成</span></div>
     <div class="reson" id="posReason">等待数据…</div>
+  </div>
+  <div class="box">
+    <div class="k">顶底概率（正态假设 N(5,2²)）</div>
+    <div style="display:flex;gap:16px;margin-top:6px">
+      <div><div style="font-size:11px;color:var(--sub)">P(底部)</div><div class="big" id="pBottom" style="color:var(--green);font-size:28px">–%</div></div>
+      <div><div style="font-size:11px;color:var(--sub)">P(顶部)</div><div class="big" id="pTop" style="color:var(--red);font-size:28px">–%</div></div>
+    </div>
+    <div class="reson" id="probReason" style="margin-top:4px">温度越低→底部概率越高</div>
   </div>
 </div>
 <div class="warn off" id="dataWarn"></div>
@@ -202,8 +212,8 @@
   <span class="sub" id="ovMsg"></span>
 </div>
 
-<h2>六、长牛八大信号（自动推导 + 可改）</h2>
-<div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。带「自」字的是由真实数据自动判定的。</div>
+<h2>六、长牛八大信号（自动推导 + 可改） <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
+<div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。7/8 由 macro.json 真实数据自动判定（消费税为政策项需手动）。</div>
 <div class="resgrid" id="resEight"></div>
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
@@ -252,14 +262,30 @@
   </label>
 </div>
 <div id="saveMsg" class="ok" style="margin-top:8px;font-size:13px"></div>
-<div style="overflow-x:auto"><table id="histTable"><thead><tr><th>日期</th><th>市场</th><th>温度</th><th>共振</th><th>仓位</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+<div style="overflow-x:auto"><table id="histTable"><thead><tr><th>日期</th><th>市场</th><th>温度</th><th>趋势</th><th>估值</th><th>流动</th><th>情绪</th><th>海外</th><th>危机</th><th>信号</th><th>VIX</th><th>仓位</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+
+<!-- ===================== 十-B、复盘分析（数学建模） ===================== -->
+<h2 style="margin-top:18px">十-B、复盘分析（数学建模）</h2>
+<div class="sub" id="reviewNoData" style="display:none">暂无足够快照（需≥3条）做统计分析，请先保存几次日常快照。</div>
+<div id="reviewBox" style="display:none">
+  <div class="grid2" style="margin-top:6px">
+    <div class="contig"><div class="t">📈 温度趋势（线性回归斜率）</div><div id="rv_slope" class="rv"></div></div>
+    <div class="contig"><div class="t">🎯 当前温度 z-score（相对历史）</div><div id="rv_z" class="rv"></div></div>
+    <div class="contig"><div class="t">🔄 阶段切换检测</div><div id="rv_regime" class="rv"></div></div>
+    <div class="contig"><div class="t">⚡ 信号达成趋势</div><div id="rv_eight" class="rv"></div></div>
+  </div>
+  <div class="contig" style="margin-top:10px"><div class="t">🌡️ 温度历史轨迹（火花图）</div><div id="rv_spark" style="font-family:monospace;letter-spacing:1px;font-size:14px;padding:8px 0;white-space:pre-wrap"></div></div>
+  <div class="contig" style="margin-top:10px"><div class="t">📊 仓位-温度一致性检验</div><div id="rv_consistency" class="rv"></div></div>
+</div>
 
 <div class="note">
-  <b>仓位算法（连续、可查）：</b><br>
+  <b>仓位算法（数学建模版）：</b><br>
   ① 综合温度 = 市场四维×0.55 + 海外风险×0.225 + 危机预警×0.225（海外/危机可手动调）。<br>
-  ② 温度→基础仓位（分段线性）：0分→9成，2.5分→8成，5分→5.5成，7.5分→3成，10分→1成。<br>
-  ③ 四道硬约束取最小值：趋势（跌破年线且空头排列→上限5.5成）｜信用（M1&lt;5%或信贷同比负→上限6成）｜海外（美债10Y≥4.5%：A股7成/H股5.5成）｜共振（八大信号达成&lt;50%→上限5.5成）。<br>
-  ④ 最终 = min(基础仓位, 四道约束) × 保守系数（默认0.85，对应你风险厌恶 + 2026-27财杀流年）。<br>
+  ② 四维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
+  ③ 温度→基础仓位用 <b>tanh</b> 平滑：bp(t) = 5.5 − 4.2·tanh(0.38·(t−5))，t=0→9.5成，t=5→5.5成，t=10→1.5成。<br>
+  ④ 四道<b>软约束</b>（softCap，避免边界摆动）：趋势/M1/信贷/海外/共振各用 sigmoid 平滑过渡，取 min。<br>
+  ⑤ 顶底概率：假设温度~N(5, 2²)，P(底)=Φ((3−t)/2)，P(顶)=1−Φ((7−t)/2)，Φ 用 logistic 近似。<br>
+  ⑥ 最终 = min(基础仓位, 软约束) × 保守系数（默认0.85）。<br>
   <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
 </div>
 
@@ -296,6 +322,8 @@ const BASELINE = {
   us_unemploy:{value:4.2,asOf:"2026-09-01",src:"基线(BLS)"},
   nasdaq_pct:{value:3.2,asOf:"2026-10-03",src:"基线(纳指20日)"},
   re_yoy:{value:-1.2,asOf:"2025-12-01",src:"基线(国房景气指数)"},
+  vix:{value:22.0,asOf:"2026-10-03",src:"基线(CBOE VIX)"},
+  trade_balance:{value:980,asOf:"2025-08-01",src:"基线(贸易帐)"},
   ai_bubble:{value:7.0,asOf:"2026-10-03",src:"推导(纳指+美债)"},
   hormuz_risk:{value:4.7,asOf:"2026-10-03",src:"推导(油价)"},
   paths_lit:{value:6.8,asOf:"2026-10-03",src:"推导(综合)"},
@@ -303,12 +331,13 @@ const BASELINE = {
   china_fragile:{value:6.8,asOf:"2025-12-01",src:"推导(景气指数)"},
 };
 
-// 定性项（机器判不了）
+// 定性项（尽量由真实数据数学推导，可手动覆盖）
+// 每项 score ∈ [0,10]，5为中性；reverse=true 表示越大越利好（温度负贡献）
 const QUAL = [
-  {k:'地缘波动', def:'国际冲突/贸易摩擦/黑天鹅，越大越危险', def5:5},
-  {k:'监管打压', def:'证监会/行业监管收紧力度', def5:3},
-  {k:'信用风险', def:'地产债/企业违约/信用利差', def5:5},
-  {k:'政策力度', def:'稳市政策加码程度，越大越利好', def5:6, reverse:true},
+  {k:'地缘波动', def:'VIX+油价推导', def5:5, auto:true},
+  {k:'监管打压', def:'M1-M2剪刀差+两融推导', def5:3, auto:true},
+  {k:'信用风险', def:'国房景气+信贷同比推导', def5:5, auto:true},
+  {k:'政策力度', def:'LPR+M1同比推导', def5:6, reverse:true, auto:true},
 ];
 
 // 海外风险维度权重 + 危机预警维度权重
@@ -318,14 +347,14 @@ const W_CR = {path:.35, win:.35, china:.30};
 const OV_DEFAULTS = {oil:7.5, ai:7.5, hormuz:8.5, usd:6.0, job:4.0};
 const CR_DEFAULTS = {path:6.5, win:6.6, china:9.0};
 
-// 长牛八大信号
+// 长牛八大信号（尽可能由真实数据自动推导，政策类保留手动）
 const EIGHT = [
   {k:'M1回升6%+',    auto:'m1'},
   {k:'社融/信贷止跌', auto:'credit'},
-  {k:'住户存款放缓',  auto:null, hint:'无免费接口，默认临界'},
-  {k:'消费税后移试点',auto:null, hint:'政策进度，默认临界'},
-  {k:'一带一路回款',  auto:null, hint:'默认满足'},
-  {k:'地产降幅收窄',  auto:null, hint:'仍承压，默认临界'},
+  {k:'住户存款放缓',  auto:'m2', hint:'M2同比<7%视为放缓'},
+  {k:'消费税后移试点',auto:null, hint:'政策事件，需手动确认'},
+  {k:'一带一路回款',  auto:'trade', hint:'贸易顺差>800亿视为回款充足'},
+  {k:'地产降幅收窄',  auto:'re', hint:'国房景气1Y涨跌>-0.5%视为收窄'},
   {k:'A股日均3万亿',  auto:'amt'},
   {k:'海外贴现率缓和',auto:'us10y'},
 ];
@@ -338,6 +367,7 @@ let META = {};                                  // key -> {src, asOf, auto, stal
 let override = {};                              // 手动覆盖
 let qualVal = {};
 let eightState = {};                            // 手动改过的八大信号
+let qualState = {};                             // 手动改过的定性项
 let Q = null;                                   // 实时行情
 let SRV = null;                                 // 服务端算好的决策（有后端时的真相源）
 let statusFlags = {quote:null, macro:null, fx:null, api:false};
@@ -476,12 +506,14 @@ function applyMacro(j){
   put('lpr1y',d.lpr1y); put('cn10y',d.cn10y); put('us10y',d.us10y);
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
   put('northbound',d.northbound);
+  if(d.m1_yoy&&d.m1_yoy.extra) M.m2_yoy={value:d.m1_yoy.extra.m2_yoy, asOf:d.m1_yoy.asOf, src:d.m1_yoy.src};
   if(d.breadth_up) put('breadth_up',d.breadth_up);
   else if(d.breadth) put('breadth_up',d.breadth);   // 兼容旧字段名
   if(d.hs300&&d.hs300.extra) M.tech=d.hs300.extra;
   // ===== 海外风险 + 危机预警 =====
   put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);
   put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy);
+  put('vix',d.vix); put('trade_balance',d.trade_balance);
   put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
   put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
 }
@@ -492,17 +524,28 @@ function loadLocal(){
   try{ qualVal=JSON.parse(localStorage.getItem(QK))||{}; }catch(e){ qualVal={}; }
   QUAL.forEach(q=>{ if(!(q.k in qualVal)) qualVal[q.k]=q.def5; });
   try{ eightState=JSON.parse(localStorage.getItem('niuxiong_v2_eight'))||{}; }catch(e){ eightState={}; }
+  try{ qualState=JSON.parse(localStorage.getItem('niuxiong_v2_qual'))||{}; }catch(e){ qualState={}; }
 }
 function saveLocal(){
   localStorage.setItem(OVK,JSON.stringify(override));
   localStorage.setItem(QK,JSON.stringify(qualVal));
   localStorage.setItem('niuxiong_v2_eight',JSON.stringify(eightState));
+  localStorage.setItem('niuxiong_v2_qual',JSON.stringify(qualState));
 }
 
 /* =========================================================
    打分引擎
    ========================================================= */
 function lerp(x,x1,y1,x2,y2){ if(x2===x1) return y1; const t=(x-x1)/(x2-x1); return y1+(y2-y1)*Math.max(0,Math.min(1,t)); }
+// ===== 数学建模核心函数 =====
+// sigmoid: S型曲线，将任意实数映射到(0,1)，用于替代硬阈值分段
+//   sigmoid(x) = 1 / (1 + e^(-x))
+//   当 x=0 时输出 0.5；x>0 趋近 1，x<0 趋近 0
+function sigmoid(x){ return 1/(1+Math.exp(-x)); }
+// softCap: 软约束上限 —— 当指标 x 超过阈值 x0 时，仓位上限从 capLo 平滑过渡到 capHi
+//   替代硬阈值 (x<x0?capLo:capHi)，避免边界来回摆动
+//   cap = capLo + (capHi-capLo) * sigmoid(k*(x-x0))
+function softCap(x, x0, capLo, capHi, k){ return capLo + (capHi-capLo)*sigmoid(k*(x-x0)); }
 
 // 陈旧数据降权：距今天数 >5 天开始衰减，>30 天降到 0.3
 function ageDays(key){
@@ -523,16 +566,23 @@ function scoreTrend(){
   const t=M.tech||{};
   let s, why=[];
   if(t.pos_in_250range!=null){
-    s = 0.5 + (t.pos_in_250range/100)*8;                 // 年内位置 0%→0.5  100%→8.5
-    why.push('年内区间位置 '+t.pos_in_250range.toFixed(0)+'%');
-    s += t.above_ma250? 1 : -0.5;  why.push(t.above_ma250?'站上年线':'跌破年线');
-    s += t.ma20_gt_ma60? 0.5 : -0.5; why.push(t.ma20_gt_ma60?'MA20>MA60':'MA20<MA60');
+    // 数学模型：趋势分 = 位置百分位的 sigmoid 映射 + 均线动量修正
+    // pos_in_250range ∈ [0,100] 是价格在250日区间的百分位
+    // 令 z = (pos - 50)/σ_pos，σ_pos=12 使 50%→5分，0%→~0.5分，100%→~9.5分
+    const z_pos = (t.pos_in_250range - 50) / 12;
+    s = 10 * sigmoid(z_pos);
+    why.push('年内区间位置 '+t.pos_in_250range.toFixed(0)+'% → z='+z_pos.toFixed(2));
+    // 均线动量修正：站上年线 +0.8，跌破 -0.4；MA20>MA60 +0.4，否则 -0.4
+    const maAdj = (t.above_ma250?0.8:-0.4) + (t.ma20_gt_ma60?0.4:-0.4);
+    s += maAdj;
+    why.push((t.above_ma250?'站上年线':'跌破年线')+' '+(t.ma20_gt_ma60?'MA20↑MA60':'MA20↓MA60')+' 修正'+(maAdj>=0?'+':'')+maAdj.toFixed(1));
   }else{
-    // 无技术面数据时，用实时涨跌+成交额粗判
+    // 无技术面数据时，用当日涨跌的 sigmoid 粗判
     const pct=Q&&Q.ok? (mode==='A'?Q.hs300.pct:Q.hsi.pct):0;
-    s = 5 - pct*1.2; why.push('无均线数据，按当日涨跌'+(pct>0?'+':'')+pct.toFixed(2)+'%粗判');
+    s = 10 * sigmoid(pct * 0.3);  // 涨3%→约7分，跌3%→约3分
+    why.push('无均线数据，当日涨跌 '+(pct>0?'+':'')+pct.toFixed(2)+'% → sigmoid');
   }
-  if(t.chg_60d!=null) why.push('60日 '+t.chg_60d.toFixed(1)+'%');
+  if(t.chg_60d!=null) why.push('60日动量 '+t.chg_60d.toFixed(1)+'%');
   if(t.drawdown_from_250high!=null) why.push('距年内高点 '+t.drawdown_from_250high.toFixed(1)+'%');
   return {v:clamp(s), why:why.join(' · ')};
 }
@@ -541,14 +591,13 @@ function scoreVal(){
   const erp=get('erp'); let s,why;
   if(erp==null){ s=5; why='ERP 缺失→中性5分'; }
   else{
-    // ERP 越高越便宜（冷）
-    if(erp>=6) s=0.5; else if(erp>=5) s=lerp(erp,5,1.5,6,0.5);
-    else if(erp>=4) s=lerp(erp,4,3,5,1.5);
-    else if(erp>=3) s=lerp(erp,3,4.5,4,3);
-    else if(erp>=2) s=lerp(erp,2,6,3,4.5);
-    else if(erp>=1) s=lerp(erp,1,7.5,2,6);
-    else s=9;
-    why='ERP '+erp.toFixed(2)+'%（股权风险溢价，越高越便宜）';
+    // 数学模型：ERP 股权风险溢价 → 估值温度
+    // 假设 A 股 ERP ~ N(μ=4.5%, σ=1.2%)，ERP 越高越便宜→温度越低
+    // z_erp = (erp - μ)/σ，估值分 = 10 * (1 - sigmoid(z_erp))
+    //   erp=4.5%→5分(中性), erp=6.9%(+2σ)→~1.2分(极便宜), erp=2.1%(-2σ)→~8.8分(极贵)
+    const z_erp = (erp - 4.5) / 1.2;
+    s = 10 * (1 - sigmoid(z_erp));
+    why = 'ERP '+erp.toFixed(2)+'% → z='+z_erp.toFixed(2)+'（μ=4.5, σ=1.2，正态假设）';
   }
   const pe=get('hs300_pe'); if(pe) why+=' · 沪深300 PE '+pe;
   return {v:clamp(s), why:why};
@@ -559,17 +608,39 @@ function scoreLiq(){
   const m1=get('m1_yoy'), cr=get('credit_yoy'), cn=get('cn10y'),
         mg=M.margin_yi&&M.margin_yi.extra?M.margin_yi.extra['周变化%']:null,
         amt=(Q&&Q.ok)?Q.amtTotalYi:get('amt_yi');
-  if(isReal('m1_yoy')){ let s; if(m1>=8)s=8; else if(m1>=6)s=lerp(m1,6,6,8,8); else if(m1>=4)s=lerp(m1,4,4.5,6,6); else if(m1>=3)s=lerp(m1,3,3.5,4,4.5); else s=2.5;
-    parts.push({s:s,w:1.2*decayW('m1_yoy')}); whys.push('M1 '+m1+'%'); }
-  if(isReal('credit_yoy')){ let s; if(cr<-20)s=1; else if(cr<0)s=lerp(cr,-20,1,0,3); else if(cr<=20)s=lerp(cr,0,3,20,5); else s=7;
-    parts.push({s:s,w:1*decayW('credit_yoy')}); whys.push('信贷同比 '+cr.toFixed(1)+'%'); }
-  if(isReal('cn10y')){ let s; if(cn<1.5)s=2; else if(cn<2.5)s=lerp(cn,1.5,2,2.5,4); else if(cn<3.5)s=lerp(cn,2.5,4,3.5,6); else s=8;
-    parts.push({s:s,w:0.8*decayW('cn10y')}); whys.push('中债10Y '+cn+'%'); }
-  if(mg!=null&&isReal('margin_yi')){ let s; if(mg>3)s=8; else if(mg>1)s=lerp(mg,1,6.5,3,8); else if(mg>=-1)s=lerp(mg,-1,5,1,6.5); else s=3.5;
-    parts.push({s:s,w:0.8*decayW('margin_yi')}); whys.push('两融周变化 '+mg.toFixed(2)+'%'); }
-  if(amt!=null){ let s; if(amt>=30000)s=8; else if(amt>=20000)s=lerp(amt,20000,6.5,30000,8); else if(amt>=12000)s=lerp(amt,12000,5,20000,6.5); else if(amt>=8000)s=lerp(amt,8000,3.5,12000,5); else s=2.5;
+  // 数学模型：每个流动性指标经 sigmoid 映射到 0-10，再按权重加权平均
+  // 流动性越宽松 → 温度越低（资金充裕推升资产价格但也是底部特征）
+  if(isReal('m1_yoy')){
+    // M1同比：μ=6%, σ=1.5%；高于6%→宽松→低温
+    const z = (m1 - 6) / 1.5;
+    const s = 10 * (1 - sigmoid(z));
+    parts.push({s:s,w:1.2*decayW('m1_yoy')}); whys.push('M1 '+m1+'%→z='+z.toFixed(2));
+  }
+  if(isReal('credit_yoy')){
+    // 信贷同比：μ=0%, σ=15%；正增长→宽松→低温
+    const z = cr / 15;
+    const s = 10 * (1 - sigmoid(z));
+    parts.push({s:s,w:1*decayW('credit_yoy')}); whys.push('信贷 '+cr.toFixed(1)+'%→z='+z.toFixed(2));
+  }
+  if(isReal('cn10y')){
+    // 中债10Y：μ=2.5%, σ=0.6%；利率低→宽松→低温
+    const z = (cn - 2.5) / 0.6;
+    const s = 10 * sigmoid(z);
+    parts.push({s:s,w:0.8*decayW('cn10y')}); whys.push('中债10Y '+cn+'%→z='+z.toFixed(2));
+  }
+  if(mg!=null&&isReal('margin_yi')){
+    // 两融周变化：μ=1%, σ=2%；加杠杆→温度升高（过热信号）
+    const z = (mg - 1) / 2;
+    const s = 10 * sigmoid(z);
+    parts.push({s:s,w:0.8*decayW('margin_yi')}); whys.push('两融周变 '+mg.toFixed(2)+'%→z='+z.toFixed(2));
+  }
+  if(amt!=null){
+    // 两市成交额：μ=15000亿, σ=6000亿；放量→温度升高
+    const z = (amt - 15000) / 6000;
+    const s = 10 * sigmoid(z);
     const amtKey=(Q&&Q.ok)?null:'amt_yi';
-    parts.push({s:s,w:1.2*(amtKey?decayW(amtKey):1)}); whys.push('两市成交额 '+(amt/10000).toFixed(2)+'万亿'); }
+    parts.push({s:s,w:1.2*(amtKey?decayW(amtKey):1)}); whys.push('成交额 '+(amt/10000).toFixed(2)+'万亿→z='+z.toFixed(2));
+  }
   if(!parts.length) return {v:5,why:'流动性数据缺失→中性'};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
   return {v:clamp(sv/sw), why:whys.join(' · ')};
@@ -577,27 +648,49 @@ function scoreLiq(){
 
 function scoreEmo(){
   const parts=[],whys=[];
-  const bu=get('breadth_up'), vix=(Q&&Q.ok)?Q.vix.price:null,
+  const bu=get('breadth_up'), vix=(Q&&Q.ok&&!isNaN(Q.vix.price))?Q.vix.price:(isReal('vix')?get('vix'):null),
         pct=(Q&&Q.ok)?(mode==='A'?Q.hs300.pct:Q.hsi.pct):null,
         nb=get('northbound');
-  if(isReal('breadth_up')){ let s; if(bu>70)s=8; else if(bu>55)s=lerp(bu,55,6.5,70,8); else if(bu>=45)s=lerp(bu,45,5,55,6.5); else if(bu>=30)s=lerp(bu,30,3.5,45,5); else s=2;
-    parts.push({s:s,w:1.3*decayW('breadth_up')}); whys.push('上涨家数占比 '+bu.toFixed(0)+'%'); }
-  if(vix!=null&&!isNaN(vix)&&vix>0){ let s; if(vix<15)s=8; else if(vix<20)s=lerp(vix,15,8,20,6.5); else if(vix<25)s=lerp(vix,20,6.5,25,5); else if(vix<30)s=lerp(vix,25,5,30,3.5); else s=2;
-    parts.push({s:s,w:1}); whys.push('VIX '+vix.toFixed(1)); }
-  if(pct!=null&&!isNaN(pct)){ let s=5-pct*1.5; parts.push({s:clamp(s),w:0.7}); whys.push('当日 '+(pct>0?'+':'')+pct.toFixed(2)+'%'); }
-  if(nb!=null&&isReal('northbound')){ let s; if(nb>80)s=8; else if(nb>20)s=lerp(nb,20,6.5,80,8); else if(nb>-20)s=lerp(nb,-20,5,20,6.5); else s=3.5;
-    parts.push({s:s,w:0.6*decayW('northbound')}); whys.push('北向 '+nb.toFixed(0)+'亿'); }
+  // 数学模型：情绪指标经 sigmoid 映射到 0-10，加权平均
+  if(isReal('breadth_up')){
+    // 上涨家数占比：μ=50%, σ=12%；占比高→情绪亢奋→高温
+    const z = (bu - 50) / 12;
+    const s = 10 * sigmoid(z);
+    parts.push({s:s,w:1.3*decayW('breadth_up')}); whys.push('宽度 '+bu.toFixed(0)+'%→z='+z.toFixed(2));
+  }
+  if(vix!=null&&!isNaN(vix)&&vix>0){
+    // VIX：μ=20, σ=4；VIX高→恐慌→低温（逆向指标）
+    const z = (vix - 20) / 4;
+    const s = 10 * (1 - sigmoid(z));
+    parts.push({s:s,w:1}); whys.push('VIX '+vix.toFixed(1)+'→z='+z.toFixed(2));
+  }
+  if(pct!=null&&!isNaN(pct)){
+    // 当日涨跌：每1%对应 z 变化 0.5；涨→高温
+    const z = pct * 0.5;
+    const s = 10 * sigmoid(z);
+    parts.push({s:clamp(s),w:0.7}); whys.push('当日 '+(pct>0?'+':'')+pct.toFixed(2)+'%→z='+z.toFixed(2));
+  }
+  if(nb!=null&&isReal('northbound')){
+    // 北向净流入：μ=0, σ=40亿；流入→高温
+    const z = nb / 40;
+    const s = 10 * sigmoid(z);
+    parts.push({s:s,w:0.6*decayW('northbound')}); whys.push('北向 '+nb.toFixed(0)+'亿→z='+z.toFixed(2));
+  }
   if(!parts.length) return {v:5,why:'情绪数据缺失→中性'};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
   return {v:clamp(sv/sw), why:whys.join(' · ')};
 }
 
-// 八大信号自动推导
+// 八大信号自动推导（7/8 由真实数据推导，仅消费税政策项手动）
 function autoEight(){
   const st={};
-  const m1=get('m1_yoy'), cr=get('credit_yoy'), amt=(Q&&Q.ok)?Q.amtTotalYi:get('amt_yi'), u=get('us10y');
+  const m1=get('m1_yoy'), cr=get('credit_yoy'), amt=(Q&&Q.ok)?Q.amtTotalYi:get('amt_yi'),
+        u=get('us10y'), m2=get('m2_yoy'), re=get('re_yoy'), tb=get('trade_balance');
   st['M1回升6%+'] = m1==null?2:(m1>=6?1:3);
   st['社融/信贷止跌'] = cr==null?2:(cr>0?1:(cr>-10?2:3));
+  st['住户存款放缓'] = m2==null?2:(m2<7?1:(m2<=9?2:3));   // M2同比低→存款增速放缓→资金入市
+  st['一带一路回款'] = tb==null?2:(tb>800?1:(tb>=500?2:3)); // 贸易顺差大→外汇回款充足
+  st['地产降幅收窄'] = re==null?2:(re>-0.5?1:(re>=-1.5?2:3)); // 景气指数1Y跌幅收窄
   st['A股日均3万亿'] = amt==null?2:(amt>=30000?1:(amt>=20000?2:3));
   st['海外贴现率缓和'] = u==null?2:(u<4?1:(u<4.5?2:3));
   return st;
@@ -608,14 +701,83 @@ function eightFinal(){
   return out;
 }
 
-/* =========================================================
-   仓位引擎
-   ========================================================= */
-function basePosition(t){
-  if(t<=0)return 9; if(t<=2.5)return lerp(t,0,9,2.5,8);
-  if(t<=5)return lerp(t,2.5,8,5,5.5); if(t<=7.5)return lerp(t,5,5.5,7.5,3);
-  return lerp(t,7.5,3,10,1);
+// ===== 定性项自动推导（数学模型）=====
+// 地缘波动：VIX + 布伦特油价 → sigmoid 合成
+//   vix_z=(VIX-20)/4, oil_z=(油价-80)/15，geo=10*sigmoid(0.55*vix_z+0.45*oil_z)
+// 监管打压：M2-M1剪刀差 + 两融周变化
+//   scissors_z=((M2-M1)-3)/2, mg_z=(两融周变-1)/2，reg=10*sigmoid(0.6*scissors_z-0.4*mg_z)
+// 信用风险：国房景气1Y涨跌 + 信贷同比
+//   re_z=(re_yoy-0)/1.5, credit_z=信贷/15，cr=10*sigmoid(-0.55*re_z-0.45*credit_z)
+// 政策力度：LPR + M1同比（逆向：降息+宽货币→力度大）
+//   lpr_z=(LPR-3.5)/0.5, m1_z=(M1-6)/1.5，pol=10*sigmoid(-0.6*lpr_z+0.4*m1_z)
+function autoQual(){
+  const vix=(Q&&Q.ok&&!isNaN(Q.vix.price))?Q.vix.price:(isReal('vix')?get('vix'):null);
+  const oil=get('oil_brent'), m1=get('m1_yoy'), m2=get('m2_yoy'),
+        re=get('re_yoy'), crd=get('credit_yoy'), lpr=get('lpr1y'),
+        mg=M.margin_yi&&M.margin_yi.extra?M.margin_yi.extra['周变化%']:null;
+  const out={};
+  // 地缘波动
+  if(vix!=null&&oil!=null){
+    const vz=(vix-20)/4, oz=(oil-80)/15;
+    out['地缘波动']=10*sigmoid(0.55*vz+0.45*oz);
+  }
+  // 监管打压
+  if(m1!=null&&m2!=null){
+    const scissors=m2-m1, sz=(scissors-3)/2;
+    const mgz=mg!=null?(mg-1)/2:0;
+    out['监管打压']=10*sigmoid(0.6*sz-0.4*mgz);
+  }
+  // 信用风险
+  if(re!=null&&crd!=null){
+    const rz=(re-0)/1.5, cz=crd/15;
+    out['信用风险']=10*sigmoid(-0.55*rz-0.45*cz);
+  }
+  // 政策力度
+  if(lpr!=null&&m1!=null){
+    const lz=(lpr-3.5)/0.5, mz=(m1-6)/1.5;
+    out['政策力度']=10*sigmoid(-0.6*lz+0.4*mz);
+  }
+  return out;
 }
+function qualFinal(){
+  const a=autoQual(), out={};
+  QUAL.forEach(q=>{ out[q.k]= (q.k in qualState)? qualState[q.k] : (a[q.k]!=null?a[q.k]:q.def5); });
+  return out;
+}
+function qualAutoMap(){ const a=autoQual(), m={}; QUAL.forEach(q=>{ m[q.k]=(q.auto&&!(q.k in qualState)&&a[q.k]!=null); }); return m; }
+// 刷新八大信号：重新拉取 macro.json 并重新推导
+async function refreshEight(){
+  const btn=event.target; btn.textContent='⏳ 刷新中…'; btn.disabled=true;
+  try{
+    const mj=await loadMacroJson();
+    if(mj){ applyMacro(mj); M.generated=mj.generated_at; fillOvCrDefaults(true); }
+    recalc();
+    btn.textContent='✅ 已刷新';
+  }catch(e){ btn.textContent='❌ 刷新失败'; }
+  setTimeout(()=>{ btn.textContent='🔄 刷新数据'; btn.disabled=false; },2000);
+}
+
+/* =========================================================
+   仓位引擎（数学建模版）
+   ========================================================= */
+// 仓位 = f(温度)，使用 tanh 平滑函数替代分段线性
+//   bp(t) = 5.5 - 4.2 * tanh(0.38 * (t - 5))
+//   t=0→~9.5成, t=2.5→~8成, t=5→5.5成, t=7.5→~3成, t=10→~1.5成
+function basePosition(t){
+  return 5.5 - 4.2 * Math.tanh(0.38 * (t - 5));
+}
+
+// 顶底概率：假设综合温度在完整周期内近似 N(μ=5, σ=2)
+//   P(底部) = Φ((3 - t)/σ)  —— 温度低于3的累积概率
+//   P(顶部) = 1 - Φ((7 - t)/σ) —— 温度高于7的累积概率
+// 用 logistic 近似正态 CDF：Φ(x) ≈ sigmoid(1.702*x)
+function topBottomProb(t){
+  const sigma = 2, k = 1.702;
+  const pBottom = sigmoid(k * (3 - t) / sigma);
+  const pTop    = sigmoid(k * (t - 7) / sigma);
+  return {pBottom: Math.round(pBottom*100), pTop: Math.round(pTop*100)};
+}
+
 function computeAll(){
   const tr=scoreTrend(), va=scoreVal(), lq=scoreLiq(), em=scoreEmo();
   const w = mode==='A' ? {tr:.25,va:.25,lq:.25,em:.25} : {tr:.2,va:.2,lq:.3,em:.3};
@@ -629,36 +791,53 @@ function computeAll(){
   const cr=clamp(pa*W_CR.path+wn*W_CR.win+cn*W_CR.china);
   // 综合温度 = 市场×0.55 + 海外×0.225 + 危机×0.225
   const temp = mkt*0.55 + ov*0.225 + cr*0.225;
-  // 定性项微调：地缘/监管/信用越大越危险
-  const qAdj = ((qualVal['地缘波动']-5)*0.06 + (qualVal['监管打压']-5)*0.04 + (qualVal['信用风险']-5)*0.05 - (qualVal['政策力度']-5)*0.05);
+  // 定性项微调（由数学模型推导，可手动覆盖）
+  const qf=qualFinal();
+  const qAdj = ((qf['地缘波动']-5)*0.06 + (qf['监管打压']-5)*0.04 + (qf['信用风险']-5)*0.05 - (qf['政策力度']-5)*0.05);
   const tempAdj = clamp(temp + qAdj);
   const bp = basePosition(tempAdj);
-  // 约束
+  // 顶底概率
+  const tb = topBottomProb(tempAdj);
+
+  // ===== 软约束（softCap 替代硬阈值，避免边界摆动）=====
   const cs=[];
   const t=M.tech||{};
-  if(t.above_ma250!=null){ cs.push({n:'趋势约束', v:(!t.above_ma250 && !t.ma20_gt_ma60)?5.5:(t.above_ma250&&t.ma20_gt_ma60?10:7), r:''}); }
+  // 趋势约束：trendScore=0(空头)→5.5, =1(混合)→7, =2(多头)→10
+  if(t.above_ma250!=null){
+    const trendScore = (t.above_ma250?1:0) + (t.ma20_gt_ma60?1:0);
+    const v = softCap(trendScore, 1, 5.5, 10, 3);
+    cs.push({n:'趋势约束', v:v, r:'年线'+(t.above_ma250?'上':'下')+' MA20'+(t.ma20_gt_ma60?'↑':'↓')+' → softCap'});
+  }
+  // 信用约束：M1 越低→约束越紧
   const m1=isReal('m1_yoy')?get('m1_yoy'):null, crd=isReal('credit_yoy')?get('credit_yoy'):null;
-  cs.push({n:'信用约束', v:((m1!=null&&m1<5)||(crd!=null&&crd<0))?6:10, r:'M1 '+m1+'% / 信贷 '+crd+'%'});
+  if(m1!=null) cs.push({n:'M1约束', v:softCap(m1, 5, 6, 10, 1.2), r:'M1 '+m1+'%'});
+  if(crd!=null) cs.push({n:'信贷约束', v:softCap(crd, 0, 6, 10, 0.15), r:'信贷 '+crd.toFixed(1)+'%'});
+  // 海外约束：美债10Y越高→约束越紧
   const u=isReal('us10y')?get('us10y'):null;
-  if(u!=null) cs.push({n:'海外约束', v:(u>=4.5)?(mode==='A'?7:5.5):(u>=4?(mode==='A'?8.5:7):10), r:'美债10Y '+u+'%'});
+  if(u!=null){
+    const hi = mode==='A'?7:5.5;
+    cs.push({n:'海外约束', v:softCap(u, 4.25, hi, 10, 2), r:'美债10Y '+u+'%'});
+  }
+  // 共振约束：八大信号达成率越高→约束越松
   const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p=sc/EIGHT.length;
-  cs.push({n:'共振约束', v:(p>=0.8?10:(p>=0.5?7:5.5)), r:'八大信号达成 '+(p*100).toFixed(0)+'%'});
+  cs.push({n:'共振约束', v:softCap(p, 0.65, 5.5, 10, 4), r:'八大信号 '+(p*100).toFixed(0)+'%'});
+
   const cap=Math.min.apply(null, cs.map(c=>c.v));
-  const tight=cs.filter(c=>c.v===cap).map(c=>c.n);
+  const tight=cs.filter(c=>Math.abs(c.v-cap)<0.01).map(c=>c.n);
   const konserv=document.getElementById('baziSwitch').checked?0.85:1;
   const final=clamp(Math.min(bp,cap)*konserv,1,9);
-  return {tr,va,lq,em,mkt,ov,cr,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,
+  return {tr,va,lq,em,mkt,ov,cr,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,
           ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
 }
 /* =========================================================
    渲染层
    ========================================================= */
 const DIMS=[
-  {k:'trend', n:'趋势', d:'均线位置 / 回撤 / 动量（越高=涨得越高越危险）'},
-  {k:'val',   n:'估值', d:'ERP 股权风险溢价（越高=越贵）'},
-  {k:'liq',   n:'流动性', d:'M1 / 信贷 / 两融 / 成交额 / 中债利率'},
-  {k:'emo',   n:'情绪', d:'涨跌家数 / VIX / 北向 / 当日涨跌'},
+  {k:'trend', n:'趋势', d:'sigmoid(年内位置z) + 均线动量修正'},
+  {k:'val',   n:'估值', d:'ERP z-score → 10×(1−sigmoid(z))'},
+  {k:'liq',   n:'流动性', d:'M1/信贷/利率/两融/成交额 各 sigmoid 加权'},
+  {k:'emo',   n:'情绪', d:'宽度/VIX/涨跌/北向 各 sigmoid 加权'},
 ];
 function colorOf(v){ return v<3.5?'var(--green)':(v<6.5?'var(--yellow)':'var(--red)'); }
 function renderDims(r){
@@ -709,7 +888,7 @@ function srcRows(){
     const noReal=(M[k]&&(M[k].baseline||M[k].noData));
     return {v:s, src:mm.src, asOf:mm.asOf, base:!!noReal&&!(k in override)};
   };
-  [['制造业PMI','pmi',''],['M1同比','m1_yoy','%'],['新增信贷同比','credit_yoy','%'],['LPR 1Y','lpr1y','%'],
+  [['制造业PMI','pmi',''],['M1同比','m1_yoy','%'],['M2同比','m2_yoy','%'],['新增信贷同比','credit_yoy','%'],['LPR 1Y','lpr1y','%'],
    ['中债10Y','cn10y','%'],['美债10Y','us10y','%'],['沪深300 PE','hs300_pe',''],['ERP','erp','%'],
    ['两融余额','margin_yi','亿'],['北向净买(已无实时披露)','northbound','亿'],['上涨家数占比','breadth_up','%'],
    ['美元/人民币','usdcny','']].forEach(([label,k,u])=>{
@@ -717,7 +896,8 @@ function srcRows(){
   });
   // ===== 海外风险 + 危机预警原始数据 =====
   [['布伦特油价','oil_brent','美元/桶'],['美元指数DXY','dxy',''],['美国失业率','us_unemploy','%'],
-   ['纳指20日涨跌','nasdaq_pct','%'],['国房景气指数1Y涨跌','re_yoy','%'],
+   ['纳指20日涨跌','nasdaq_pct','%'],['国房景气指数1Y涨跌','re_yoy','%'],['CBOE VIX','vix',''],
+   ['中国贸易帐','trade_balance','亿美元'],
    ['AI泡沫分(推导)','ai_bubble',''],['海峡风险分(推导)','hormuz_risk',''],
    ['四路径点燃度(推导)','paths_lit',''],['高危窗临近度(计算)','win_proximity',''],
    ['中国脆弱点(推导)','china_fragile','']].forEach(([label,k,u])=>{
@@ -769,12 +949,16 @@ function renderEight(){
 function setStateEight(k,v){ eightState[k]=v; saveLocal(); recalc(); }
 
 function renderQual(){
-  document.getElementById('qualList').innerHTML=QUAL.map(q=>
-    '<div class="dim"><div class="hd"><div class="nm">'+q.k+'</div><div class="sc">'+qualVal[q.k]+'</div></div>'+
-    '<div class="slider"><input type="range" min="0" max="10" step="1" value="'+qualVal[q.k]+'" oninput="onQual(\''+q.k+'\',this.value)"><div class="val">'+qualVal[q.k]+'</div></div>'+
-    '<div class="why">'+q.def+'</div></div>').join('');
+  const qf=qualFinal(), am=qualAutoMap();
+  document.getElementById('qualList').innerHTML=QUAL.map(q=>{
+    const v=qf[q.k], auto=am[q.k];
+    return '<div class="dim"><div class="hd"><div class="nm">'+q.k+(auto?'<span class="au">AUTO</span>':'')+
+      '<span class="why" style="float:right;font-size:10px;color:#7f8c8d">'+q.def+'</span></div><div class="sc">'+v.toFixed(1)+'</div></div>'+
+      '<div class="slider"><input type="range" min="0" max="10" step="1" value="'+Math.round(v)+'" oninput="onQual(\''+q.k+'\',this.value)"><div class="val">'+v.toFixed(1)+'</div></div>'+
+      '<div class="why">'+(auto?'<i>由数据自动推导（拖动=手动覆盖）</i>':'<i>手动覆盖值</i>')+'</div></div>';
+  }).join('');
 }
-function onQual(k,v){ qualVal[k]=parseInt(v); saveLocal(); recalc(); }
+function onQual(k,v){ qualState[k]=parseInt(v); saveLocal(); recalc(); }
 
 function renderMoney(r){
   const wan=parseFloat(document.getElementById('assetWan').value)||0;
@@ -903,8 +1087,15 @@ function recalc(){
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
   document.getElementById('posReason').innerHTML=
     '市场'+r.mkt.toFixed(2)+'×0.55 + 海外'+r.ov.toFixed(1)+'×0.225 + 危机'+r.cr.toFixed(1)+'×0.225 → 综合温度 '+r.tempAdj.toFixed(2)+
-    '<br>温度仓位 '+r.bp.toFixed(1)+'成 → 硬约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
+    '<br>温度仓位(tanh) '+r.bp.toFixed(1)+'成 → 软约束取 min '+r.cap.toFixed(1)+'成（卡在：<b>'+r.tight.join('/')+'</b>）'+
     (r.konserv<1?' → 保守系数×0.85':'')+'<br><span style="font-size:11.5px">'+csTxt+'</span>';
+  // 顶底概率
+  document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
+  document.getElementById('pTop').textContent=r.tb.pTop+'%';
+  const pInterp = r.tb.pBottom>40?'<b style="color:var(--green)">底部区域概率较高，可分批建仓</b>'
+                 : r.tb.pTop>40?'<b style="color:var(--red)">顶部区域概率较高，逐步减仓</b>'
+                 : '中性区间，按仓位建议执行';
+  document.getElementById('probReason').innerHTML='温度 '+r.tempAdj.toFixed(2)+' → '+pInterp;
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支
@@ -964,40 +1155,135 @@ function saveToday(){
   const dt=document.getElementById('dt').value||todayStr();
   const r=computeAll();
   const st=JSON.parse(localStorage.getItem(HK)||'{}');
-  st[dt]={date:dt,mode,temp:+r.tempAdj.toFixed(2),reson:+(r.p*100).toFixed(0),
-          pos:+r.final.toFixed(1), dims:{tr:+r.tr.v.toFixed(1),va:+r.va.v.toFixed(1),lq:+r.lq.v.toFixed(1),em:+r.em.v.toFixed(1)}};
+  // 保存完整快照：温度/仓位/四维/海外/危机/八大信号/VIX/HS300，供复盘做数学分析
+  const ef=eightFinal();
+  st[dt]={
+    date:dt, mode,
+    temp:+r.tempAdj.toFixed(2), reson:+(r.p*100).toFixed(0), pos:+r.final.toFixed(1),
+    dims:{tr:+r.tr.v.toFixed(1),va:+r.va.v.toFixed(1),lq:+r.lq.v.toFixed(1),em:+r.em.v.toFixed(1)},
+    ov:+r.ov.toFixed(1), cr:+r.cr.toFixed(1),
+    eightN: EIGHT.reduce((s,e)=>s+(ef[e.k]===1?1:(ef[e.k]===2?0.5:0)),0).toFixed(1),
+    vix: Q&&Q.ok? +Q.vix.price.toFixed(1) : (isReal('vix')?+get('vix').toFixed(1):null),
+    hs300: Q&&Q.ok? +Q.hs300.price.toFixed(0) : null,
+  };
   localStorage.setItem(HK,JSON.stringify(st));
   document.getElementById('saveMsg').textContent='已保存 '+dt+' 快照 ✓';
-  renderHist();
+  renderHist(); renderReview();
 }
 function renderHist(){
   const st=JSON.parse(localStorage.getItem(HK)||'{}');
   const tb=document.querySelector('#histTable tbody'); tb.innerHTML='';
   Object.keys(st).sort().reverse().forEach(k=>{
-    const r=st[k]; const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+r.date+'</td><td>'+(r.mode==='A'?'A股':'H股')+'</td><td>'+r.temp+'</td><td>'+r.reson+'%</td><td>'+r.pos+'成</td>'+
+    const r=st[k]; const d=r.dims||{};
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+r.date+'</td><td>'+(r.mode==='A'?'A股':'H股')+'</td>'+
+      '<td><b>'+r.temp+'</b></td>'+
+      '<td>'+(d.tr??'—')+'</td><td>'+(d.va??'—')+'</td><td>'+(d.lq??'—')+'</td><td>'+(d.em??'—')+'</td>'+
+      '<td>'+(r.ov??'—')+'</td><td>'+(r.cr??'—')+'</td>'+
+      '<td>'+(r.eightN??'—')+'</td>'+
+      '<td>'+(r.vix??'—')+'</td>'+
+      '<td><b>'+r.pos+'成</b></td>'+
       '<td><button class="hist-del" onclick="delRec(\''+k+'\')">删</button></td>';
     tb.appendChild(tr);
   });
 }
-function delRec(k){const st=JSON.parse(localStorage.getItem(HK)||'{}');delete st[k];localStorage.setItem(HK,JSON.stringify(st));renderHist();}
-function clearAll(){ if(confirm('确定清空全部历史快照？')){localStorage.removeItem(HK);renderHist();} }
+function delRec(k){const st=JSON.parse(localStorage.getItem(HK)||'{}');delete st[k];localStorage.setItem(HK,JSON.stringify(st));renderHist();renderReview();}
+function clearAll(){ if(confirm('确定清空全部历史快照？')){localStorage.removeItem(HK);renderHist();renderReview();} }
 function exportCSV(){
   const st=JSON.parse(localStorage.getItem(HK)||'{}');
-  let csv='日期,市场,温度,共振%,仓位,趋势,估值,流动性,情绪\n';
+  let csv='日期,市场,温度,趋势,估值,流动性,情绪,海外,危机,信号数,VIX,仓位\n';
   Object.keys(st).sort().forEach(k=>{const r=st[k];const d=r.dims||{};
-    csv+=[r.date,(r.mode==='A'?'A股':'H股'),r.temp,r.reson,r.pos,d.tr,d.va,d.lq,d.em].join(',')+'\n';});
+    csv+=[r.date,(r.mode==='A'?'A股':'H股'),r.temp,d.tr,d.va,d.lq,d.em,r.ov,r.cr,r.eightN,r.vix,r.pos].join(',')+'\n';});
   const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='牛熊自查v2历史.csv';a.click();
+}
+
+/* ---------- 复盘分析：线性回归 / z-score / 阶段切换 / 一致性检验 ---------- */
+function linreg(xs, ys){
+  const n=xs.length; if(n<2) return {slope:0, intercept:0, r2:0};
+  const mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n;
+  let num=0, den=0;
+  for(let i=0;i<n;i++){ num+=(xs[i]-mx)*(ys[i]-my); den+=(xs[i]-mx)**2; }
+  const slope = den===0?0:num/den, intercept=my-slope*mx;
+  let ssTot=0, ssRes=0;
+  for(let i=0;i<n;i++){ const pred=intercept+slope*xs[i]; ssRes+=(ys[i]-pred)**2; ssTot+=(ys[i]-my)**2; }
+  return {slope, intercept, r2: ssTot===0?0:1-ssRes/ssTot};
+}
+function renderReview(){
+  const st=JSON.parse(localStorage.getItem(HK)||'{}');
+  const keys=Object.keys(st).sort();
+  const box=document.getElementById('reviewBox'), nd=document.getElementById('reviewNoData');
+  if(keys.length<3){ box.style.display='none'; nd.style.display='block'; return; }
+  box.style.display='block'; nd.style.display='none';
+  const arr=keys.map(k=>st[k]);
+  const temps=arr.map(r=>r.temp);
+  const n=arr.length;
+  // 1) 线性回归斜率（温度随时间变化）
+  const xs=arr.map((_,i)=>i);
+  const lr=linreg(xs, temps);
+  const slopeTxt = lr.slope>0.05 ? '升温中（+'+lr.slope.toFixed(3)+'/次）' : (lr.slope<-0.05?'降温中（'+lr.slope.toFixed(3)+'/次）':'横盘震荡（'+lr.slope.toFixed(3)+'）');
+  const slopeColor = lr.slope>0.05?'var(--red)':(lr.slope<-0.05?'var(--green)':'var(--yellow)');
+  document.getElementById('rv_slope').innerHTML=
+    '斜率 <b style="color:'+slopeColor+'">'+lr.slope.toFixed(4)+'</b> ／ R²='+lr.r2.toFixed(2)+'<br>'+
+    '→ <b style="color:'+slopeColor+'">'+slopeTxt+'</b>。斜率>0 表示市场在升温，需警惕风险累积。';
+  // 2) z-score：当前温度相对历史均值的偏离
+  const mean=temps.reduce((a,b)=>a+b,0)/n;
+  const sd=Math.sqrt(temps.reduce((a,b)=>a+(b-mean)**2,0)/n);
+  const cur=temps[n-1];
+  const z = sd>0 ? (cur-mean)/sd : 0;
+  const zColor = z>1?'var(--red)':(z<-1?'var(--green)':'var(--yellow)');
+  const zInterp = z>1.5?'显著高于历史均值（过热区）':(z>0.5?'略高于均值':(z>-0.5?'处于均值附近':(z>-1.5?'略低于均值':'显著低于均值（底部区）')));
+  document.getElementById('rv_z').innerHTML=
+    '历史均值 <b>'+mean.toFixed(2)+'</b>，标准差 <b>'+sd.toFixed(2)+'</b><br>'+
+    '当前温度 '+cur.toFixed(2)+' → z = <b style="color:'+zColor+'">'+z.toFixed(2)+'</b><br>'+
+    '→ '+zInterp;
+  // 3) 阶段切换检测：温度穿越 5.0 中性线
+  let crosses=0, lastSide=null;
+  temps.forEach(t=>{ const side=t>=5?1:-1; if(lastSide!==null&&side!==lastSide) crosses++; lastSide=side; });
+  const curSide = cur>=5?'偏热(≥5)':'偏冷(<5)';
+  document.getElementById('rv_regime').innerHTML=
+    '当前阶段：<b>'+curSide+'</b><br>历史中共发生 <b>'+crosses+'</b> 次冷热切换<br>'+
+    (crosses>0?'切换频繁→市场方向不明，建议降低仓位等待趋势确立':'阶段稳定→可按当前温度执行对应策略');
+  // 4) 信号达成趋势
+  const eights=arr.map(r=>parseFloat(r.eightN)||0);
+  const eN=eights.length;
+  const eMean=eights.reduce((a,b)=>a+b,0)/eN;
+  const eCur=eights[eN-1], ePrev=eights[eN-2]||eCur;
+  const eTrend = eCur>ePrev?'↑ 信号在点亮':(eCur<ePrev?'↓ 信号在熄灭':'→ 信号持平');
+  document.getElementById('rv_eight').innerHTML=
+    '当前信号达成 <b>'+eCur.toFixed(1)+'/8</b>（均值 '+eMean.toFixed(1)+'）<br>'+
+    '较上次 '+(eCur-ePrev>=0?'+':'')+(eCur-ePrev).toFixed(1)+' → <b>'+eTrend+'</b><br>'+
+    (eCur>=6?'信号大面积点亮→可考虑进攻':'信号不足5→维持防御');
+  // 5) 火花图：温度历史轨迹（block chars）
+  const blocks=['▁','▂','▃','▄','▅','▆','▇','█'];
+  const mn=Math.min(...temps), mx=Math.max(...temps);
+  const spark = temps.map(t=>{
+    const idx = mx===mn?4:Math.round((t-mn)/(mx-mn)*7);
+    return blocks[Math.max(0,Math.min(7,idx))];
+  }).join('');
+  document.getElementById('rv_spark').innerHTML=
+    spark+' <span style="font-size:11px;color:var(--sub)">（min '+mn.toFixed(1)+' ~ max '+mx.toFixed(1)+'，共 '+n+' 期）</span>';
+  // 6) 仓位-温度一致性检验：理论仓位 vs 实际建议仓位
+  let consistent=0;
+  arr.forEach(r=>{
+    // 理论仓位 = basePosition(temp)，实际 = r.pos
+    const theo = 5.5 - 4.2 * Math.tanh(0.38 * (r.temp - 5));
+    if(Math.abs(r.pos-theo)<=1.2) consistent++;  // 允许约束造成的偏差
+  });
+  const rate=(consistent/n*100).toFixed(0);
+  document.getElementById('rv_consistency').innerHTML=
+    '理论仓位 vs 实际建议仓位 一致率 <b>'+rate+'%</b>（'+consistent+'/'+n+'）<br>'+
+    (rate>=80?'模型自洽：仓位与温度匹配良好':'偏差较大：可能被硬约束（趋势/信用/海外/共振）压低，请检查约束来源');
 }
 function copySummary(){
   const r=computeAll();
   const wan=document.getElementById('assetWan').value;
   const txt='牛熊自查 '+todayStr()+'（'+document.getElementById('modeName').textContent+'）\n'+
     '温度 '+r.tempAdj.toFixed(2)+'/10 '+tempTagOf(r.tempAdj).txt+'\n'+
+    'P(底部) '+r.tb.pBottom+'% / P(顶部) '+r.tb.pTop+'%\n'+
     '四维：趋势'+r.tr.v.toFixed(1)+' 估值'+r.va.v.toFixed(1)+' 流动性'+r.lq.v.toFixed(1)+' 情绪'+r.em.v.toFixed(1)+'\n'+
     '八大信号 '+ (r.p*100).toFixed(0)+'%\n'+
-    '建议仓位 '+r.final.toFixed(1)+'成（基础'+r.bp.toFixed(1)+'→约束'+r.cap.toFixed(1)+'，卡在'+r.tight.join('/')+'）\n'+
+    '建议仓位 '+r.final.toFixed(1)+'成（tanh基础'+r.bp.toFixed(1)+'→软约束'+r.cap.toFixed(1)+'，卡在'+r.tight.join('/')+'）\n'+
     '资产 '+wan+'万 → 目标权益 '+(wan*r.final/10).toFixed(1)+'万';
   const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
   try{document.execCommand('copy');}catch(e){}
@@ -1016,7 +1302,7 @@ function init(){
   ['in_oil','in_ai','in_hormuz','in_usd','in_job','in_path','in_win','in_china']
     .forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',recalc);});
   recalc();
-  renderHist();
+  renderHist(); renderReview();
   pullAll().then(startAutoRefresh);
 }
 

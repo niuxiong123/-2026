@@ -36,6 +36,7 @@ RANGES = {
     "northbound": (-2000, 2000), "breadth_up": (0, 100),
     "oil_brent": (20, 200), "dxy": (70, 130), "us_unemploy": (2, 20),
     "nasdaq_pct": (-15, 15), "re_yoy": (-10, 10),
+    "vix": (8, 80), "trade_balance": (-500, 2000),
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
 }
@@ -182,6 +183,41 @@ def fetch_re_yoy():
     return {"value": round(float(r["近1年涨跌幅"]), 2), "asOf": str(r["日期"])[:10],
             "src": "东财·国房景气指数"}
 
+def fetch_vix():
+    """CBOE VIX 恐慌指数 —— 全球风险偏好/金融传染核心指标
+    数据源：腾讯行情 usVIX（与前端实时同源，保证口径一致）。
+    该接口返回 CBOE 官方 VIX 指数，延迟约 15 分钟，对宏观日度判断足够准确。"""
+    import urllib.request
+    req = urllib.request.Request("https://qt.gtimg.cn/q=usVIX",
+                                 headers={"Referer": "https://gu.qq.com"})
+    raw = urllib.request.urlopen(req, timeout=10).read().decode("gbk", errors="ignore")
+    # v_usVIX="200~标普500波动率指数~.VIX~21.67~...~2026-09-14 09:30:00~..."
+    body = raw.split('"')[1] if '"' in raw else ""
+    parts = body.split("~")
+    if len(parts) < 4:
+        raise ValueError("VIX 解析失败: " + raw[:80])
+    v = float(parts[3])
+    if v <= 0:
+        raise ValueError("VIX 数值异常: " + str(v))
+    asOf = parts[30] if len(parts) > 30 else str(dt.date.today())
+    return {"value": round(v, 2), "asOf": str(asOf)[:10], "src": "腾讯行情·CBOE VIX"}
+
+def fetch_trade_balance():
+    """中国贸易帐（亿美元）—— 一带一路/出口回款代理：顺差越大→外汇回款越充足"""
+    df = ak.macro_china_trade_balance().dropna(subset=["今值"])
+    if not len(df):
+        raise ValueError("贸易帐：无有效数据")
+    r = df.iloc[-1]
+    return {"value": float(r["今值"]), "asOf": str(r["日期"])[:10],
+            "src": "海关总署/东财", "extra": {"前值": float(r["前值"]) if not _is_nan(r["前值"]) else None}}
+
+def _is_nan(x):
+    try:
+        import math
+        return math.isnan(float(x))
+    except Exception:
+        return True
+
 # ---------------- 新增：危机预警维度推导（由真实数据算0-10分） ----------------
 def score_ai_bubble(nasdaq_pct, us10y, vix=None):
     """AI泡沫风险分：纳指短期涨幅越大 + 美债越高 → 泡沫越危险"""
@@ -259,6 +295,8 @@ JOBS = {
     "us_unemploy": (fetch_us_unemploy, "美国失业率"),
     "nasdaq_pct": (fetch_nasdaq_pct, "纳斯达克20日涨跌"),
     "re_yoy": (fetch_re_yoy, "国房景气指数1Y涨跌"),
+    "vix": (fetch_vix, "CBOE VIX恐慌指数"),
+    "trade_balance": (fetch_trade_balance, "中国贸易帐"),
 }
 
 def sanity(key: str, obj: dict) -> dict | None:
