@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-06 11:27:22",
+  "generated_at": "2026-10-06 11:54:08",
   "ok_count": 21,
   "total": 22,
   "failed": [
@@ -109,19 +109,19 @@
       }
     },
     "oil_brent": {
-      "value": 98.35,
+      "value": 97.95,
       "asOf": "2026-10-06",
       "src": "akshare·布伦特原油期货"
     },
     "dxy": {
-      "value": 101.9,
+      "value": 101.79,
       "asOf": "2026-10-06",
       "src": "新浪行情·DINIW"
     },
     "us_unemploy": {
       "value": 4.2,
       "asOf": "2025-08-01",
-      "src": "BLS/东财"
+      "src": "BLS/东财·滞后(回退)"
     },
     "nasdaq_pct": {
       "value": 3.66,
@@ -138,7 +138,7 @@
     },
     "vix": {
       "value": 21.67,
-      "asOf": "2026-09-14",
+      "asOf": "2026-09-11",
       "src": "腾讯行情·CBOE VIX"
     },
     "trade_balance": {
