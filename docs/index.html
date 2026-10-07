@@ -96,9 +96,10 @@
   .clockbar{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));position:relative;margin-top:10px}
   .clockbar .pin{position:absolute;top:-5px;width:5px;height:24px;background:#fff;border-radius:3px;transform:translateX(-2px)}
   .clocklab{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:5px}
-  .dim .row{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0}
-  .dim .row .lab{flex:1;text-align:left}
-  .dim .row .w{color:var(--sub);font-size:11px;width:62px;text-align:right}
+  .dim .row{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;font-size:13px;padding:5px 0}
+  .dim .row .lab{flex:1 1 100%;text-align:left;line-height:1.55}          /* 说明文字独占一行→永远横写，不再被挤成竖排 */
+  .dim .row input[type=number]{flex:1 1 auto;min-width:0;width:auto}
+  .dim .row .w{color:var(--sub);font-size:11px;flex:0 0 auto;text-align:right;white-space:nowrap}  /* 权重横写，跟在输入框右侧 */
   .score0{color:var(--green)} .score1{color:var(--yellow)} .score2{color:var(--red)}
   .rv{font-size:13px;line-height:1.7}
   .rv b{font-size:15px}
@@ -178,7 +179,10 @@
 
 <div class="banner">
   <div class="bt">最终结论 · 当前操作建议</div>
-  <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
+  <div class="bb"><span id="bannerRegime">防御期</span><br>
+    <span style="display:block;margin-top:4px">A · 信号总闸版（推荐）：<b id="bannerPos">—</b></span>
+    <span style="display:block">B · 温度穿线版：<b id="bannerPosB">—</b></span>
+    <span id="bannerBand" style="display:block;font-size:12px;margin-top:3px;opacity:.9">—</span></div>
   <div class="bl" id="actionList">
     1.<span class="act-up">加大</span> 利率债/货基 + 黄金 ▲（随时可动、逢回调小仓）｜<br>
     2.<span class="act-short">对冲</span> 小仓股指认沽保护beta · <span class="act-short">不空</span> 原油 ｜<br>
@@ -1418,19 +1422,21 @@ function recalc(){
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:16px">成</span>';
   document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
-  document.getElementById('posReason').innerHTML=
+  const detOpen='<details style="text-align:left;margin-top:3px"><summary style="cursor:pointer;font-size:11px;color:var(--sub);user-select:none">▸ 打分明细（点开查看）</summary><div style="margin-top:4px">';
+  const detClose='</div></details>';
+  document.getElementById('posReason').innerHTML=detOpen+
     '主温度 <b>'+r.tempAdj.toFixed(2)+'</b> → tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b><br>'+
     '×顶底联动(底'+r.sb+'/顶'+r.st+'→×'+r.probMult.toFixed(2)+') = <b>'+r.cap.toFixed(1)+'成</b>'+(r.gateTxt?' ｜ '+r.gateTxt:'')+'<br>'+
     '×风险叠加 ×'+r.overlayScale.toFixed(2)+'（海外'+r.ov.toFixed(1)+'+危机'+r.cr.toFixed(1)+'）'+(r.konserv<1?' ×保守0.85':'')+' → <b>最终 '+r.final.toFixed(1)+'成</b><br>'+
     (r.eightGate? '<span style="color:var(--red);font-weight:700">🔒 '+r.eightGate+'</span><br>':'')+
-    '<span style="font-size:11.5px">'+csTxt+'</span>';
+    '<span style="font-size:11.5px">'+csTxt+'</span>'+detClose;
   // B 版：温度穿线（与八大信号无关）
-  document.getElementById('posReasonB').innerHTML=
+  document.getElementById('posReasonB').innerHTML=detOpen+
     '主温度 <b>'+r.tempAdj.toFixed(2)+'</b>（上线'+r.LINE_U+'／下线'+r.LINE_L+'）<br>'+
     '→ tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b> × 顶底联动×'+r.probMult.toFixed(2)+' × 风险叠加×'+r.overlayScale.toFixed(2)+
     (r.konserv<1?' ×保守0.85':'')+' = <b>'+r.tempPos.toFixed(1)+'成</b><br>'+
     '状态：<b style="color:'+(r.tempBand.indexOf('减仓')>=0?'var(--red)':(r.tempBand.indexOf('加仓')>=0?'var(--green)':'var(--yellow)'))+'">'+r.tempBand+'</b>'+
-    (r.eightGate?'<br><span style="font-size:11px;color:var(--sub)">（A版因信号未集齐已封顶，B版不受影响）</span>':'');
+    (r.eightGate?'<br><span style="font-size:11px;color:var(--sub)">（A版因信号未集齐已封顶，B版不受影响）</span>':'')+detClose;
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
@@ -1446,7 +1452,8 @@ function recalc(){
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支
-  document.getElementById('bannerPos').textContent='A '+r.final.toFixed(1)+'成（推荐）/ B '+r.tempPos.toFixed(1)+'成';
+  document.getElementById('bannerPos').textContent=r.final.toFixed(1)+'成';
+  document.getElementById('bannerPosB').textContent=(r.tempPos!=null? r.tempPos.toFixed(1)+'成':'–');
   document.getElementById('bannerBand').textContent=tag.txt+' ｜ '+(r.eightGate?'🔒信号'+r.litCount+'/8未满·已封顶':'信号'+r.litCount+'/8集齐')+' · '+r.tempBand;
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
   renderActionList(r);

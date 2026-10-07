@@ -13,7 +13,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.55;padding:14px;max-width:920px;margin:0 auto}
   h1{font-size:21px;margin-bottom:4px}
-  h2{font-size:16px;margin:22px 0 10px;padding-left:9px;border-left:4px solid var(--acc)}
+  h2{font-size:16px;margin:16px 0 8px;padding-left:9px;border-left:4px solid var(--acc)}
   .sub{color:var(--sub);font-size:12.5px}
   .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);padding:12px;border-radius:12px}
   .topbar label{font-size:12px;color:var(--sub);display:block;margin-bottom:3px}
@@ -34,17 +34,20 @@
   .tag.hot{background:rgba(227,179,65,.18);color:var(--yellow)}
   .tag.over{background:rgba(240,88,75,.18);color:var(--red)}
   .reson{font-size:13px;color:var(--sub);margin-top:8px}
-  .dim{background:var(--card);border-radius:11px;padding:11px;margin-bottom:9px}
+  .dim{background:var(--card);border-radius:11px;padding:9px;margin-bottom:7px}
   .dim .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .dim .nm{font-weight:700;font-size:14px}
   .dim .sc{font-weight:800;font-size:17px}
   .dim .bar{height:8px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:7px}
   .dim .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red))}
   .dim .why{font-size:12px;color:var(--sub);margin-top:6px}
+  #dimList{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  #qualList{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .dimgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .btn{background:var(--acc);color:#06121f;border:none;border-radius:9px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer}
   .btn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
   .btn.sm{padding:6px 12px;font-size:13px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
   table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
   th,td{border:1px solid var(--line);padding:6px 7px;text-align:center}
   th{background:var(--card2);color:var(--sub)}
@@ -93,9 +96,10 @@
   .clockbar{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));position:relative;margin-top:10px}
   .clockbar .pin{position:absolute;top:-5px;width:5px;height:24px;background:#fff;border-radius:3px;transform:translateX(-2px)}
   .clocklab{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-top:5px}
-  .dim .row{display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0}
-  .dim .row .lab{flex:1;text-align:left}
-  .dim .row .w{color:var(--sub);font-size:11px;width:62px;text-align:right}
+  .dim .row{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;font-size:13px;padding:5px 0}
+  .dim .row .lab{flex:1 1 100%;text-align:left;line-height:1.55}          /* 说明文字独占一行→永远横写，不再被挤成竖排 */
+  .dim .row input[type=number]{flex:1 1 auto;min-width:0;width:auto}
+  .dim .row .w{color:var(--sub);font-size:11px;flex:0 0 auto;text-align:right;white-space:nowrap}  /* 权重横写，跟在输入框右侧 */
   .score0{color:var(--green)} .score1{color:var(--yellow)} .score2{color:var(--red)}
   .rv{font-size:13px;line-height:1.7}
   .rv b{font-size:15px}
@@ -111,7 +115,7 @@
   .mod-sub.on{background:rgba(78,161,255,.18);color:var(--acc)}
   .mod-sub.off{background:rgba(128,128,128,.16);color:var(--sub)}
   .mod-sub.done{background:rgba(39,174,96,.18);color:var(--green)}
-  @media(max-width:560px){.panel,.resgrid,.quad,.grid2{grid-template-columns:1fr}}
+  @media(max-width:560px){.panel,.resgrid,.quad,.grid2,.dimgrid,#dimList,#qualList{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -142,9 +146,20 @@
     <div class="tag shake" id="tempTag">待计算</div>
   </div>
   <div class="box">
-    <div class="k">今日建议仓位（<span id="modeName">A股</span>）</div>
-    <div class="pos" id="posVal">–<span style="font-size:20px">成</span></div>
-    <div class="reson" id="posReason">等待数据…</div>
+    <div class="k">今日建议仓位（<span id="modeName">A股</span>）· 双口径对照</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+      <div style="background:var(--card2);border-radius:10px;padding:9px 8px;text-align:center">
+        <div style="font-size:11px;color:var(--sub)">A · 信号总闸版（保险丝）</div>
+        <div class="pos" id="posVal" style="font-size:36px;margin-top:0">–<span style="font-size:16px">成</span></div>
+        <div class="reson" id="posReason" style="margin-top:2px;font-size:11.5px">等待数据…</div>
+      </div>
+      <div style="background:var(--card2);border-radius:10px;padding:9px 8px;text-align:center">
+        <div style="font-size:11px;color:var(--sub)">B · 温度穿线版（无关信号）</div>
+        <div class="pos" id="posValB" style="font-size:36px;margin-top:0">–<span style="font-size:16px">成</span></div>
+        <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
+      </div>
+    </div>
+    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝（信号&lt;4强制封顶3成）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
   </div>
   <div class="box">
     <div class="k">顶底概率（市场内部信号 logistic 合成 · 1-10 信号强度分）</div>
@@ -164,7 +179,10 @@
 
 <div class="banner">
   <div class="bt">最终结论 · 当前操作建议</div>
-  <div class="bb"><span id="bannerRegime">防御期</span> ｜ 建议仓位 <b id="bannerPos">—</b>（<span id="bannerBand">—</span>）</div>
+  <div class="bb"><span id="bannerRegime">防御期</span><br>
+    <span style="display:block;margin-top:4px">A · 信号总闸版（推荐）：<b id="bannerPos">—</b></span>
+    <span style="display:block">B · 温度穿线版：<b id="bannerPosB">—</b></span>
+    <span id="bannerBand" style="display:block;font-size:12px;margin-top:3px;opacity:.9">—</span></div>
   <div class="bl" id="actionList">
     1.<span class="act-up">加大</span> 利率债/货基 + 黄金 ▲（随时可动、逢回调小仓）｜<br>
     2.<span class="act-short">对冲</span> 小仓股指认沽保护beta · <span class="act-short">不空</span> 原油 ｜<br>
@@ -220,12 +238,14 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2>二、市场温度 · 四维打分（每项 0-10，越红越危险）</h2>
+<h2>二、市场温度 · 四维打分</h2>
+<div class="sub" style="margin:4px 0 8px">本模块 = 市场温度<b>全部来源</b>：占温度100%（趋势/流动/情绪 各约1/3，估值0%已移出温度→独家喂顶底）；占仓位 = 温度经 tanh→bp；占顶底 = 趋势背离+估值分位为主。每项精确权重见卡片（A股≈34/33/33，H股≈30/35/35）。</div>
 <div id="dimList"></div>
 
 <!-- ===================== 三、海外风险维度 ===================== -->
 <h2>三、海外风险维度 · 新增打分（A）</h2>
-<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。</div>
+<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b></div>
+<div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
   <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number"><span class="w">权重25%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">AI/美股估值</div><div class="sc" id="sc_ai">—</div></div><div class="bar"><i id="bar_ai"></i></div>
@@ -236,17 +256,20 @@
   <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number"><span class="w">权重15%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">美国就业</div><div class="sc" id="sc_job">—</div></div><div class="bar"><i id="bar_job"></i></div>
   <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number"><span class="w">权重15%</span></div></div>
+</div>
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
 <!-- ===================== 四、金融危机预警 ===================== -->
 <h2>四、金融危机预警 · 新增打分（B）</h2>
-<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。</div>
+<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b></div>
+<div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
   <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">高危窗口临近度</div><div class="sc" id="sc_win">—</div></div><div class="bar"><i id="bar_win"></i></div>
   <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">中国脆弱点</div><div class="sc" id="sc_china">—</div></div><div class="bar"><i id="bar_china"></i></div>
   <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number"><span class="w">权重30%</span></div></div>
+</div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
 
 <h2>五、数据源明细（自动值 + 新鲜度 + 可手动覆盖）</h2>
@@ -983,6 +1006,14 @@ function computeAll(){
   let gate2 = '';
   if(strongBottom && final < bottomFloor-0.5){ final = bottomFloor-0.5; gate2 = ' · 闸门保底'+(bottomFloor-0.5).toFixed(1)+'成'; }
   if(strongTop    && final > 3.0){ final = 3.0; gate2 = ' · 闸门封顶3成'; }
+  // 仓位B · 温度穿线版（与八大信号无关，只看温度穿破上线/下线）——第二条独立仓位口径
+  // 上线 U=7：温度穿破→减仓区；下线 L=3：温度穿破→加仓区；区间内→中性
+  const LINE_U=7, LINE_L=3;
+  let tempPos = clamp(bp * probMult * overlayScale * konserv, 1, 9.5);
+  if(strongBottom){ tempPos = Math.max(tempPos, bottomFloor); }   // 顶底共振闸门属市场内部信号，与八大信号无关，保留
+  if(strongTop){    tempPos = Math.min(tempPos, 2.5); }
+  const tempBand = tempAdj>=LINE_U ? '穿破上线 · 减仓区'
+                 : (tempAdj<=LINE_L ? '穿破下线 · 加仓区' : '区间内 · 中性');
   // ❿ 八大长牛信号总闸（与你的总纲对齐：信号未集齐前坚持保本金）
   // 未集齐(<4 个点亮)→强制防御上限 3 成，杜绝温度<4 时仍建议进攻 7-8 成的"假进攻"
   const ef=eightFinal();   // 注意：必须在总闸之前声明（此前 ef 在下方才定义，触发 TDZ ReferenceError 导致整页卡在"正在拉取"）
@@ -1006,7 +1037,8 @@ function computeAll(){
   const p = sc / EIGHT.length;
   return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
           probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn},
-          realDims,K,litCount,eightGate,ovCrUnconfirmed};
+          realDims,K,litCount,eightGate,ovCrUnconfirmed,
+          tempPos,tempBand,LINE_U,LINE_L,w};
 }
 /* =========================================================
    渲染层
@@ -1020,13 +1052,17 @@ const DIMS=[
 function colorOf(v){ return v<3.5?'var(--green)':(v<6.5?'var(--yellow)':'var(--red)'); }
 function renderDims(r){
   const map={trend:r.tr,val:r.va,liq:r.lq,emo:r.em};
+  const wt={trend:r.w?r.w.tr:0, liq:r.w?r.w.lq:0, emo:r.w?r.w.em:0, val:0};
   document.getElementById('dimList').innerHTML=DIMS.map(d=>{
     const o=map[d.k];
+    const wtxt = d.k==='val' ? '权重 0%（已移出温度，独家喂顶底概率）'
+               : '权重 '+Math.round((wt[d.k]||0)*100)+'%';
     return '<div class="dim"><div class="hd"><div><div class="nm">'+d.n+'</div>'+
       '<div class="why" style="margin-top:2px">'+d.d+'</div></div>'+
       '<div class="sc" style="color:'+colorOf(o.v)+'">'+o.v.toFixed(1)+'</div></div>'+
       '<div class="bar"><i style="width:'+(o.v*10)+'%"></i></div>'+
-      '<div class="why">'+o.why+'</div></div>';
+      '<div class="why">'+o.why+'</div>'+
+      '<div class="why" style="margin-top:3px;color:var(--acc)">'+wtxt+'</div></div>';
   }).join('');
 }
 function renderQuad(r){
@@ -1383,14 +1419,24 @@ function recalc(){
   document.getElementById('tempPin').style.left=(r.tempAdj*10)+'%';
   const te=document.getElementById('tempTag'); te.className='tag '+tag.cls; te.textContent=tag.txt;
   if(!r.va.real) te.textContent += ' ⚠估值缺位';   // D 半盲提示：估值被静默置中时明确告知，温度=半盲
-  document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:20px">成</span>';
+  document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:16px">成</span>';
+  document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
-  document.getElementById('posReason').innerHTML=
+  const detOpen='<details style="text-align:left;margin-top:3px"><summary style="cursor:pointer;font-size:11px;color:var(--sub);user-select:none">▸ 打分明细（点开查看）</summary><div style="margin-top:4px">';
+  const detClose='</div></details>';
+  document.getElementById('posReason').innerHTML=detOpen+
     '主温度 <b>'+r.tempAdj.toFixed(2)+'</b> → tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b><br>'+
     '×顶底联动(底'+r.sb+'/顶'+r.st+'→×'+r.probMult.toFixed(2)+') = <b>'+r.cap.toFixed(1)+'成</b>'+(r.gateTxt?' ｜ '+r.gateTxt:'')+'<br>'+
     '×风险叠加 ×'+r.overlayScale.toFixed(2)+'（海外'+r.ov.toFixed(1)+'+危机'+r.cr.toFixed(1)+'）'+(r.konserv<1?' ×保守0.85':'')+' → <b>最终 '+r.final.toFixed(1)+'成</b><br>'+
     (r.eightGate? '<span style="color:var(--red);font-weight:700">🔒 '+r.eightGate+'</span><br>':'')+
-    '<span style="font-size:11.5px">'+csTxt+'</span>';
+    '<span style="font-size:11.5px">'+csTxt+'</span>'+detClose;
+  // B 版：温度穿线（与八大信号无关）
+  document.getElementById('posReasonB').innerHTML=detOpen+
+    '主温度 <b>'+r.tempAdj.toFixed(2)+'</b>（上线'+r.LINE_U+'／下线'+r.LINE_L+'）<br>'+
+    '→ tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b> × 顶底联动×'+r.probMult.toFixed(2)+' × 风险叠加×'+r.overlayScale.toFixed(2)+
+    (r.konserv<1?' ×保守0.85':'')+' = <b>'+r.tempPos.toFixed(1)+'成</b><br>'+
+    '状态：<b style="color:'+(r.tempBand.indexOf('减仓')>=0?'var(--red)':(r.tempBand.indexOf('加仓')>=0?'var(--green)':'var(--yellow)'))+'">'+r.tempBand+'</b>'+
+    (r.eightGate?'<br><span style="font-size:11px;color:var(--sub)">（A版因信号未集齐已封顶，B版不受影响）</span>':'')+detClose;
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
@@ -1407,7 +1453,8 @@ function recalc(){
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支
   document.getElementById('bannerPos').textContent=r.final.toFixed(1)+'成';
-  document.getElementById('bannerBand').textContent=tag.txt;
+  document.getElementById('bannerPosB').textContent=(r.tempPos!=null? r.tempPos.toFixed(1)+'成':'–');
+  document.getElementById('bannerBand').textContent=tag.txt+' ｜ '+(r.eightGate?'🔒信号'+r.litCount+'/8未满·已封顶':'信号'+r.litCount+'/8集齐')+' · '+r.tempBand;
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
   renderActionList(r);
   renderAlloc();
