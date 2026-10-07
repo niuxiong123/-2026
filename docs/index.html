@@ -985,6 +985,7 @@ function computeAll(){
   if(strongTop    && final > 3.0){ final = 3.0; gate2 = ' · 闸门封顶3成'; }
   // ❿ 八大长牛信号总闸（与你的总纲对齐：信号未集齐前坚持保本金）
   // 未集齐(<4 个点亮)→强制防御上限 3 成，杜绝温度<4 时仍建议进攻 7-8 成的"假进攻"
+  const ef=eightFinal();   // 注意：必须在总闸之前声明（此前 ef 在下方才定义，触发 TDZ ReferenceError 导致整页卡在"正在拉取"）
   const litCount = EIGHT.filter(e=>ef[e.k]===1).length;
   let eightGate = '';
   if(litCount < 4){ final = Math.max(1, Math.min(final, 3.0)); eightGate = '长牛信号 '+litCount+'/8 未集齐 → 强制防御上限3成'; }
@@ -1001,7 +1002,7 @@ function computeAll(){
     {n:'保守系数',       v:final,         r:(konserv<1?'×0.85':'×1.00')+(gate2?' ｜ '+gate2:'')}
   ];
   const cap = core, tight = [gateTxt || '无共振'];
-  const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
+  let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p = sc / EIGHT.length;
   return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
           probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn},
