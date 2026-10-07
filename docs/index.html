@@ -675,7 +675,7 @@ function scoreTrend(){
   if(div.mDiv||div.wDiv) why += ' ｜ '+div.mTxt+'·'+div.wTxt;
   if(t.chg_60d!=null) why += ' · 60日动量 '+t.chg_60d.toFixed(1)+'%';
   if(t.drawdown_from_250high!=null) why += ' · 距年内高点 '+t.drawdown_from_250high.toFixed(1)+'%';
-  return {v, why, div};
+  return {v, why, div, real: parts.length>0};
 }
 
 function scoreVal(){
@@ -703,9 +703,10 @@ function scoreVal(){
   if(peP!=null){ const s=10*peP; parts.push({s,w:0.35}); whys.push('PE分位 '+(peP*100).toFixed(0)+'%→'+s.toFixed(1)); }
   if(pbP!=null){ const s=10*pbP; parts.push({s,w:0.25}); whys.push('PB分位 '+(pbP*100).toFixed(0)+'%→'+s.toFixed(1)); }
   if(erpP!=null){ const s=10*(1-erpP); parts.push({s,w:0.40}); whys.push('ERP便宜分位 '+(erpP*100).toFixed(0)+'%→'+s.toFixed(1)); }
-  if(!parts.length) return {v:5, why:'估值数据缺失→中性5分'};
+  if(!parts.length) return {v:5, why:'估值数据缺失→中性5分', real:false};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
-  return {v:clamp(sv/sw), why:whys.join(' · ')};
+  // real=true 仅当至少有一个真实估值指标参与（PE/PB/ERP 分位），基线占位值不算
+  return {v:clamp(sv/sw), why:whys.join(' · '), real:true};
 }
 
 function scoreLiq(){
@@ -746,9 +747,9 @@ function scoreLiq(){
     const amtKey=(Q&&Q.ok)?null:'amt_yi';
     parts.push({s:s,w:1.2*(amtKey?decayW(amtKey):1)}); whys.push('成交额 '+(amt/10000).toFixed(2)+'万亿→z='+z.toFixed(2));
   }
-  if(!parts.length) return {v:5,why:'流动性数据缺失→中性'};
+  if(!parts.length) return {v:5,why:'流动性数据缺失→中性', real:false};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
-  return {v:clamp(sv/sw), why:whys.join(' · ')};
+  return {v:clamp(sv/sw), why:whys.join(' · '), real:true};
 }
 
 function scoreEmo(){
@@ -788,9 +789,9 @@ function scoreEmo(){
     const s = 10 * sigmoid(z);
     parts.push({s:s,w:0.6*decayW('northbound')}); whys.push('北向 '+nb.toFixed(0)+'亿→z='+z.toFixed(2));
   }
-  if(!parts.length) return {v:5,why:'情绪数据缺失→中性'};
+  if(!parts.length) return {v:5,why:'情绪数据缺失→中性', real:false};
   const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
-  return {v:clamp(sv/sw), why:whys.join(' · ')};
+  return {v:clamp(sv/sw), why:whys.join(' · '), real:true};
 }
 
 // 八大信号自动推导（7/8 由真实数据推导，仅消费税政策项手动）
@@ -934,8 +935,9 @@ function probRead(pB, pT){
 
 function computeAll(){
   const tr=scoreTrend(), va=scoreVal(), lq=scoreLiq(), em=scoreEmo();
-  const w = mode==='A' ? {tr:.25,va:.25,lq:.25,em:.25} : {tr:.2,va:.2,lq:.3,em:.3};
-  const mkt = tr.v*w.tr + va.v*w.va + lq.v*w.lq + em.v*w.em;   // 市场温度(0-10,高=热/贵)——顶底判断主信号
+  // ❶ 估值双重计账修复：估值(ERP/PE/PB)不再计入温度，独家喂顶底概率(下方 erpP/peP)，消除同一便宜信号被计两遍导致的底过度自信
+  const w = mode==='A' ? {tr:.34, lq:.33, em:.33} : {tr:.30, lq:.35, em:.35};
+  const mkt = tr.v*w.tr + lq.v*w.lq + em.v*w.em;   // 市场温度(0-10,高=热/贵)=趋势+流动性+情绪 三因子，估值已移出
   // 海外风险 + 危机预警：仅作「仓位叠加层」，不参与顶底概率（解耦硬伤①）
   const iv=id=>{const e=document.getElementById(id);const v=e?parseFloat(e.value):NaN;return isNaN(v)?5:v;};
   const oil=iv('in_oil'),aiv=iv('in_ai'),hm=iv('in_hormuz'),usd=iv('in_usd'),job=iv('in_job');
@@ -944,9 +946,11 @@ function computeAll(){
   const cr=clamp(pa*W_CR.path+wn*W_CR.win+cn*W_CR.china);
   const riskOverlay = clamp(0.5*ov + 0.5*cr, 0, 10);           // 0-10，仅收缩仓位用
   // 顶底概率：只吃市场内部信号（脱钩综合温度）
-  const erp=get('erp'); const erpP = erp!=null? erpPercentile(erp) : 0.5;
-  const peP = (M.hs300_pe_pct && M.hs300_pe_pct.value!=null)? M.hs300_pe_pct.value/100
-            : (get('hs300_pe')!=null? valPctFromPe(get('hs300_pe')) : 0.5);
+  // C 顶底基线静默泄漏修复：erp/peP 必须过 isReal() 守卫，基线/过期值一律回退中性 0.5，不再静默喂进 P(底)
+  const erp = isReal('erp') ? get('erp') : null;
+  const erpP = erp!=null ? erpPercentile(erp) : 0.5;
+  const peP = isReal('hs300_pe_pct') ? M.hs300_pe_pct.value/100
+            : (isReal('hs300_pe') ? valPctFromPe(get('hs300_pe')) : 0.5);
   const bu=get('breadth_up');
   const brdT = (isReal('breadth_up')&&bu>65)? sigmoid((bu-65)/10) : 0;   // 广度亢奋→顶
   const brdB = (isReal('breadth_up')&&bu<35)? sigmoid((35-bu)/10) : 0;   // 广度恐慌→底
@@ -979,6 +983,16 @@ function computeAll(){
   let gate2 = '';
   if(strongBottom && final < bottomFloor-0.5){ final = bottomFloor-0.5; gate2 = ' · 闸门保底'+(bottomFloor-0.5).toFixed(1)+'成'; }
   if(strongTop    && final > 3.0){ final = 3.0; gate2 = ' · 闸门封顶3成'; }
+  // ❿ 八大长牛信号总闸（与你的总纲对齐：信号未集齐前坚持保本金）
+  // 未集齐(<4 个点亮)→强制防御上限 3 成，杜绝温度<4 时仍建议进攻 7-8 成的"假进攻"
+  const litCount = EIGHT.filter(e=>ef[e.k]===1).length;
+  let eightGate = '';
+  if(litCount < 4){ final = Math.max(1, Math.min(final, 3.0)); eightGate = '长牛信号 '+litCount+'/8 未集齐 → 强制防御上限3成'; }
+  // D 半盲提示：四维真实数据覆盖度；❷ 海外/危机默认值未确认标记
+  const realDims = [tr, va, lq, em].filter(d=>d.real).length;
+  const K = 4;
+  const ovCrUnconfirmed = !['oil_brent','ai_bubble','hormuz_risk','dxy','us_unemploy'].some(isReal)
+                       || !['paths_lit','win_proximity','china_fragile'].some(isReal);
   // 展示链路（同一根信号，不再互相独立）
   const cs=[
     {n:'温度仓位(tanh)', v:bp,            r:'主温度 '+tempAdj.toFixed(2)+' → '+bp.toFixed(1)+'成'},
@@ -990,7 +1004,8 @@ function computeAll(){
   const ef=eightFinal(); let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p = sc / EIGHT.length;
   return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
-          probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn}};
+          probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn},
+          realDims,K,litCount,eightGate,ovCrUnconfirmed};
 }
 /* =========================================================
    渲染层
@@ -1222,14 +1237,21 @@ function renderStatus(){
   const s1=f.quote===null?'⏳':(f.quote?'🟢':'🔴');
   const s2=f.macro===null?'⏳':(f.macro?'🟢':'🟡');
   const s3=f.fx===null?'⏳':(f.fx?'🟢':'🟡');
+  const rr=window.__r||{};
+  const realDims=rr.realDims!=null?rr.realDims:0, K=rr.K||4;
   document.getElementById('srcBadge').innerHTML=
     s1+' 实时行情('+(statusFlags.api?'后端代理':'腾讯直连')+') ｜ '+s2+' 宏观'+(statusFlags.api?'API':'macro.json')+' ｜ '+s3+' 汇率'
-    + (SRV?' ｜ 🟢 决策由服务端计算':' ｜ ⚪ 本机计算');
+    + (SRV?' ｜ 🟢 决策由服务端计算':' ｜ ⚪ 本机计算')
+    + ' ｜ 📡 实时信号 <b style="color:'+(realDims>=3?'var(--green)':(realDims>=2?'var(--yellow)':'var(--red)'))+'">'+realDims+'/'+K+'</b>';
   const warn=document.getElementById('dataWarn');
   const lost=[];
   if(f.macro===false) lost.push('macro.json 未读到（用内置基线值，数值可能过时）——本页若托管在静态空间/资料库，必然读不到，需要自建后端');
   if(M.generated){ const g=daysAgo(M.generated.slice(0,10)); if(g>2) lost.push('macro.json 已 '+g+' 天未更新（抓取脚本可能没跑）'); }
   if(f.quote===false) lost.push('实时行情拉取失败');
+  // D 半盲提示：四维真实覆盖度过低时不建议以温度为据
+  if(realDims/K < 0.5) lost.push('实时信号仅 '+realDims+'/'+K+'（<50%）→ 温度"半盲"，不建议据此重仓；估值缺位时温度已自动置中');
+  // ❷ 海外/危机默认值未确认：静态部署回落写死基线，易被误判为数据驱动
+  if(rr.ovCrUnconfirmed) lost.push('⚠ 海外/危机风险为默认基线值(非真实数据)→压仓约30%仅为保守假设，非信号确认');
   if(lost.length){ warn.classList.remove('off'); warn.innerHTML='⚠️ '+lost.join('；')+'。请把 fetch_macro.py 跑一次生成 macro.json 放在本页同目录，或粘贴 JSON 到页面底部。'; }
   else warn.classList.add('off');
 }
@@ -1348,22 +1370,25 @@ function recalc(){
     const d=SRV[mode];
     r.tempAdj=d.temp; r.final=d.final; r.bp=d.base; r.cap=d.cap;
     r.tight=d.tight; r.p=d.resonance;
-    r.tr={v:d.dims.trend.v,why:d.dims.trend.why}; r.va={v:d.dims.val.v,why:d.dims.val.why};
-    r.lq={v:d.dims.liq.v,why:d.dims.liq.why};   r.em={v:d.dims.emo.v,why:d.dims.emo.why};
+    r.tr={v:d.dims.trend.v,why:d.dims.trend.why,real:true}; r.va={v:d.dims.val.v,why:d.dims.val.why,real:true};
+    r.lq={v:d.dims.liq.v,why:d.dims.liq.why,real:true};   r.em={v:d.dims.emo.v,why:d.dims.emo.why,real:true};
     r.quad={idx:d.quad.idx,name:d.quad.name};
     EIGHT.forEach(e=>{ if(d.eight[e.k]!=null) eightState[e.k]=d.eight[e.k]; });
+    r.realDims=4; r.K=4;   // 服务端已用真实宏观计算，四维视为真实覆盖
   }
   renderDims(r); renderQuad(r); renderFG(); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
   const tag=tempTagOf(r.tempAdj);
   document.getElementById('tempVal').textContent=r.tempAdj.toFixed(2);
   document.getElementById('tempPin').style.left=(r.tempAdj*10)+'%';
   const te=document.getElementById('tempTag'); te.className='tag '+tag.cls; te.textContent=tag.txt;
+  if(!r.va.real) te.textContent += ' ⚠估值缺位';   // D 半盲提示：估值被静默置中时明确告知，温度=半盲
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:20px">成</span>';
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
   document.getElementById('posReason').innerHTML=
     '主温度 <b>'+r.tempAdj.toFixed(2)+'</b> → tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b><br>'+
     '×顶底联动(底'+r.sb+'/顶'+r.st+'→×'+r.probMult.toFixed(2)+') = <b>'+r.cap.toFixed(1)+'成</b>'+(r.gateTxt?' ｜ '+r.gateTxt:'')+'<br>'+
     '×风险叠加 ×'+r.overlayScale.toFixed(2)+'（海外'+r.ov.toFixed(1)+'+危机'+r.cr.toFixed(1)+'）'+(r.konserv<1?' ×保守0.85':'')+' → <b>最终 '+r.final.toFixed(1)+'成</b><br>'+
+    (r.eightGate? '<span style="color:var(--red);font-weight:700">🔒 '+r.eightGate+'</span><br>':'')+
     '<span style="font-size:11.5px">'+csTxt+'</span>';
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
@@ -1387,6 +1412,7 @@ function recalc(){
   renderAlloc();
   // 统一模块联动：九-B 应变分支（auto 档跟随温度）；牛熊钟聚焦非 auto 时保持说明；四阶段内容静态由 renderStage 维护
   window.__lastTempAdj=r.tempAdj;
+  window.__r=r;   // 供 renderStatus 读取四维覆盖度/未确认标记，渲染半盲提示
   if(document.getElementById('selBranch') && document.getElementById('selBranch').value==='auto') renderBranch('auto');
   if(document.getElementById('selQuad')){
     const sq=document.getElementById('selQuad');
