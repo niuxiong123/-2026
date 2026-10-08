@@ -121,7 +121,7 @@
 <body>
 
 <h1>牛熊每日自查 v2+</h1>
-<div class="sub">四维打分 + 海外风险 + 危机预警 → 综合温度与建议仓位 → 赢家四阶段操作。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
+<div class="sub">七维温度打分 + 海外风险 + 危机预警 → 综合温度与建议仓位 → 赢家四阶段操作。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
 
 <div class="topbar">
   <div><label>日期</label><input type="date" id="dt"></div>
@@ -238,7 +238,7 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2>二、市场温度 · 四维打分</h2>
+<h2>二、市场温度 · 七维打分</h2>
 <div class="sub" style="margin:4px 0 8px">本模块 = 市场温度<b>全部来源</b>：占温度100%（趋势/流动/情绪 各约1/3，估值0%已移出温度→独家喂顶底）；占仓位 = 温度经 tanh→bp；占顶底 = 趋势背离+估值分位为主。每项精确权重见卡片（A股≈34/33/33，H股≈30/35/35）。</div>
 <div id="dimList"></div>
 
@@ -354,14 +354,14 @@
   <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:6px 0">📖 仓位算法 / 方法说明（点击展开，全文默认收起）</summary>
 <div class="note" style="margin-top:6px">
   <b>仓位算法（数学建模版 · 顶底/仓位/温度三表同步）：</b><br>
-  ① 市场温度 = 趋势/估值/流动性/情绪 四维合成（A股各0.25，H股 0.2/0.2/0.3/0.3），是顶底判断主信号；海外风险+危机预警仅作「仓位叠加层」(核心仓位×1−风险/20)，不再污染顶底温度。<br>
-  ② 四维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
+  ① 市场温度 = 趋势/流动性/情绪 + 货币/盈利/汇率/美债 七维合成（A股 货币.20/趋势.18/流动.15/情绪.13/盈利.14/美债.15/汇率.05；H股 美债.30/汇率.18/趋势.15/流动.12/情绪.10/货币.10/盈利.05），估值独家喂顶底概率不进温度；是顶底判断主信号。海外风险+危机预警仅作「仓位叠加层」(核心仓位×1−风险/20)，不再污染顶底温度。<br>
+  ② 七维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
   ③ 温度→基础仓位用 <b>tanh</b> 平滑：bp(t) = 5.5 − 4.2·tanh(0.38·(t−5))，t=0→9.5成，t=5→5.5成，t=10→1.5成。<br>
   ④ 【同步核心】<b>顶底概率进入仓位公式</b>：核心仓位 = tanh温度仓位 × 顶底联动系数(1±4%×底顶分差，范围0.6~1.4)。三大面板共用同一根信号，不再各算各的。<br>
   ⑤ 【共振硬闸门】底≥7且顶≤3 → 仓位下限6.5成（月线空头时降至4.5成，只许左侧小仓）；顶≥7且底≤3 → 仓位上限2.5成。风险叠加层与保守系数只在该区间内活动。<br>
   ⑥ 最终 = 核心仓位 × 风险叠加(×1−风险/20) × 保守系数(默认0.85)。<br>
   ⑦ 【本轮迭代】①月线方向过滤：月线向下（大级别空头）时底部闸门下限6.5→4.5成，不逆势重仓；②6历史极点相似度以0.20权重并入顶底概率（ERP高斯核σ=1.2+背离方向匹配）；⑧恐贪指数显性化（宽度30%+VIX25%+估值分位20%+5日动量15%+当日10%，反向读法）；⑨情绪维度当日涨跌降权0.7→0.25、5日动量0.45补位（防单日噪声让仓位跳变）。<br>
-  <b>为何删除原"四道软约束"：</b>趋势/M1/信贷/共振已占温度四维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
+  <b>为何删除原"四道软约束"：</b>货币/趋势/流动/盈利/美债/汇率已占温度七维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
   <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
 </div>
 </details>
@@ -597,7 +597,7 @@ function applyMacro(j){
   if(d.hs300&&d.hs300.extra) M.tech=d.hs300.extra;
   // ===== 海外风险 + 危机预警 =====
   put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);
-  put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy);
+  put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy); put('profit_yoy',d.profit_yoy);
   put('vix',d.vix); put('trade_balance',d.trade_balance);
   put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
   put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
@@ -817,6 +817,34 @@ function scoreEmo(){
   return {v:clamp(sv/sw), why:whys.join(' · '), real:true};
 }
 
+// ===== 优中选优(M3) 新增四个温度维度：货币/盈利/汇率/美债 =====
+function scoreMoney(){
+  // 货币松紧（A股第一核心）：M1/LPR/M2 越紧 → 温度越高
+  const parts=[],whys=[];
+  const m1=get('m1_yoy'), lpr=get('lpr1y'), m2=get('m2_yoy');
+  if(isReal('m1_yoy')){ const z=(m1-6)/1.5; const s=10*(1-sigmoid(z)); parts.push({s,w:1.2}); whys.push('M1 '+m1+'%'); }
+  if(isReal('lpr1y')){ const z=(lpr-3.5)/0.5; const s=10*(1-sigmoid(z)); parts.push({s,w:1.0}); whys.push('LPR1Y '+lpr+'%'); }
+  if(isReal('m2_yoy')){ const z=(m2-7)/1.5; const s=10*(1-sigmoid(z)); parts.push({s,w:0.6}); whys.push('M2 '+m2+'%'); }
+  const sw=parts.reduce((a,b)=>a+b.w,0), sv=parts.reduce((a,b)=>a+b.s*b.w,0);
+  return {v: sw?clamp(sv/sw):5, why: whys.join(' · '), real: parts.length>0};
+}
+function scoreEarn(){
+  // 盈利面（市场衰退代理）：工业利润同比优先；缺失用地产景气 re_yoy 代理（页面标"缺工业利润"）
+  if(isReal('profit_yoy')){ const p=get('profit_yoy'); const z=-(p-0)/10; return {v:clamp(10*sigmoid(z)), why:'工业利润同比 '+p+'%', real:true}; }
+  if(isReal('re_yoy')){ const re=get('re_yoy'); const z=-(re+0.5)/1.5; return {v:clamp(10*sigmoid(z)), why:'地产景气(代理盈利) '+re+'%[缺工业利润]', real:true}; }
+  return {v:5, why:'盈利数据缺失→中性', real:false};
+}
+function scoreFx(){
+  // 人民币贬值：USDCNY 越贬 → 温度越高（H股权重高）
+  const v=isReal('usdcny')?get('usdcny'):7.10;
+  const z=(v-7.0)/0.2; return {v:clamp(10*sigmoid(z)), why:'美元/人民币 '+(isReal('usdcny')?get('usdcny'):'≈7.10')+(isReal('usdcny')?'':'[未接入]'), real:isReal('usdcny')};
+}
+function scoreUst(){
+  // 美债10Y（H股第一核心锚）：越高 → 温度越高
+  if(!isReal('us10y')) return {v:5, why:'美债缺失→中性', real:false};
+  const u=get('us10y'); const z=(u-4)/0.5; return {v:clamp(10*sigmoid(z)), why:'美债10Y '+u+'%', real:true};
+}
+
 // 八大信号自动推导（7/8 由真实数据推导，仅消费税政策项手动）
 function autoEight(){
   const st={};
@@ -958,9 +986,13 @@ function probRead(pB, pT){
 
 function computeAll(){
   const tr=scoreTrend(), va=scoreVal(), lq=scoreLiq(), em=scoreEmo();
+  const money=scoreMoney(), earn=scoreEarn(), fx=scoreFx(), ust=scoreUst();
   // ❶ 估值双重计账修复：估值(ERP/PE/PB)不再计入温度，独家喂顶底概率(下方 erpP/peP)，消除同一便宜信号被计两遍导致的底过度自信
-  const w = mode==='A' ? {tr:.34, lq:.33, em:.33} : {tr:.30, lq:.35, em:.35};
-  const mkt = tr.v*w.tr + lq.v*w.lq + em.v*w.em;   // 市场温度(0-10,高=热/贵)=趋势+流动性+情绪 三因子，估值已移出
+  // 优中选优(M3七维温度)：趋势/流动/情绪 + 货币/盈利/汇率/美债 连续进温度；A/H 按你的排序分权重
+  const w = mode==='A'
+    ? {money:0.20, tr:0.18, lq:0.15, em:0.13, earn:0.14, ust:0.15, fx:0.05}
+    : {ust:0.30, fx:0.18, tr:0.15, lq:0.12, em:0.10, money:0.10, earn:0.05};
+  const mkt = money.v*w.money + tr.v*w.tr + lq.v*w.lq + em.v*w.em + earn.v*w.earn + ust.v*w.ust + fx.v*w.fx;   // 市场温度(0-10,高=热/贵) 七维合成
   // 海外风险 + 危机预警：仅作「仓位叠加层」，不参与顶底概率（解耦硬伤①）
   const iv=id=>{const e=document.getElementById(id);const v=e?parseFloat(e.value):NaN;return isNaN(v)?5:v;};
   const oil=iv('in_oil'),aiv=iv('in_ai'),hm=iv('in_hormuz'),usd=iv('in_usd'),job=iv('in_job');
@@ -1020,9 +1052,12 @@ function computeAll(){
   const litCount = EIGHT.filter(e=>ef[e.k]===1).length;
   let eightGate = '';
   if(litCount < 4){ final = Math.max(1, Math.min(final, 3.0)); eightGate = '长牛信号 '+litCount+'/8 未集齐 → 强制防御上限3成'; }
-  // D 半盲提示：四维真实数据覆盖度；❷ 海外/危机默认值未确认标记
-  const realDims = [tr, va, lq, em].filter(d=>d.real).length;
-  const K = 4;
+  // 优中选优叠加 M2 美债硬上限：H股 美债10Y≥4.5% → 强制仓位上限5.5成（美债是H股第一核心风险，纯靠温度可能仍高估H股）
+  let ustCap = '';
+  if(mode==='H' && isReal('us10y') && get('us10y')>=4.5 && final>5.5){ final = 5.5; ustCap = '美债≥4.5%→H股硬上限5.5成'; }
+  // D 半盲提示：七维真实数据覆盖度；❷ 海外/危机默认值未确认标记
+  const realDims = [tr, lq, em, money, earn, fx, ust].filter(d=>d.real).length;
+  const K = 7;
   const ovCrUnconfirmed = !['oil_brent','ai_bubble','hormuz_risk','dxy','us_unemploy'].some(isReal)
                        || !['paths_lit','win_proximity','china_fragile'].some(isReal);
   // 展示链路（同一根信号，不再互相独立）
@@ -1035,9 +1070,9 @@ function computeAll(){
   const cap = core, tight = [gateTxt || '无共振'];
   let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p = sc / EIGHT.length;
-  return {tr,va,lq,em,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
+  return {tr,va,lq,em,money,earn,fx,ust,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
           probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn},
-          realDims,K,litCount,eightGate,ovCrUnconfirmed,
+          realDims,K,litCount,eightGate,ustCap,ovCrUnconfirmed,
           tempPos,tempBand,LINE_U,LINE_L,w};
 }
 /* =========================================================
@@ -1045,14 +1080,18 @@ function computeAll(){
    ========================================================= */
 const DIMS=[
   {k:'trend', n:'趋势', d:'sigmoid(年内位置z) + 均线动量修正'},
-  {k:'val',   n:'估值', d:'ERP z-score → 10×(1−sigmoid(z))'},
   {k:'liq',   n:'流动性', d:'M1/信贷/利率/两融/成交额 各 sigmoid 加权'},
   {k:'emo',   n:'情绪', d:'宽度/VIX/涨跌/北向 各 sigmoid 加权'},
+  {k:'money', n:'货币', d:'M1/LPR/M2 货币松紧：越紧→温度越高'},
+  {k:'earn',  n:'盈利', d:'工业利润同比(缺则地产景气代理)：越差→温度越高'},
+  {k:'fx',    n:'汇率', d:'USDCNY：越贬值→温度越高(H股权重高)'},
+  {k:'ust',   n:'美债', d:'US10Y：越高→温度越高(H股第一核心权重)'},
+  {k:'val',   n:'估值', d:'ERP/PE/PB：独家喂顶底概率，不进温度'},
 ];
 function colorOf(v){ return v<3.5?'var(--green)':(v<6.5?'var(--yellow)':'var(--red)'); }
 function renderDims(r){
-  const map={trend:r.tr,val:r.va,liq:r.lq,emo:r.em};
-  const wt={trend:r.w?r.w.tr:0, liq:r.w?r.w.lq:0, emo:r.w?r.w.em:0, val:0};
+  const map={trend:r.tr,liq:r.lq,emo:r.em,money:r.money,earn:r.earn,fx:r.fx,ust:r.ust,val:r.va};
+  const wt={trend:r.w?r.w.tr:0, liq:r.w?r.w.lq:0, emo:r.w?r.w.em:0, money:r.w?r.w.money:0, earn:r.w?r.w.earn:0, fx:r.w?r.w.fx:0, ust:r.w?r.w.ust:0, val:0};
   document.getElementById('dimList').innerHTML=DIMS.map(d=>{
     const o=map[d.k];
     const wtxt = d.k==='val' ? '权重 0%（已移出温度，独家喂顶底概率）'
@@ -1178,6 +1217,7 @@ function srcRows(){
   };
   [['制造业PMI','pmi',''],['M1同比','m1_yoy','%'],['M2同比','m2_yoy','%'],['新增信贷同比','credit_yoy','%'],['LPR 1Y','lpr1y','%'],
    ['中债10Y','cn10y','%'],['美债10Y','us10y','%'],['沪深300 PE','hs300_pe',''],['ERP','erp','%'],
+   ['工业企业利润同比','profit_yoy','%'],
    ['两融余额','margin_yi','亿'],['北向净买(已无实时披露)','northbound','亿'],['上涨家数占比','breadth_up','%'],
    ['美元/人民币','usdcny','']].forEach(([label,k,u])=>{
     const o=m(k,u); add(label, o.v, u, o.src, o.asOf, k, true, o.base);

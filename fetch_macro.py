@@ -41,7 +41,7 @@ RANGES = {
     "hs300_pe": (5, 60), "erp": (-5, 20), "margin_yi": (5000, 60000),
     "northbound": (-2000, 2000), "breadth_up": (0, 100),
     "oil_brent": (20, 200), "dxy": (70, 130), "us_unemploy": (2, 20),
-    "nasdaq_pct": (-15, 15), "re_yoy": (-10, 10),
+    "nasdaq_pct": (-15, 15), "re_yoy": (-10, 10), "profit_yoy": (-40, 60),
     "vix": (8, 80), "trade_balance": (-500, 2000),
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
@@ -410,6 +410,37 @@ def fetch_re_yoy():
     return {"value": round(yoy, 2), "asOf": str(latest)[:10],
             "src": "国家统计局·70城二手房同比(均值,%d城)" % len(sub)}
 
+def fetch_profit_yoy():
+    """工业企业利润同比(%) —— 盈利面核心（优中选优·earn 维度真实喂料）。
+    国家统计局每月公布；akshare 接口名随版本变化，故做二级回退：
+      1) macro_china_industrial_profit（利润累计同比）
+      2) macro_china_industrial_production_yoy（工业增加值同比，作为盈利代理）
+    任一成功即返回；全部失败则抛异常，由 main 的逐字段 try 隔离，不影响其它指标。"""
+    import pandas as pd
+    def _latest_yoy(df):
+        col = next((c for c in df.columns if ("同比" in c) or ("增长率" in c) or ("增速" in c)), None)
+        if col is None:
+            raise ValueError("无同比列")
+        df = df.copy(); df[col] = pd.to_numeric(df[col], errors="coerce")
+        df = df.dropna(subset=[col])
+        dcol = next((c for c in df.columns if ("日期" in c) or (c.lower() == "date") or ("时间" in c)), None)
+        if dcol:
+            df[dcol] = pd.to_datetime(df[dcol], errors="coerce")
+            df = df.dropna(subset=[dcol]).sort_values(dcol)
+        last = df.iloc[-1]
+        return float(last[col]), (str(last[dcol])[:10] if dcol else str(dt.date.today()))
+    # 1) 工业企业利润
+    try:
+        df = ak.macro_china_industrial_profit()
+        v, asof = _latest_yoy(df)
+        return {"value": round(v, 2), "asOf": asof, "src": "国家统计局·工业企业利润同比"}
+    except Exception:
+        pass
+    # 2) 回退：工业增加值同比
+    df = ak.macro_china_industrial_production_yoy()
+    v, asof = _latest_yoy(df)
+    return {"value": round(v, 2), "asOf": asof, "src": "国家统计局·工业增加值同比(代理盈利)"}
+
 def fetch_vix():
     """CBOE VIX 恐慌指数 —— 全球风险偏好/金融传染核心指标
     数据源：腾讯行情 usVIX（与前端实时同源，保证口径一致）。
@@ -526,6 +557,7 @@ JOBS = {
     "us_unemploy": (fetch_us_unemploy, "美国失业率"),
     "nasdaq_pct": (fetch_nasdaq_pct, "纳斯达克20日涨跌"),
     "re_yoy": (fetch_re_yoy, "国房景气指数1Y涨跌"),
+    "profit_yoy": (fetch_profit_yoy, "工业企业利润同比"),
     "vix": (fetch_vix, "CBOE VIX恐慌指数"),
     "trade_balance": (fetch_trade_balance, "中国贸易帐"),
     # 新增：估值历史分位 + H股锚（改造②喂料）
