@@ -42,7 +42,9 @@ RANGES = {
     "northbound": (-2000, 2000), "breadth_up": (0, 100),
     "oil_brent": (20, 200), "dxy": (70, 130), "us_unemploy": (2, 20),
     "nasdaq_pct": (-15, 15), "re_yoy": (-10, 10), "profit_yoy": (-40, 60),
-    "vix": (8, 80), "trade_balance": (-500, 2000),
+    "vix": (8, 80), "trade_balance": (-500, 2000), "gold": (500, 6000),
+    "qual_geo": (0, 10), "qual_reg": (0, 10),
+    "qual_credit": (0, 10), "qual_policy": (0, 10),
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
     "hs300_pe_pct": (0, 100), "hs300_pb_pct": (0, 100),
@@ -123,9 +125,22 @@ def fetch_credit():
             "src": "央行·社融存量同比(锚408万亿+月度增量)",
             "extra": {"近12月增量万亿": round(yoy12, 2), "存量万亿": round(stock[last_m], 1)}}
 def fetch_lpr():
-    r = ak.macro_china_lpr().iloc[-1]
-    return {"value": float(r["LPR1Y"]), "asOf": str(r["TRADE_DATE"]),
-            "src": "全国银行间同业拆借中心", "extra": {"LPR5Y": float(r["LPR5Y"])}}
+    df = ak.macro_china_lpr().dropna(subset=["LPR1Y"]).sort_values("TRADE_DATE").reset_index(drop=True)
+    r = df.iloc[-1]
+    lpr1y = float(r["LPR1Y"])
+    # 12个月净变动(bp)：负值=净降息。政策力度的直接市场度量（比 LPR 绝对水平更灵敏）
+    cut_bp = None
+    try:
+        if len(df) >= 13:
+            prev = float(df.iloc[-13]["LPR1Y"])
+            cut_bp = int(round((lpr1y - prev) * 100))
+    except Exception:
+        pass
+    extra = {"LPR5Y": float(r["LPR5Y"])}
+    if cut_bp is not None:
+        extra["12个月净变动bp"] = cut_bp
+    return {"value": lpr1y, "asOf": str(r["TRADE_DATE"]),
+            "src": "全国银行间同业拆借中心", "extra": extra}
 def fetch_rates():
     df = ak.bond_zh_us_rate()
     cn = df.dropna(subset=["中国国债收益率10年"]).iloc[-1]
@@ -191,10 +206,26 @@ def fetch_valuation(code="000300"):
             "extra": {"股息率": float(r["股息率1"])}}
 def fetch_margin():
     sh, sz = ak.macro_china_market_margin_sh(), ak.macro_china_market_margin_sz()
-    total = (float(sh.iloc[-1]["融资余额"]) + float(sz.iloc[-1]["融资余额"])) / 1e8
-    prev = (float(sh.iloc[-6]["融资余额"]) + float(sz.iloc[-6]["融资余额"])) / 1e8
-    return {"value": total, "asOf": str(sh.iloc[-1]["日期"]), "src": "沪深交易所",
-            "extra": {"周变化%": float((total / prev - 1) * 100)}}
+    def _tot(df):
+        s = pd.to_numeric(df["融资余额"], errors="coerce").dropna()
+        s.index = pd.to_datetime(df["日期"], errors="coerce")
+        return s.sort_index()
+    t = (_tot(sh) + _tot(sz)).dropna()
+    if len(t) < 21:
+        raise ValueError("两融历史过短")
+    total = float(t.iloc[-1]) / 1e8
+    chg20 = (float(t.iloc[-1] / t.iloc[-21]) - 1) * 100
+    extra = {"周变化%": (float(t.iloc[-1] / t.iloc[-6]) - 1) * 100 if len(t) > 6 else None,
+             "20日变化%": round(chg20, 2)}
+    # 20日增速的3年分位：加速=杠杆情绪亢奋（招监管/见顶风险），供定性项「监管打压」分位法推导
+    try:
+        r20 = ((t / t.shift(20) - 1) * 100).dropna().tail(750)
+        if len(r20) > 250:
+            pct = float(pd.Series(r20.tolist() + [chg20]).rank(pct=True).iloc[-1]) * 100
+            extra["pct_3y_20d"] = round(pct, 1)
+    except Exception:
+        pass
+    return {"value": total, "asOf": str(sh.iloc[-1]["日期"]), "src": "沪深交易所", "extra": extra}
 def fetch_northbound():
     df = ak.stock_hsgt_fund_flow_summary_em()
     nb = df[df["资金方向"] == "北向"]
@@ -329,17 +360,45 @@ def fetch_ah_premium():
 
 # ---------------- 新增：海外风险维度自动抓取 ----------------
 def fetch_oil_brent():
-    """布伦特原油价（美元/桶）—— 地缘/通胀核心变量"""
+    """布伦特原油价（美元/桶）—— 地缘/通胀核心变量。
+    升级：附加近5年收盘序列的历史分位(pct_5y)，供定性项「地缘波动」分位法推导（优中选优）。"""
     # 优先用 OIL（布伦特原油期货），CL（WTI）作为降级
     for sym, src in [("OIL", "akshare·布伦特原油期货"), ("CL", "akshare·WTI原油期货")]:
         try:
             df = ak.futures_foreign_hist(symbol=sym).dropna(subset=["close"])
             if len(df):
-                v = float(df.iloc[-1]["close"])
-                return {"value": round(v, 2), "asOf": str(df.iloc[-1]["date"])[:10], "src": src}
+                c = pd.to_numeric(df["close"], errors="coerce").dropna()
+                v = float(c.iloc[-1])
+                out = {"value": round(v, 2), "asOf": str(df.iloc[-1]["date"])[:10], "src": src}
+                try:
+                    hist = c.tail(1260)   # 近5年交易日
+                    if len(hist) > 250:
+                        pct = float(pd.Series(hist.tolist() + [v]).rank(pct=True).iloc[-1]) * 100
+                        out["extra"] = {"pct_5y": round(pct, 1)}
+                except Exception:
+                    pass
+                return out
         except Exception:
             continue
     raise RuntimeError("油价抓取失败: OIL/CL 均不可用")
+
+def fetch_gold():
+    """COMEX 黄金（美元/盎司）—— 避险情绪代理（分位越高=避险越浓）。
+    与油价同接口（新浪外盘期货），附近5年分位供「地缘波动」第三因子。"""
+    df = ak.futures_foreign_hist(symbol="GC").dropna(subset=["close"])
+    if not len(df):
+        raise ValueError("黄金数据为空")
+    c = pd.to_numeric(df["close"], errors="coerce").dropna()
+    v = float(c.iloc[-1])
+    out = {"value": round(v, 2), "asOf": str(df.iloc[-1]["date"])[:10], "src": "akshare·COMEX黄金期货"}
+    try:
+        hist = c.tail(1260)
+        if len(hist) > 250:
+            pct = float(pd.Series(hist.tolist() + [v]).rank(pct=True).iloc[-1]) * 100
+            out["extra"] = {"pct_5y": round(pct, 1)}
+    except Exception:
+        pass
+    return out
 
 def fetch_dxy():
     """美元指数 DXY —— 新兴市场压力指标"""
@@ -458,7 +517,24 @@ def fetch_vix():
     if v <= 0:
         raise ValueError("VIX 数值异常: " + str(v))
     asOf = parts[30] if len(parts) > 30 else str(dt.date.today())
-    return {"value": round(v, 2), "asOf": str(asOf)[:10], "src": "腾讯行情·CBOE VIX"}
+    out = {"value": round(v, 2), "asOf": str(asOf)[:10], "src": "腾讯行情·CBOE VIX"}
+    # 分位：FRED VIXCLS 近5年日收盘序列（免费官方CSV，与失业率同源模式）
+    try:
+        r = requests.get("https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS",
+                         headers={"User-Agent": "Mozilla/5.0"}, timeout=20)
+        r.raise_for_status()
+        vals = []
+        for ln in r.text.strip().splitlines()[1:]:
+            p = ln.split(",")
+            if len(p) >= 2 and p[1].strip() not in ("", ".", "ND"):
+                vals.append(float(p[1]))
+        vals = vals[-1260:]                     # 近5年交易日
+        if len(vals) > 250:
+            pct = float(pd.Series(vals + [out["value"]]).rank(pct=True).iloc[-1]) * 100
+            out["extra"] = {"pct_5y": round(pct, 1)}
+    except Exception as e:
+        log("[warn] VIX分位(FRED)失败: %s" % e)
+    return out
 
 def fetch_trade_balance():
     """中国贸易帐（亿美元）—— 一带一路/出口回款代理：顺差越大→外汇回款越充足"""
@@ -538,6 +614,54 @@ def score_china_fragile(re_yoy):
     s = 5.0 - re_yoy * 1.5   # -3%→9.5分, -1.2%→6.8分, 0%→5分, +3%→0.5分
     return round(max(0, min(10, s)), 1)
 
+# ---------------- 新增：定性四项自动推导（优中选优·历史分位法）----------------
+# 设计原则：凡有长历史序列的市场指标(VIX/油价/黄金/两融)一律用「近N年分位」(端到端自适应，锚点不拍脑袋)；
+# 月度短序列(剪刀差/社融/二手房同比/LPR降息幅度)用「权威锚点映射」(分位法在短序列上的退化形式)。
+# 输出 0-10 分，5 为中性。前端 autoQual() 优先读这些服务端定值，缺料时回退本地 sigmoid。
+def score_qual_geo(vix_pct=None, oil_pct=None, gold_pct=None):
+    """地缘波动 (0-10)：VIX 5年分位45% + 油价5年分位35% + 黄金5年分位20%"""
+    parts, w = [], 0.0
+    for val, wt in ((vix_pct, 0.45), (oil_pct, 0.35), (gold_pct, 0.20)):
+        if val is not None:
+            parts.append((val / 10.0, wt)); w += wt
+    if w == 0:
+        return None
+    return round(sum(p * wt for p, wt in parts) / w * 10, 1)
+
+def score_qual_reg(scissors=None, mg_pct=None):
+    """监管打压 (0-10)：M2-M1 剪刀差50% + 两融20日增速3年分位50%。
+    剪刀差大=资金空转/活钱不进实体；两融加速=杠杆情绪亢奋招监管。二者越高→打压分越高。"""
+    s, w = 0.0, 0.0
+    if scissors is not None:
+        s += clamp01((scissors - 1.0) / 6.0) * 0.5; w += 0.5     # 1%→0, 7%→1
+    if mg_pct is not None:
+        s += (mg_pct / 10.0) * 0.5; w += 0.5
+    if w == 0:
+        return None
+    return round(s / w * 10, 1)
+
+def score_qual_credit(re_yoy=None, credit_yoy=None):
+    """信用风险 (0-10)：70城二手房同比55% + 社融存量同比45%（均反向：越差分越高）。"""
+    s, w = 0.0, 0.0
+    if re_yoy is not None:
+        s += clamp01((1.0 - re_yoy) / 6.0) * 0.55; w += 0.55     # -5%→1, +1%→0
+    if credit_yoy is not None:
+        s += clamp01((11.0 - credit_yoy) / 6.0) * 0.45; w += 0.45  # 11%→0, 5%→1
+    if w == 0:
+        return None
+    return round(s / w * 10, 1)
+
+def score_qual_policy(cut_bp=None, m1_yoy=None):
+    """政策力度 (0-10)：LPR 12个月净降息bp 55% + M1同比 45%（正向：降得越多、M1越高→越有力）。"""
+    s, w = 0.0, 0.0
+    if cut_bp is not None:
+        s += clamp01((-cut_bp) / 60.0) * 0.55; w += 0.55         # 0bp→0, -60bp→1
+    if m1_yoy is not None:
+        s += clamp01(m1_yoy / 10.0) * 0.45; w += 0.45
+    if w == 0:
+        return None
+    return round(s / w * 10, 1)
+
 # ---------------- 任务表 ----------------
 JOBS = {
     "pmi": (fetch_pmi, "制造业PMI"),
@@ -559,6 +683,7 @@ JOBS = {
     "re_yoy": (fetch_re_yoy, "国房景气指数1Y涨跌"),
     "profit_yoy": (fetch_profit_yoy, "工业企业利润同比"),
     "vix": (fetch_vix, "CBOE VIX恐慌指数"),
+    "gold": (fetch_gold, "COMEX黄金"),
     "trade_balance": (fetch_trade_balance, "中国贸易帐"),
     # 新增：估值历史分位 + H股锚（改造②喂料）
     "hs300_pe_pct": (fetch_hs300_pe_pct, "沪深300 PE分位"),
@@ -686,6 +811,40 @@ def main():
         "asOf": str(dt.date.today()),
         "src": "推导(真实压力:油价+VIX+纳指+美债)"
     }
+
+    # ===== 定性四项自动推导（优中选优·历史分位法，服务端单一真相源）=====
+    vix_pct = (data.get("vix", {}).get("extra", {}) or {}).get("pct_5y") if "vix" in data else None
+    oil_pct = (data.get("oil_brent", {}).get("extra", {}) or {}).get("pct_5y") if "oil_brent" in data else None
+    gold_pct = (data.get("gold", {}).get("extra", {}) or {}).get("pct_5y") if "gold" in data else None
+    mg_pct = (data.get("margin_yi", {}).get("extra", {}) or {}).get("pct_3y_20d") if "margin_yi" in data else None
+    lpr_cut = (data.get("lpr1y", {}).get("extra", {}) or {}).get("12个月净变动bp") if "lpr1y" in data else None
+    m1_obj = data.get("m1_yoy", {})
+    m1_v = m1_obj.get("value") if m1_obj else None
+    m2_v = (m1_obj.get("extra", {}) or {}).get("m2_yoy") if m1_obj else None
+    scissors = (m2_v - m1_v) if (m1_v is not None and m2_v is not None) else None
+    crd_v = data.get("credit_yoy", {}).get("value") if "credit_yoy" in data else None
+    re_v = data.get("re_yoy", {}).get("value") if "re_yoy" in data else None
+
+    def _qual_obj(val, src):
+        if val is None:
+            return {"value": None, "asOf": "", "src": src + " · 原料缺失", "noData": True}
+        return {"value": val, "asOf": str(dt.date.today()), "src": src}
+
+    data["qual_geo"] = _qual_obj(
+        score_qual_geo(vix_pct, oil_pct, gold_pct),
+        "推导(VIX分位%s+油价分位%s+黄金分位%s)" % (
+            "%.0f%%" % vix_pct if vix_pct is not None else "缺失",
+            "%.0f%%" % oil_pct if oil_pct is not None else "缺失",
+            "%.0f%%" % gold_pct if gold_pct is not None else "缺失"))
+    data["qual_reg"] = _qual_obj(
+        score_qual_reg(scissors, mg_pct),
+        "推导(M2-M1剪刀差%.1f%%+两融20日分位%.0f%%)" % (scissors or 0, mg_pct or 0))
+    data["qual_credit"] = _qual_obj(
+        score_qual_credit(re_v, crd_v),
+        "推导(70城二手房同比%.2f%%+社融存量同比%.2f%%)" % (re_v or 0, crd_v or 0))
+    data["qual_policy"] = _qual_obj(
+        score_qual_policy(lpr_cut, m1_v),
+        "推导(LPR12月净变动%dbp+M1同比%.1f%%)" % (lpr_cut if lpr_cut is not None else 0, m1_v or 0))
 
     ts = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     json.dump({"generated_at": ts, "ok_count": ok_n, "total": len(JOBS), "failed": failed,

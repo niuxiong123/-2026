@@ -46,6 +46,9 @@
   .dimgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .btn{background:var(--acc);color:#06121f;border:none;border-radius:9px;padding:11px 18px;font-size:15px;font-weight:700;cursor:pointer}
   .btn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+  .mini{font-size:11px;padding:2px 8px;border:1px solid var(--line);background:var(--card2);color:var(--blue);border-radius:6px;cursor:pointer;margin-left:6px}
+  .au{font-size:10px;color:#fff;background:var(--green);border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:middle}
+  .dim .why i{color:var(--sub)}
   .btn.sm{padding:6px 12px;font-size:13px}
   .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
   table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
@@ -292,7 +295,8 @@
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
-<h2>七、定性项（机器判不了，手动打）</h2>
+<h2>七、定性项（数据自动推导 + 可手动覆盖） <button class="btn ghost sm" onclick="resetAllQual()" style="float:right;font-size:12px">↩ 全部恢复自动</button></h2>
+<div class="sub">四项均由 fetch_macro.py 用「历史分位法」自动算出（优中选优），无需手动打；拖动滑条可临时覆盖，点「恢复自动」即回真实数据。</div>
 <div id="qualList"></div>
 
 <h2>八、仓位换钱 · 操作建议</h2>
@@ -421,10 +425,10 @@ const BASELINE = {
 // 定性项（尽量由真实数据数学推导，可手动覆盖）
 // 每项 score ∈ [0,10]，5为中性；reverse=true 表示越大越利好（温度负贡献）
 const QUAL = [
-  {k:'地缘波动', def:'VIX+油价推导', def5:5, auto:true},
-  {k:'监管打压', def:'M1-M2剪刀差+两融推导', def5:3, auto:true},
-  {k:'信用风险', def:'国房景气+信贷同比推导', def5:5, auto:true},
-  {k:'政策力度', def:'LPR+M1同比推导', def5:6, reverse:true, auto:true},
+  {k:'地缘波动', def:'VIX/油价/黄金·近5年分位推导', def5:5, auto:true},
+  {k:'监管打压', def:'M2-M1剪刀差+两融20日分位推导', def5:3, auto:true},
+  {k:'信用风险', def:'70城二手房同比+社融存量同比推导', def5:5, auto:true},
+  {k:'政策力度', def:'LPR12月净降息+M1同比推导', def5:6, reverse:true, auto:true},
 ];
 
 // 海外风险维度权重 + 危机预警维度权重
@@ -589,7 +593,7 @@ function applyMacro(j){
   const d=j.data;
   if(d.northbound && (d.northbound.value===0||d.northbound.value==null)) d.northbound.noData=true;
   if(d.breadth && d.breadth.value==null) d.breadth.noData=true;
-  const put=(k,obj,fmt)=>{ if(!obj) return; M[k]={value:fmt?fmt(obj.value):obj.value, asOf:obj.asOf||obj.as_of||'', src:obj.src||'macro.json', stale:!!obj.stale, noData:!!obj.noData}; };
+  const put=(k,obj,fmt)=>{ if(!obj) return; M[k]={value:fmt?fmt(obj.value):obj.value, asOf:obj.asOf||obj.as_of||'', src:obj.src||'macro.json', stale:!!obj.stale, noData:!!obj.noData, extra:obj.extra||null}; };
   put('pmi',d.pmi); put('m1_yoy',d.m1_yoy); put('credit_yoy',d.credit_yoy);
   put('lpr1y',d.lpr1y); put('cn10y',d.cn10y); put('us10y',d.us10y);
   put('hs300_pe',d.hs300_pe); put('erp',d.erp); put('margin_yi',d.margin_yi);
@@ -603,8 +607,12 @@ function applyMacro(j){
   put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);
   put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy); put('profit_yoy',d.profit_yoy);
   put('vix',d.vix); put('trade_balance',d.trade_balance);
+  put('gold',d.gold);
   put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
   put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
+  // ===== 定性四项（优中选优·历史分位法，服务端单一真相源）=====
+  put('qual_geo',d.qual_geo); put('qual_reg',d.qual_reg);
+  put('qual_credit',d.qual_credit); put('qual_policy',d.qual_policy);
   // #1 stale 自动生效：前端兜底闸门——asOf 距今 >180 天强制 noData（旧缓存/旧兜底 macro.json 也无害）
   const STALE_DAYS=180;
   Object.keys(M).forEach(k=>{
@@ -872,38 +880,36 @@ function eightFinal(){
 }
 
 // ===== 定性项自动推导（数学模型）=====
-// 地缘波动：VIX + 布伦特油价 → sigmoid 合成
-//   vix_z=(VIX-20)/4, oil_z=(油价-80)/15，geo=10*sigmoid(0.55*vix_z+0.45*oil_z)
-// 监管打压：M2-M1剪刀差 + 两融周变化
-//   scissors_z=((M2-M1)-3)/2, mg_z=(两融周变-1)/2，reg=10*sigmoid(0.6*scissors_z-0.4*mg_z)
-// 信用风险：国房景气1Y涨跌 + 信贷同比
-//   re_z=(re_yoy-0)/1.5, credit_z=信贷/15，cr=10*sigmoid(-0.55*re_z-0.45*credit_z)
-// 政策力度：LPR + M1同比（逆向：降息+宽货币→力度大）
-//   lpr_z=(LPR-3.5)/0.5, m1_z=(M1-6)/1.5，pol=10*sigmoid(-0.6*lpr_z+0.4*m1_z)
+// 优中选优：服务端 fetch_macro.py 已用「历史分位法」算好 qual_geo/reg/credit/policy（单一真相源）；
+//   前端 autoQual() 优先用这些值（isReal 守卫防基线/过期/脏数据），缺料时回退本地固定锚点 sigmoid。
+// 本地回退锚点（仅兜底）：地缘=VIX+油价 / 监管=剪刀差+两融周变 / 信用=二手房+社融 / 政策=LPR+M1
 function autoQual(){
+  const out={};
+  const MAP=[['qual_geo','地缘波动'],['qual_reg','监管打压'],['qual_credit','信用风险'],['qual_policy','政策力度']];
+  MAP.forEach(([k,name])=>{ if(isReal(k)) out[name]=M[k].value; });   // ① 服务端定值优先
+  // ② 回退：本地固定锚点 sigmoid（服务端缺料兜底）
   const vix=(Q&&Q.ok&&!isNaN(Q.vix.price))?Q.vix.price:(isReal('vix')?get('vix'):null);
   const oil=get('oil_brent'), m1=get('m1_yoy'), m2=get('m2_yoy'),
         re=get('re_yoy'), crd=get('credit_yoy'), lpr=get('lpr1y'),
         mg=M.margin_yi&&M.margin_yi.extra?M.margin_yi.extra['周变化%']:null;
-  const out={};
   // 地缘波动
-  if(vix!=null&&oil!=null){
+  if(!('地缘波动' in out) && vix!=null && oil!=null){
     const vz=(vix-20)/4, oz=(oil-80)/15;
     out['地缘波动']=10*sigmoid(0.55*vz+0.45*oz);
   }
   // 监管打压
-  if(m1!=null&&m2!=null){
+  if(!('监管打压' in out) && m1!=null && m2!=null){
     const scissors=m2-m1, sz=(scissors-3)/2;
     const mgz=mg!=null?(mg-1)/2:0;
     out['监管打压']=10*sigmoid(0.6*sz-0.4*mgz);
   }
   // 信用风险
-  if(re!=null&&crd!=null){
+  if(!('信用风险' in out) && re!=null && crd!=null){
     const rz=(re-0)/1.5, cz=crd/15;
     out['信用风险']=10*sigmoid(-0.55*rz-0.45*cz);
   }
   // 政策力度
-  if(lpr!=null&&m1!=null){
+  if(!('政策力度' in out) && lpr!=null && m1!=null){
     const lz=(lpr-3.5)/0.5, mz=(m1-6)/1.5;
     out['政策力度']=10*sigmoid(-0.6*lz+0.4*mz);
   }
@@ -1318,17 +1324,47 @@ function renderEight(){
 }
 function setStateEight(k,v){ eightState[k]=v; saveLocal(); recalc(); }
 
+function qualDetailText(k){
+  const f=(x)=> (x!=null? (typeof x==='number'? x.toFixed(1): x) : '—');
+  if(k==='地缘波动'){
+    const vp=M.vix&&M.vix.extra?M.vix.extra['pct_5y']:null;
+    const op=M.oil_brent&&M.oil_brent.extra?M.oil_brent.extra['pct_5y']:null;
+    const gp=M.gold&&M.gold.extra?M.gold.extra['pct_5y']:null;
+    return 'VIX分位 '+f(vp)+'%｜油价分位 '+f(op)+'%｜黄金分位 '+f(gp)+'%';
+  }
+  if(k==='监管打压'){
+    const m1=M.m1_yoy?M.m1_yoy.value:null, m2=M.m1_yoy&&M.m1_yoy.extra?M.m1_yoy.extra['m2_yoy']:null;
+    const sc=(m1!=null&&m2!=null)?(m2-m1):null;
+    const mp=M.margin_yi&&M.margin_yi.extra?M.margin_yi.extra['pct_3y_20d']:null;
+    return 'M2-M1剪刀差 '+f(sc)+'%｜两融20日分位 '+f(mp)+'%';
+  }
+  if(k==='信用风险'){
+    const re=M.re_yoy?M.re_yoy.value:null, cr=M.credit_yoy?M.credit_yoy.value:null;
+    return '70城二手房同比 '+f(re)+'%｜社融存量同比 '+f(cr)+'%';
+  }
+  if(k==='政策力度'){
+    const cut=M.lpr1y&&M.lpr1y.extra?M.lpr1y.extra['12个月净变动bp']:null;
+    const m1=M.m1_yoy?M.m1_yoy.value:null;
+    return 'LPR12月净变动 '+(cut!=null?cut:'—')+'bp｜M1同比 '+f(m1)+'%';
+  }
+  return '';
+}
 function renderQual(){
   const qf=qualFinal(), am=qualAutoMap();
   document.getElementById('qualList').innerHTML=QUAL.map(q=>{
-    const v=qf[q.k], auto=am[q.k];
+    const v=qf[q.k], auto=am[q.k], overridden=(q.k in qualState);
     return '<div class="dim"><div class="hd"><div class="nm">'+q.k+(auto?'<span class="au">AUTO</span>':'')+
       '<span class="why" style="float:right;font-size:10px;color:#7f8c8d">'+q.def+'</span></div><div class="sc">'+v.toFixed(1)+'</div></div>'+
       '<div class="slider"><input type="range" min="0" max="10" step="1" value="'+Math.round(v)+'" oninput="onQual(\''+q.k+'\',this.value)"><div class="val">'+v.toFixed(1)+'</div></div>'+
-      '<div class="why">'+(auto?'<i>由数据自动推导（拖动=手动覆盖）</i>':'<i>手动覆盖值</i>')+'</div></div>';
+      '<div class="why">'+qualDetailText(q.k)+'</div>'+
+      (overridden?'<div class="why" style="color:#c0392b"><i>✋ 手动覆盖中</i> <button class="mini" onclick="clearQual(\''+q.k+'\')">↩ 恢复自动</button></div>'
+                 :'<div class="why"><i>由数据自动推导（拖动=手动覆盖）</i></div>')+
+      '</div>';
   }).join('');
 }
 function onQual(k,v){ qualState[k]=parseInt(v); saveLocal(); recalc(); }
+function clearQual(k){ delete qualState[k]; saveLocal(); recalc(); }
+function resetAllQual(){ qualState={}; saveLocal(); recalc(); }
 
 function renderMoney(r){
   const wan=parseFloat(document.getElementById('assetWan').value)||0;
