@@ -162,7 +162,7 @@
         <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
       </div>
     </div>
-    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝·共振分级（信号&lt;4默认封顶3成；资金面三柱 M1/社融/住户存款 亮1柱放宽3.5、亮2柱4.5、三柱全亮或信号≥4不封顶）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
+    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝·共振分级<b>（判定门：只封顶仓位，不进温度权重——避免与货币/流动性等维度重复计分）</b>（信号&lt;4默认封顶3成；资金面三柱 M1/社融/住户存款 亮1柱放宽3.5、亮2柱4.5、三柱全亮或信号≥4不封顶）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
   </div>
   <div class="box">
     <div class="k">顶底概率（市场内部信号 logistic 合成 · 1-10 信号强度分）</div>
@@ -607,6 +607,7 @@ function applyMacro(j){
   put('oil_brent',d.oil_brent); put('dxy',d.dxy); put('us_unemploy',d.us_unemploy);
   put('nasdaq_pct',d.nasdaq_pct); put('re_yoy',d.re_yoy); put('profit_yoy',d.profit_yoy);
   put('vix',d.vix); put('trade_balance',d.trade_balance);
+  put('reg_heat',d.reg_heat);   // 监管发声热度：辅助确认标签，不进主分
   put('gold',d.gold);
   put('ai_bubble',d.ai_bubble); put('hormuz_risk',d.hormuz_risk);
   put('paths_lit',d.paths_lit); put('win_proximity',d.win_proximity); put('china_fragile',d.china_fragile);
@@ -1349,14 +1350,25 @@ function qualDetailText(k){
   }
   return '';
 }
+function regHeatChip(){
+  // 监管发声热度：新闻关键词计数（低/中/高），辅助确认标签——不进主分、不参与任何计算
+  const o=M.reg_heat;
+  if(!o||o.noData||o.value==null) return '<span class="au" style="background:#666">监管发声热度：数据缺失</span>';
+  const lv=(o.extra&&o.extra.level)?o.extra.level:'—';
+  const c=lv==='高'?'#c0392b':(lv==='中'?'#d68910':'#1e8449');
+  const total=(o.extra&&o.extra.total)?'/'+o.extra.total+'条':'';
+  return '<span class="au" style="background:'+c+'">🔥监管发声热度：'+lv+'（'+o.value+total+'）</span>';
+}
 function renderQual(){
   const qf=qualFinal(), am=qualAutoMap();
   document.getElementById('qualList').innerHTML=QUAL.map(q=>{
     const v=qf[q.k], auto=am[q.k], overridden=(q.k in qualState);
+    const chip=(q.k==='监管打压')?'<div class="why" style="margin-top:4px">'+regHeatChip()+' <i style="color:var(--sub)">辅助确认标签·不进主分</i></div>':'';
     return '<div class="dim"><div class="hd"><div class="nm">'+q.k+(auto?'<span class="au">AUTO</span>':'')+
       '<span class="why" style="float:right;font-size:10px;color:#7f8c8d">'+q.def+'</span></div><div class="sc">'+v.toFixed(1)+'</div></div>'+
       '<div class="slider"><input type="range" min="0" max="10" step="1" value="'+Math.round(v)+'" oninput="onQual(\''+q.k+'\',this.value)"><div class="val">'+v.toFixed(1)+'</div></div>'+
       '<div class="why">'+qualDetailText(q.k)+'</div>'+
+      chip+
       (overridden?'<div class="why" style="color:#c0392b"><i>✋ 手动覆盖中</i> <button class="mini" onclick="clearQual(\''+q.k+'\')">↩ 恢复自动</button></div>'
                  :'<div class="why"><i>由数据自动推导（拖动=手动覆盖）</i></div>')+
       '</div>';
@@ -1566,8 +1578,11 @@ function recalc(){
   const mDirTxt = (r.mUp===true)? '<span style="color:var(--red)">月线多头·右侧持有为主</span>'
                : (r.mUp===false)? '<span style="color:var(--green)">月线空头·只许左侧小仓(闸门下限'+r.bottomFloor+'成)</span>'
                : '<span style="color:var(--sub)">月线方向未知(tech缺失·不启用过滤器)</span>';
+  const earnRev = (r.earn && r.earn.real && r.earn.v >= 8)
+    ? '<br>②盈利极值逆向提示：盈利维度 <b>'+r.earn.v.toFixed(1)+'/10</b>（衰退最深处）——铁律「衰退打分最高时，往往临近盈利底」，属逆向<b>关注</b>信号而非买入指令，入场确认仍看保险丝资金面三柱'
+    : '';
   document.getElementById('probReason').innerHTML='信号强度 底'+probScore(r.tb.pBottom)+'/10 · 顶'+probScore(r.tb.pTop)+'/10 → '+pr.txt+neutralNote+
-    '<br>①月线方向过滤：'+mDirTxt;
+    '<br>①月线方向过滤：'+mDirTxt+earnRev;
   document.getElementById('resBar').style.width=(r.p*100)+'%';
   document.getElementById('resText').textContent='八大信号达成度 '+(r.p*100).toFixed(0)+'%（满=1分，临=0.5分）';
   // banner + 应变分支

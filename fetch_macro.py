@@ -45,6 +45,7 @@ RANGES = {
     "vix": (8, 80), "trade_balance": (-500, 2000), "gold": (500, 6000),
     "qual_geo": (0, 10), "qual_reg": (0, 10),
     "qual_credit": (0, 10), "qual_policy": (0, 10),
+    "reg_heat": (0, 5000),
     "ai_bubble": (0, 10), "hormuz_risk": (0, 10),
     "paths_lit": (0, 10), "win_proximity": (0, 10), "china_fragile": (0, 10),
     "hs300_pe_pct": (0, 100), "hs300_pb_pct": (0, 100),
@@ -589,6 +590,40 @@ def score_paths_lit(oil_brent, ai_bubble, vix, china_fragile):
         return 5.0
     return round(sum(parts) / len(parts), 1)
 
+def fetch_reg_heat():
+    """监管发声热度（新闻关键词计数）—— 辅助确认标签，不进主分。
+    多源回退：东财全球财经快讯 → 新浪环球市场快讯 → 新闻联播文字稿(近3日)。
+    value=命中监管关键词的新闻条数；extra.level = 低(≤2)/中(3-6)/高(≥7)。
+    """
+    KWS = ["证监会", "监管", "处罚", "立案", "调查", "整顿", "约谈", "警示函",
+           "罚单", "罚款", "规范", "整治", "退市", "减持", "窗口指导", "问询"]
+    ak = _ak()
+    attempts = [
+        ("东财全球财经快讯", lambda: ak.stock_info_global_em()),
+        ("新浪环球市场快讯", lambda: ak.stock_info_global_sina()),
+        ("央视新闻联播(近3日)", lambda: pd.concat(
+            [ak.news_cctv(date=(dt.date.today() - dt.timedelta(days=i)).strftime("%Y%m%d"))
+             for i in range(3)], ignore_index=True)),
+    ]
+    last_err = None
+    for src_name, fn in attempts:
+        try:
+            df = fn()
+            if df is None or len(df) == 0:
+                raise RuntimeError("空数据")
+            texts = df.apply(lambda r: " ".join(str(x) for x in r.values), axis=1)
+            hits = int(texts.str.contains("|".join(KWS), regex=True, na=False).sum())
+            total = int(len(df))
+            level = "低" if hits <= 2 else ("中" if hits <= 6 else "高")
+            return {"value": hits, "asOf": str(dt.date.today()),
+                    "src": "关键词计数·%s(%d条中命中)" % (src_name, total),
+                    "extra": {"level": level, "total": total, "keywords": len(KWS)}}
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError("监管发声热度抓取失败: %s" % last_err)
+
+
 def score_win_proximity(oil_brent=None, vix=None, nasdaq_pct=None, us10y=None):
     """高危窗口临近度(0-10)：完全由真实全球压力信号推导，无信号归0；彻底删除原「日期距2027Q1」硬算(P0-1)。
     取各路径压力子分(0-10)均值：地缘(油价>60)/金融传染(VIX>15)/AI泡沫(纳指涨幅)/流动性(美债>4%)。
@@ -674,6 +709,7 @@ JOBS = {
     "hs300_pe": (fetch_valuation, "沪深300 PE"),
     "margin_yi": (fetch_margin, "两市融资余额"),
     "northbound": (fetch_northbound, "北向净买入"),
+    "reg_heat": (fetch_reg_heat, "监管发声热度(新闻关键词计数)"),
     "breadth_up": (fetch_breadth, "上涨家数占比"),
     # 新增：海外风险
     "oil_brent": (fetch_oil_brent, "布伦特油价"),
