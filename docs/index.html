@@ -1019,7 +1019,10 @@ function computeAll(){
   const ov=clamp(oil*W_OV.oil+aiv*W_OV.ai+hm*W_OV.hormuz+usd*W_OV.usd+job*W_OV.job);
   const pa=iv('in_path'),wn=iv('in_win'),cn=iv('in_china');
   const cr=clamp(pa*W_CR.path+wn*W_CR.win+cn*W_CR.china);
-  const riskOverlay = clamp(0.5*ov + 0.5*cr, 0, 10);           // 0-10，仅收缩仓位用
+  // 定性风险(地缘/监管/信用/政策)整体并入风险叠加层，只在此计一次——修复原版"既进温度又进叠加层"的双重暴露
+  const qf=qualFinal();
+  const qAdj = ((qf['地缘波动']-5)*0.04 + (qf['监管打压']-5)*0.03 + (qf['信用风险']-5)*0.04 - (qf['政策力度']-5)*0.04);
+  const riskOverlay = clamp(0.5*ov + 0.5*cr + qAdj, 0, 10);           // 0-10，仅收缩仓位用(含定性风险)
   // 顶底概率：只吃市场内部信号（脱钩综合温度）
   // C 顶底基线静默泄漏修复：erp/peP 必须过 isReal() 守卫，基线/过期值一律回退中性 0.5，不再静默喂进 P(底)
   const erp = isReal('erp') ? get('erp') : null;
@@ -1030,10 +1033,8 @@ function computeAll(){
   const brdT = (isReal('breadth_up')&&bu>65)? sigmoid((bu-65)/10) : 0;   // 广度亢奋→顶
   const brdB = (isReal('breadth_up')&&bu<35)? sigmoid((35-bu)/10) : 0;   // 广度恐慌→底
   const tb = topBottomProb({erpPct:erpP, pePct:peP, mDiv:tr.div.mDiv, wDiv:tr.div.wDiv, brdB, brdT, mode, erpRaw:(erp!=null?erp:null)});
-  // 主温度 = 市场温度 + 定性微调（定性项降权，仅微调，不决定顶底）
-  const qf=qualFinal();
-  const qAdj = ((qf['地缘波动']-5)*0.04 + (qf['监管打压']-5)*0.03 + (qf['信用风险']-5)*0.04 - (qf['政策力度']-5)*0.04);
-  const temp = clamp(mkt + qAdj);
+  // 主温度 = 市场内部(mkt 已含美债定价中枢)；定性风险已并入 riskOverlay，温度不再混入(修复双计+名不副实)
+  const temp = clamp(mkt);
   const tempAdj = temp;
   const bp = basePosition(tempAdj);
   // ============ 顶底-仓位-温度 三表同步 ============
