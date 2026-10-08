@@ -159,7 +159,7 @@
         <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
       </div>
     </div>
-    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝（信号&lt;4强制封顶3成）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
+    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝·共振分级（信号&lt;4默认封顶3成；资金面三柱 M1/社融/住户存款 亮1柱放宽3.5、亮2柱4.5、三柱全亮或信号≥4不封顶）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
   </div>
   <div class="box">
     <div class="k">顶底概率（市场内部信号 logistic 合成 · 1-10 信号强度分）</div>
@@ -174,6 +174,10 @@
       <b>双≤3</b>=中性震荡（按仓位执行，不急）；<b>双≥6</b>=信号矛盾（观望勿追）。
     </div>
   </div>
+</div>
+<div class="box" id="tianShiBox" style="margin-top:10px">
+  <div class="k">命理天时校验 · <span id="tianShiTag" style="color:var(--yellow)">—</span><span id="tianShiHit" style="color:var(--red);font-size:11px;margin-left:6px"></span></div>
+  <div class="sub" id="tianShiTxt" style="margin-top:4px;line-height:1.6">等待数据…</div>
 </div>
 <div class="warn off" id="dataWarn"></div>
 
@@ -244,31 +248,31 @@
 
 <!-- ===================== 三、海外风险维度 ===================== -->
 <h2>三、海外风险维度 · 新增打分（A）</h2>
-<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b></div>
+<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为系统定值（自动由真实数据推导），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
-  <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number"><span class="w">权重25%</span></div></div>
+  <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重25%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">AI/美股估值</div><div class="sc" id="sc_ai">—</div></div><div class="bar"><i id="bar_ai"></i></div>
-  <div class="row"><span class="lab">AI资本开支仅花少量，泡沫高危</span><input id="in_ai" step="0.1" type="number"><span class="w">权重25%</span></div></div>
+  <div class="row"><span class="lab">AI资本开支仅花少量，泡沫高危</span><input id="in_ai" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重25%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">霍尔木兹/曼德海峡</div><div class="sc" id="sc_hormuz">—</div></div><div class="bar"><i id="bar_hormuz"></i></div>
-  <div class="row"><span class="lab">航道受威胁→供应链风险</span><input id="in_hormuz" step="0.1" type="number"><span class="w">权重20%</span></div></div>
+  <div class="row"><span class="lab">航道受威胁→供应链风险</span><input id="in_hormuz" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重20%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">美元指数</div><div class="sc" id="sc_usd">—</div></div><div class="bar"><i id="bar_usd"></i></div>
-  <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number"><span class="w">权重15%</span></div></div>
+  <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重15%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">美国就业</div><div class="sc" id="sc_job">—</div></div><div class="bar"><i id="bar_job"></i></div>
-  <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number"><span class="w">权重15%</span></div></div>
+  <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重15%</span></div></div>
 </div>
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
 <!-- ===================== 四、金融危机预警 ===================== -->
 <h2>四、金融危机预警 · 新增打分（B）</h2>
-<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b></div>
+<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为系统定值（自动由真实数据推导），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
-  <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number"><span class="w">权重35%</span></div></div>
+  <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">高危窗口临近度</div><div class="sc" id="sc_win">—</div></div><div class="bar"><i id="bar_win"></i></div>
-  <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number"><span class="w">权重35%</span></div></div>
+  <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">中国脆弱点</div><div class="sc" id="sc_china">—</div></div><div class="bar"><i id="bar_china"></i></div>
-  <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number"><span class="w">权重30%</span></div></div>
+  <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重30%</span></div></div>
 </div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
 
@@ -324,7 +328,7 @@
   <button class="btn ghost sm" onclick="copySummary()">复制诊断摘要</button>
   <button class="btn ghost sm" onclick="clearAll()">清空历史</button>
   <label class="sub" style="display:flex;align-items:center;gap:6px">
-    <input type="checkbox" id="baziSwitch" checked onchange="recalc()" style="width:16px;height:16px"> 命理保守系数 ×0.85
+    <input type="checkbox" id="baziSwitch" checked onchange="recalc()" style="width:16px;height:16px"> 命理防追高系数（仅温度≥6.5生效，低温不打折）
   </label>
 </div>
 <div id="saveMsg" class="ok" style="margin-top:8px;font-size:13px"></div>
@@ -362,7 +366,7 @@
   ⑥ 最终 = 核心仓位 × 风险叠加(×1−风险/20) × 保守系数(默认0.85)。<br>
   ⑦ 【本轮迭代】①月线方向过滤：月线向下（大级别空头）时底部闸门下限6.5→4.5成，不逆势重仓；②6历史极点相似度以0.20权重并入顶底概率（ERP高斯核σ=1.2+背离方向匹配）；⑧恐贪指数显性化（宽度30%+VIX25%+估值分位20%+5日动量15%+当日10%，反向读法）；⑨情绪维度当日涨跌降权0.7→0.25、5日动量0.45补位（防单日噪声让仓位跳变）。<br>
   <b>为何删除原"四道软约束"：</b>货币/趋势/流动/盈利/美债/汇率已占温度七维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
-  <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年，市场越跌越易手痒抄底。工具给的已是保守值，仍请留足 18-24 个月应急金，不杠杆。仅供参考，不构成投资建议。
+  <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年（2026–2027），市场越跌越易手痒抄底。<b>「守」的准确语义 = 不追高、控杠杆、不是不抄底</b>——资金面关键项逐步亮时可左侧小幅建仓（见命理天时校验卡），但仍请留足 18-24 个月应急金，不杠杆。真正行动窗口 2028+ 水木大运年。仅供参考，不构成投资建议。
 </div>
 </details>
 
@@ -439,7 +443,7 @@ const EIGHT = [
   {k:'一带一路回款',  auto:'trade', hint:'贸易顺差>800亿视为回款充足'},
   {k:'地产降幅收窄',  auto:'re', hint:'70城二手房同比>-0.5%视为收窄'},
   {k:'A股日均3万亿',  auto:'amt'},
-  {k:'海外贴现率缓和',auto:'us10y'},
+  {k:'中东缓和',      auto:'geo', hint:'地缘波动分<4视为缓和（与总纲对齐）'},
 ];
 
 const HK='niuxiong_v2_hist', OVK='niuxiong_v2_override', QK='niuxiong_v2_qual';
@@ -856,7 +860,9 @@ function autoEight(){
   st['一带一路回款'] = tb==null?2:(tb>800?1:(tb>=500?2:3)); // 贸易顺差大→外汇回款充足
   st['地产降幅收窄'] = re==null?2:(re>-0.5?1:(re>=-1.5?2:3)); // 景气指数1Y跌幅收窄
   st['A股日均3万亿'] = amt==null?2:(amt>=30000?1:(amt>=20000?2:3));
-  st['海外贴现率缓和'] = u==null?2:(u<4?1:(u<4.5?2:3));
+  // 中东缓和（与总纲对齐）：地缘波动分越低=缓和。美债仍由H股硬上限单独处理，不重复计入信号
+  const geo = (typeof autoQual==='function') ? autoQual()['地缘波动'] : null;
+  st['中东缓和'] = geo==null?2:(geo<4?1:(geo<6?2:3));
   return st;
 }
 function eightFinal(){
@@ -1032,7 +1038,8 @@ function computeAll(){
   if(strongBottom){ core = Math.max(core, bottomFloor); gateTxt = '底部共振闸门：仓位下限'+bottomFloor+'成'+(mUp===false?'（月线空头→仅左侧小仓）':''); }
   if(strongTop){    core = Math.min(core, 2.5); gateTxt = '顶部共振闸门：仓位上限2.5成'; }
   const overlayScale = clamp(1 - riskOverlay/20, 0.5, 1);   // 海外+危机叠加层，0.5~1.0
-  const konserv = document.getElementById('baziSwitch').checked ? 0.85 : 1;
+  // 改1：命理保守系数仅在高温区(温度≥6.5)防追高；低温区(左侧建仓区)不打折，避免越便宜越被压仓（底部反向折扣逻辑错误）
+  const konserv = (document.getElementById('baziSwitch').checked && tempAdj>=6.5) ? 0.85 : 1;
   // 风险叠加层与保守系数只在闸门区间内活动（乘法后再兜底一次）
   let final = clamp(core * overlayScale * konserv, 1, 9.5);
   let gate2 = '';
@@ -1050,11 +1057,36 @@ function computeAll(){
   // 未集齐(<4 个点亮)→强制防御上限 3 成，杜绝温度<4 时仍建议进攻 7-8 成的"假进攻"
   const ef=eightFinal();   // 注意：必须在总闸之前声明（此前 ef 在下方才定义，触发 TDZ ReferenceError 导致整页卡在"正在拉取"）
   const litCount = EIGHT.filter(e=>ef[e.k]===1).length;
+  // 改2：关键项共振——资金面三柱（M1/社融/住户存款）是驱动底部的核心流动性，逐步亮时放松防御上限（温度偏低但关键项亮→允许左侧加仓）
+  const moneyPillars = ['M1回升6%+','社融/信贷止跌','住户存款放缓'];
+  const moneyLit = moneyPillars.filter(k=>ef[k]===1).length;
+  let fuseCap = 3.0;                               // 强防御默认上限
+  if(moneyLit === 1) fuseCap = 3.5;                // 仅一柱亮（资金面刚开始松动）→ 轻微放松，仍守
+  if(moneyLit === 2) fuseCap = 4.5;                // 两柱亮 → 允许左侧小幅加仓
+  if(moneyLit >= 3 || litCount >= 4) fuseCap = 9.5;// 三柱全亮或总信号达4 → 不封顶
   let eightGate = '';
-  if(litCount < 4){ final = Math.max(1, Math.min(final, 3.0)); eightGate = '长牛信号 '+litCount+'/8 未集齐 → 强制防御上限3成'; }
+  if(final > fuseCap){ final = Math.max(1, Math.min(final, fuseCap)); }
+  if(fuseCap < 9.5){
+    const reson = moneyLit>=3 ? '资金面三柱全亮' : (moneyLit===2 ? '资金面两柱亮' : (moneyLit===1 ? '资金面开始松动' : '资金面未亮'));
+    eightGate = '长牛信号 '+litCount+'/8（'+reson+'）→ 防御上限'+fuseCap.toFixed(1)+'成';
+  }
   // 优中选优叠加 M2 美债硬上限：H股 美债10Y≥4.5% → 强制仓位上限5.5成（美债是H股第一核心风险，纯靠温度可能仍高估H股）
   let ustCap = '';
   if(mode==='H' && isReal('us10y') && get('us10y')>=4.5 && final>5.5){ final = 5.5; ustCap = '美债≥4.5%→H股硬上限5.5成'; }
+  // 加分5：命理天时校验——财杀年(2026–2027)硬上限4.5成：「守=不追高、控杠杆、不是不抄底」；
+  // 资金面关键项逐步亮时允许左侧小幅建仓（保险丝已按共振放宽到3.5/4.5），但财杀年总仓位再封顶4.5防追高；2028+水木大运年=行动窗口
+  let tianShi = null;
+  {
+    const y = new Date().getFullYear();
+    if(y <= 2027){
+      tianShi = { tag:'财杀年 · 守', cap:4.5, hit:false,
+        txt:'2026–2027 财杀年：守 = 不追高、控杠杆、不是不抄底——资金面关键项（M1/社融/住户存款）逐步亮时允许左侧小幅建仓（保险丝已按共振放宽至3.5/4.5成），但总仓位硬上限 4.5 成防追高；真正行动窗口 2028+ 水木大运年。' };
+      if(final > tianShi.cap){ tianShi.hit=true; final = Math.max(1, Math.min(final, tianShi.cap)); }
+    } else {
+      tianShi = { tag:'水木年 · 行动窗', cap:9.5, hit:false,
+        txt:'2028+ 水木大运年：用神当令，按温度/信号正常执行仓位，无命理硬上限。' };
+    }
+  }
   // D 半盲提示：七维真实数据覆盖度；❷ 海外/危机默认值未确认标记
   const realDims = [tr, lq, em, money, earn, fx, ust].filter(d=>d.real).length;
   const K = 7;
@@ -1065,14 +1097,14 @@ function computeAll(){
     {n:'温度仓位(tanh)', v:bp,            r:'主温度 '+tempAdj.toFixed(2)+' → '+bp.toFixed(1)+'成'},
     {n:'顶底联动',       v:core,          r:'底'+sb+'/顶'+st+' → ×'+probMult.toFixed(2)+(gateTxt?' ｜ '+gateTxt:'')},
     {n:'风险叠加',       v:core*overlayScale, r:'海外'+ov.toFixed(1)+'+危机'+cr.toFixed(1)+' → ×'+overlayScale.toFixed(2)},
-    {n:'保守系数',       v:final,         r:(konserv<1?'×0.85':'×1.00')+(gate2?' ｜ '+gate2:'')}
+    {n:'保守系数',       v:final,         r:(konserv<1?'×0.85(高温防追高)':'×1.00(低温不收紧)')+(gate2?' ｜ '+gate2:'')}
   ];
   const cap = core, tight = [gateTxt || '无共振'];
   let sc=0; EIGHT.forEach(e=>{ sc += ef[e.k]===1?1:(ef[e.k]===2?0.5:0); });
   const p = sc / EIGHT.length;
   return {tr,va,lq,em,money,earn,fx,ust,mkt,ov,cr,riskOverlay,temp,tempAdj,bp,cap,cs,final,p,konserv,tight,tb,overlayScale,
           probMult,sb,st,gateTxt,mUp,bottomFloor,ovItems:{oil,aiv,hm,usd,job}, crItems:{pa,wn,cn},
-          realDims,K,litCount,eightGate,ustCap,ovCrUnconfirmed,
+          realDims,K,litCount,eightGate,ustCap,ovCrUnconfirmed,tianShi,
           tempPos,tempBand,LINE_U,LINE_L,w};
 }
 /* =========================================================
@@ -1252,6 +1284,15 @@ function renderSrcTable(){
     tb.appendChild(tr);
   });
 }
+function renderTianShi(r){
+  const t=r.tianShi; if(!t) return;
+  const tagEl=document.getElementById('tianShiTag');
+  tagEl.textContent=t.tag;
+  tagEl.style.color = t.cap<=4.5 ? 'var(--red)' : 'var(--green)';
+  document.getElementById('tianShiHit').textContent = t.hit ? ('⛔已触发：总仓位封顶 '+t.cap.toFixed(1)+' 成') : ('当前未触发（上限 '+t.cap.toFixed(1)+' 成）');
+  document.getElementById('tianShiTxt').textContent = t.txt;
+}
+
 function setOverride(k){
   const el=document.getElementById('ov_'+k); if(!el) return;
   const v=parseFloat(el.value);
@@ -1461,6 +1502,7 @@ function recalc(){
   if(!r.va.real) te.textContent += ' ⚠估值缺位';   // D 半盲提示：估值被静默置中时明确告知，温度=半盲
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:16px">成</span>';
   document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
+  renderTianShi(r);
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
   const detOpen='<details style="text-align:left;margin-top:3px"><summary style="cursor:pointer;font-size:11px;color:var(--sub);user-select:none">▸ 打分明细（点开查看）</summary><div style="margin-top:4px">';
   const detClose='</div></details>';
@@ -1494,7 +1536,7 @@ function recalc(){
   // banner + 应变分支
   document.getElementById('bannerPos').textContent=r.final.toFixed(1)+'成';
   document.getElementById('bannerPosB').textContent=(r.tempPos!=null? r.tempPos.toFixed(1)+'成':'–');
-  document.getElementById('bannerBand').textContent=tag.txt+' ｜ '+(r.eightGate?'🔒信号'+r.litCount+'/8未满·已封顶':'信号'+r.litCount+'/8集齐')+' · '+r.tempBand;
+  document.getElementById('bannerBand').textContent=tag.txt+' ｜ '+(r.eightGate?'🔒信号'+r.litCount+'/8未满·已封顶':'信号'+r.litCount+'/8集齐')+' · '+r.tempBand+(r.tianShi?(' ｜ '+r.tianShi.tag):'');
   document.getElementById('bannerRegime').textContent=r.final<5?'防御期':(r.final<7?'中性观察':'进攻期');
   renderActionList(r);
   renderAlloc();
