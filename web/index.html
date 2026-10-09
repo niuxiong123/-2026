@@ -254,15 +254,15 @@
 <div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
-  <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重25%</span></div></div>
+  <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重25%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">AI/美股估值</div><div class="sc" id="sc_ai">—</div></div><div class="bar"><i id="bar_ai"></i></div>
-  <div class="row"><span class="lab">AI资本开支仅花少量，泡沫高危</span><input id="in_ai" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重25%</span></div></div>
+  <div class="row"><span class="lab">AI资本开支仅花少量，泡沫高危</span><input id="in_ai" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重25%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">霍尔木兹/曼德海峡</div><div class="sc" id="sc_hormuz">—</div></div><div class="bar"><i id="bar_hormuz"></i></div>
-  <div class="row"><span class="lab">航道受威胁→供应链风险</span><input id="in_hormuz" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重20%</span></div></div>
+  <div class="row"><span class="lab">航道受威胁→供应链风险</span><input id="in_hormuz" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重20%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">美元指数</div><div class="sc" id="sc_usd">—</div></div><div class="bar"><i id="bar_usd"></i></div>
-  <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重15%</span></div></div>
+  <div class="row"><span class="lab">美元强→新兴市场承压</span><input id="in_usd" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重15%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">美国就业</div><div class="sc" id="sc_job">—</div></div><div class="bar"><i id="bar_job"></i></div>
-  <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重15%</span></div></div>
+  <div class="row"><span class="lab">稳健但降温（权重最低）</span><input id="in_job" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重15%</span></div></div>
 </div>
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
@@ -271,11 +271,11 @@
 <div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
-  <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重35%</span></div></div>
+  <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">高危窗口临近度</div><div class="sc" id="sc_win">—</div></div><div class="bar"><i id="bar_win"></i></div>
-  <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重35%</span></div></div>
+  <div class="row"><span class="lab">真实全球压力推导（油价+VIX+纳指+美债）</span><input id="in_win" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重35%</span></div></div>
 <div class="dim"><div class="hd"><div class="nm">中国脆弱点</div><div class="sc" id="sc_china">—</div></div><div class="bar"><i id="bar_china"></i></div>
-  <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number" disabled title="系统定值：由真实数据自动推导，不可手动修改"><span class="w">权重30%</span></div></div>
+  <div class="row"><span class="lab">地产降幅+中小银行/信托</span><input id="in_china" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重30%</span></div></div>
 </div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
 
@@ -468,8 +468,8 @@ let statusFlags = {quote:null, macro:null, fx:null, api:false};
 const QS_TOKEN = (()=>{
   try{
     const t = new URL(location.href).searchParams.get('token');
-    if(t){ localStorage.setItem('nx_token', t); return t; }
-    return localStorage.getItem('nx_token') || '';
+    if(t){ sessionStorage.setItem('nx_token', t); return t; }
+    return sessionStorage.getItem('nx_token') || '';
   }catch(e){ return ''; }
 })();
 function apiUrl(p){ return QS_TOKEN ? p + (p.indexOf('?')>=0?'&':'?') + 'token=' + encodeURIComponent(QS_TOKEN) : p; }
@@ -883,7 +883,7 @@ function autoEight(){
 }
 function eightFinal(){
   const a=autoEight(), out={};
-  EIGHT.forEach(e=>{ out[e.k]= (a[e.k]!=null?a[e.k]:2); });   // 系统定值（防手动覆盖操纵仓位），不再读 eightState
+  EIGHT.forEach(e=>{ out[e.k]= (a[e.k]!=null?a[e.k]:2); });   // 静态保守假设兜底（防手动覆盖操纵仓位），不再读 eightState
   return out;
 }
 
@@ -1204,7 +1204,7 @@ function renderStage(v){
 const BRANCHES={
   def:{t:'🔴 防御（温度≥6）',body:'维持3–4成：消费/红利/利率债▲，科技/地产/美元▼，现金为王。等2028。'},
   neu:{t:'🟡 中性（温度4–6）',body:'均衡5成：权益(沪深300ETF 510300/红利)与防御各半，观望不加杠杆。'},
-  atk:{t:'🟢 进攻（温度&lt;4，信号提前亮）',body:'加到7–9.5成：沪深300ETF(510300)/创业板(159915)/成长科技加回，纳指100回补，现金降至5成内；分步建仓不追高。'}
+  atk:{t:'🟢 进攻（温度&lt;4，信号提前亮）',body:'加到7–9.5成：沪深300ETF(510300)/创业板(159915)/成长科技加回，纳指100回补，现金降至3成内；分步建仓不追高。'}
 };
 function branchFromTemp(t){ return (t>=6)?'def':(t>=4?'neu':'atk'); }
 function renderBranch(v){
@@ -1323,12 +1323,12 @@ function renderEight(){
   document.getElementById('resEight').innerHTML=EIGHT.map(e=>{
     const cur=ef[e.k], auto=(e.auto&&au[e.k]!=null);
     const keyTag=e.key?'<span style="color:var(--purple);font-size:10px;margin-left:4px">关键项</span>':'';
-    return '<div class="ritem"><div class="rn">'+e.k+keyTag+'<small>'+(auto?'🤖自动判定·系统定值':(e.hint||'暂无数据源'))+'</small></div>'+
+    return '<div class="ritem"><div class="rn">'+e.k+keyTag+'<small>'+(auto?'静态保守假设·非实时':(e.hint||'暂无数据源'))+'</small></div>'+
       '<div class="states">'+
-      '<button class="s1 '+(cur===1?'on':'')+'" disabled title="系统定值">满</button>'+
-      '<button class="s2 '+(cur===2?'on':'')+'" disabled title="系统定值">临</button>'+
-      '<button class="s3 '+(cur===3?'on':'')+'" disabled title="系统定值">未</button>'+
-      '</div></div>';
+      '<button class="s1 '+(cur===1?'on':'')+'" disabled title="静态保守假设·非实时">满</button>'+
+      '<button class="s2 '+(cur===2?'on':'')+'" disabled title="静态保守假设·非实时">临</button>'+
+      '<button class="s3 '+(cur===3?'on':'')+'" disabled title="静态保守假设·非实时">未</button>'+
+      '</div></div>' + '<div style="font-size:11px;color:var(--muted);margin-top:4px">🔒 信号由系统推导，不可手动改</div>';
   }).join('');
 }
 function setStateEight(k,v){ eightState[k]=v; saveLocal(); recalc(); }
@@ -1669,6 +1669,7 @@ function saveToday(){
     vix: Q&&Q.ok? +Q.vix.price.toFixed(1) : (isReal('vix')?+get('vix').toFixed(1):null),
     hs300: Q&&Q.ok? +Q.hs300.price.toFixed(0) : null,
   };
+  const _ks=Object.keys(st).sort(); while(_ks.length>200){ delete st[_ks.shift()]; }
   localStorage.setItem(HK,JSON.stringify(st));
   document.getElementById('saveMsg').textContent='已保存 '+dt+' 快照 ✓';
   renderHist(); renderReview();
@@ -1854,6 +1855,7 @@ function startAutoRefresh(){
     return (t>=570&&t<=690)||(t>=780&&t<=900)||(mode==='H'&&t>=900&&t<=960);
   };
   setInterval(async()=>{
+    if(document.visibilityState!=='visible') return;
     if(!isMarketHours()) return;
     const badge=document.getElementById('srcBadge');
     if(badge) badge.innerHTML='⏳ 刷新行情…';
