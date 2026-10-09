@@ -118,13 +118,21 @@
   .mod-sub.on{background:rgba(78,161,255,.18);color:var(--acc)}
   .mod-sub.off{background:rgba(128,128,128,.16);color:var(--sub)}
   .mod-sub.done{background:rgba(39,174,96,.18);color:var(--green)}
+  details.subfold{margin:2px 0 6px}
+  details.subfold>summary{cursor:pointer;user-select:none;font-size:11.5px;color:var(--sub);padding:3px 0;list-style:none}
+  details.subfold>summary::-webkit-details-marker{display:none}
+  details.subfold>summary::before{content:"▸";display:inline-block;width:14px;color:var(--sub);transition:transform .15s ease}
+  details.subfold[open]>summary::before{transform:rotate(90deg)}
+  details.subfold .sub{margin:4px 0 2px}
   @media(max-width:560px){.panel,.resgrid,.quad,.grid2,.dimgrid,#dimList,#qualList{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <h1>牛熊每日自查 v2+</h1>
+<details class="subfold"><summary>ℹ️ 使用说明与数据来源（点击展开）</summary>
 <div class="sub">七维温度打分 + 海外风险 + 危机预警 → 综合温度与建议仓位 → 赢家四阶段操作。<b>实时行情自动拉腾讯，宏观自动读 macro.json，汇率自动拉公开接口</b>；拉不到的项自动降级为基线值并标灰，绝不静默算错。</div>
+</details>
 
 <div class="topbar">
   <div><label>日期</label><input type="date" id="dt"></div>
@@ -162,7 +170,9 @@
         <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
       </div>
     </div>
+    <details class="subfold"><summary>ℹ️ A版/B版保险丝判定逻辑（点击展开）</summary>
     <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝·共振分级<b>（判定门：只封顶仓位，不进温度权重——避免与货币/流动性等维度重复计分）</b>（信号&lt;4默认封顶3成；资金面三柱 M1/社融/住户存款 亮1柱放宽3.5、亮2柱4.5、三柱全亮或信号≥4不封顶）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
+    </details>
   </div>
   <div class="box">
     <div class="k">顶底概率（市场内部信号 logistic 合成 · 1-10 信号强度分）</div>
@@ -230,7 +240,9 @@
 <!-- ===================== 一、赢家四阶段 ===================== -->
 <div class="mod">
   <div class="k">一、赢家四阶段定位（C）· 当前动作</div>
+  <details class="subfold"><summary>ℹ️ 模块说明（点击展开）</summary>
   <div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
+  </details>
   <div class="mod-sel">
     <label>当前阶段</label>
     <select id="selStage" onchange="renderStage(this.value)">
@@ -253,7 +265,9 @@
 
 <!-- ===================== 三、海外风险维度 ===================== -->
 <h2>三、海外风险维度 · 新增打分（A）</h2>
+<details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
+</details>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
   <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重25%</span></div></div>
@@ -270,7 +284,9 @@
 
 <!-- ===================== 四、金融危机预警 ===================== -->
 <h2>四、金融危机预警 · 新增打分（B）</h2>
+<details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
+</details>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
   <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number" disabled title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重35%</span></div></div>
@@ -294,13 +310,17 @@
 </details>
 
 <h2>六、长牛八大信号（自动推导 + 可改） <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
+<details class="subfold"><summary>ℹ️ 判定规则（点击展开）</summary>
 <div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。7/8 由 macro.json 真实数据自动判定（消费税为政策项需手动）。</div>
+</details>
 <div class="resgrid" id="resEight"></div>
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
 <h2>七、定性项（数据自动推导 + 可手动覆盖） <button class="btn ghost sm" onclick="resetAllQual()" style="float:right;font-size:12px">↩ 全部恢复自动</button></h2>
+<details class="subfold"><summary>ℹ️ 自动推导逻辑（点击展开）</summary>
 <div class="sub">四项均由 fetch_macro.py 用「历史分位法」自动算出（优中选优），无需手动打；拖动滑条可临时覆盖，点「恢复自动」即回真实数据。</div>
+</details>
 <div id="qualList"></div>
 
 <h2>八、仓位换钱 · 操作建议</h2>
@@ -308,7 +328,9 @@
 
 <!-- ===================== 九、资产配置建议 + 应变分支 ===================== -->
 <h2>九、资产配置建议（D）· 加大 / 持有 / 减少 / 对冲（细化标的）</h2>
+<details class="subfold"><summary>ℹ️ 使用说明（点击展开）</summary>
 <div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
+</details>
 <div style="overflow-x:auto"><table>
   <thead><tr><th style="width:38px" title="按建议强度排序：1=最强烈(优先执行)">序</th><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
   <tbody id="allocBody"></tbody>
@@ -316,7 +338,9 @@
 
 <div class="mod">
   <div class="k">九-B、应变分支（若踏空 / 信号提前亮）</div>
+  <details class="subfold"><summary>ℹ️ 切换逻辑（点击展开）</summary>
   <div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
+  </details>
   <div class="mod-sel">
     <label>应变档位</label>
     <select id="selBranch" onchange="renderBranch(this.value)">
@@ -344,7 +368,9 @@
 
 <!-- ===================== 十一、回测校验（让工具可被证伪） ===================== -->
 <h2 style="margin-top:18px">十一、回测校验（顶底公式自我证伪）</h2>
+<details class="subfold"><summary>ℹ️ 校验逻辑（点击展开）</summary>
 <div class="sub">用 6 个历史极点喂入同一套顶底公式：牛顶应 P(顶部)&gt;60%，熊底应 P(底部)&gt;60%。对不上=公式错，不是市场错。</div>
+</details>
 <div style="overflow-x:auto"><table id="btTable"><thead><tr><th>历史极点</th><th>ERP%</th><th>PE</th><th>P(底部)</th><th>P(顶部)</th><th>结论</th></tr></thead><tbody></tbody></table></div>
 <div id="btNote" class="why" style="margin-top:6px"></div>
 
