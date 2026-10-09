@@ -170,17 +170,16 @@
       <div><div style="font-size:11px;color:var(--sub)">P(底部)</div><div class="big" id="pBottom" style="color:var(--green);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scBottom" style="color:var(--green)">–</b>/10</div></div>
       <div><div style="font-size:11px;color:var(--sub)">P(顶部)</div><div class="big" id="pTop" style="color:var(--red);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scTop" style="color:var(--red)">–</b>/10</div></div>
     </div>
-    <div class="reson" id="probReason" style="margin-top:4px">等待数据…</div>
-    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.55">
-      1-10 分读法：<b style="color:var(--green)">底≥7 且 顶≤3</b>=强烈底部区（分批建仓）；
-      <b style="color:var(--red)">顶≥7 且 底≤3</b>=强烈顶部区（减仓）；
-      <b>双≤3</b>=中性震荡（按仓位执行，不急）；<b>双≥6</b>=信号矛盾（观望勿追）。
-    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;font-size:12px;color:var(--sub);padding:3px 0">📉 打分明细与读法（点击展开）</summary>
+      <div class="reson" id="probReason" style="margin-top:4px">等待数据…</div>
+      <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.55">
+        1-10 分读法：<b style="color:var(--green)">底≥7 且 顶≤3</b>=强烈底部区（分批建仓）；
+        <b style="color:var(--red)">顶≥7 且 底≤3</b>=强烈顶部区（减仓）；
+        <b>双≤3</b>=中性震荡（按仓位执行，不急）；<b>双≥6</b>=信号矛盾（观望勿追）。
+      </div>
+    </details>
   </div>
-</div>
-<div class="box" id="tianShiBox" style="margin-top:10px">
-  <div class="k">命理天时校验 · <span id="tianShiTag" style="color:var(--yellow)">—</span><span id="tianShiHit" style="color:var(--red);font-size:11px;margin-left:6px"></span></div>
-  <div class="sub" id="tianShiTxt" style="margin-top:4px;line-height:1.6">等待数据…</div>
 </div>
 <div class="warn off" id="dataWarn"></div>
 
@@ -245,9 +244,12 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2>二、市场温度 · 纯市场温度（贵贱）</h2>
-<div class="sub" style="margin:4px 0 8px">本模块 = <b>纯市场温度（贵贱）</b>：只吃 趋势/流动/情绪（各约 40/30/30），反映股票真实冷热；<b>货币/盈利/汇率/美债已移出温度</b>，改为「环境分」仅做轻度调节(envAdj)，避免港股跌时仍被美债/汇率托高假热。估值0%已移出温度→独家喂顶底。温度经 tanh→bp 进仓位。</div>
-<div id="dimList"></div>
+<h2>二、市场温度 · 纯市场温度（贵贱）　<b style="font-size:20px">当前 <span id="tempHeadScore" style="color:var(--yellow)">–</span><span style="font-size:13px;color:var(--sub)"> / 10</span></b></h2>
+<details style="margin-top:4px">
+  <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:5px 0">🌡️ 展开八维打分明细（趋势/流动/情绪 + 环境四柱 + 估值）</summary>
+  <div class="sub" style="margin:4px 0 8px">本模块 = <b>纯市场温度（贵贱）</b>：只吃 趋势/流动/情绪（各约 40/30/30），反映股票真实冷热；<b>货币/盈利/汇率/美债已移出温度</b>，改为「环境分」仅做轻度调节(envAdj)，避免港股跌时仍被美债/汇率托高假热。估值0%已移出温度→独家喂顶底。温度经 tanh→bp 进仓位。</div>
+  <div id="dimList"></div>
+</details>
 
 <!-- ===================== 三、海外风险维度 ===================== -->
 <h2>三、海外风险维度 · 新增打分（A）</h2>
@@ -378,6 +380,11 @@
   <div class="dt1">macro.json 手动兜底（当页面读不到后端文件时粘贴）</div>
   <textarea id="jsonPaste" placeholder='把 fetch_macro.py 生成的 macro.json 内容整段粘进来，点下方按钮即可载入'></textarea>
   <div class="row"><button class="btn ghost sm" onclick="loadPasted()">载入粘贴的 JSON</button><span class="sub" id="pasteMsg"></span></div>
+</div>
+
+<div class="box" id="tianShiBox" style="margin-top:14px">
+  <div class="k">命理天时校验 · <span id="tianShiTag" style="color:var(--yellow)">—</span><span id="tianShiHit" style="color:var(--red);font-size:11px;margin-left:6px"></span></div>
+  <div class="sub" id="tianShiTxt" style="margin-top:4px;line-height:1.6">等待数据…</div>
 </div>
 
 <script>
@@ -1145,6 +1152,8 @@ const DIMS=[
 ];
 function colorOf(v){ return v<3.5?'var(--green)':(v<6.5?'var(--yellow)':'var(--red)'); }
 function renderDims(r){
+  const hs=document.getElementById('tempHeadScore');
+  if(hs){ hs.textContent = (r.tempAdj!=null)? r.tempAdj.toFixed(2) : '–'; hs.style.color = colorOf(r.tempAdj||5); }
   const map={trend:r.tr,liq:r.lq,emo:r.em,money:r.money,earn:r.earn,fx:r.fx,ust:r.ust,val:r.va};
   const wt={trend:r.w?r.w.tr:0, liq:r.w?r.w.lq:0, emo:r.w?r.w.em:0, money:r.w?r.w.money:0, earn:r.w?r.w.earn:0, fx:r.w?r.w.fx:0, ust:r.w?r.w.ust:0, val:0};
   document.getElementById('dimList').innerHTML=DIMS.map(d=>{
