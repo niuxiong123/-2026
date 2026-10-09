@@ -25,7 +25,7 @@
 ## 3. 修改前必读（硬性第一步，不可跳过）
 - **任何 AI 在动键盘前，必须先读本文件（AI_RULES.md）+ 资料库审计文档 + `E_plan_blueprint.md`**，确认改动不是已被否决的方案、不违反 §2 铁律。
 - 未读宪法就改 → 视为跑偏；改动须符合"总分总 + 底层逻辑 + 具体应用"输出格式，向用户讲清理由。
-- **强制执行机制（让"先读"真落地）**：所有上线改动**只经草稿分支 PR**（`draft` → `main`），PR 触发 `verify.yml` 校验 + 人工复核。AI 无法直推 `main`（分支保护），等于"先读宪法、经闸门、被人看一眼"才上线。
+- **强制执行机制（2026-10-09 更新）**：分支保护已无技术拦截（见 §6），"先读宪法、先自检"靠纪律 + 惯例落地：所有上线改动先推 `draft` 分支跑 `verify.yml` 校验，全绿后再合 `main`；数据类提交由 `daily.yml` 内置自检兜底。AI 直推 main 前必须已完成本地校验。
 
 ## 4. 交付前校验（零回归门槛）
 每次宣称"改完"前必须：
@@ -44,8 +44,17 @@
 - [x] `tests/verify_site.js`：内部一致性校验（语法 + 回归标记 + 港股跌13月数值 + 命理铁律）
 - [x] `.github/workflows/verify.yml`：推送/PR 跑校验，红灯即拦（需在后台设为 main 必过项才成闸门）
 - [x] `draft` 分支：所有上线改动入口（AI 推 draft，PR 合 main）
-- [ ] **GitHub 后台·用户本人点**：`main` 分支保护（Require a pull request + Require status checks 选 verify.yml + 禁止绕行）
-- [ ] **GitHub 后台·用户本人点（可选）**：本机明文 PAT 降级为细粒度令牌（仅本仓库、contents:write）或 SSH deploy key；CI 侧 `daily.yml` 已用 `GITHUB_TOKEN`，无需动
+- [x] **GitHub 后台·main 分支保护（2026-10-09 定稿形态，勿凭印象改）**：
+  - 背景：曾试过「PR+必过verify」强闸门，实测把 `daily.yml`（GITHUB_TOKEN 直推 main 写数据）永久拦死——GITHUB_TOKEN 的推送不会触发新 workflow，verify 永远无法在机器人提交上先跑，死锁（GH006: Required status check "verify" is expected）。
+  - **定稿形态：规则卡片保留（防强推/防删除），所有 Require... 项全部不勾**：
+    1. ❌ Require a pull request before merging = 不勾（勾了机器人数据链路断）
+    2. ❌ Require status checks to pass = 不勾（同上，死锁根源）
+    3. ❌ Require conversation resolution / signed commits / linear history / deployments = 都不勾（单人项目无意义）
+    4. 底部 Allow force pushes / Allow deletions = 不勾（即禁止强推与删分支，这是残留硬保护，勿动）
+  - **闸门内移**：verify 校验已内置进 `daily.yml`（推送前自检，不过不推），数据链路自带校验。
+- ⚠️ **已知安全边界（知情接受，非疏漏）**：现在直推 main 无技术拦截，AI 行为约束完全靠本宪法 §1/§2/§5 + `tests/verify_site.js` 本地自检 + verify.yml 每次推送亮红灯报警（不拦门）。AI 每次改动仍须：先读本文件 → 本地校验全绿 → 推 draft 留痕 → 再合 main。
+- ❌ **不要把 `daily.yml` 改成"开 PR + 自动合并"**（已否决方案，勿再提议）：`GITHUB_TOKEN` 触发的 `pull_request` 事件只会进入 **"需要审批"（approval-required）状态**而不会自动运行，必须有人手动点 "Approve workflows to run"；若依赖自动合并 + 必过 check，则数据更新永久卡住。要自动触发必须另配 PAT/GitHub App，复杂度远大于收益。
+- [ ] **GitHub 后台·用户本人点（可选）**：本机明文 PAT 降级为细粒度令牌（仅本仓库、contents:write）或 SSH deploy key。
 
 ## 7. 一键回滚
 任一版本发布即打 tag（如 `site-20261009`）；发现跑偏：`git checkout <tag> -- docs/index.html web/index.html` 后走 draft PR 还原。
