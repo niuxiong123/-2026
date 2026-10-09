@@ -407,11 +407,14 @@
 </div>
 </details>
 
-<div class="srcbox">
-  <div class="dt1">macro.json 手动兜底（当页面读不到后端文件时粘贴）</div>
-  <textarea id="jsonPaste" placeholder='把 fetch_macro.py 生成的 macro.json 内容整段粘进来，点下方按钮即可载入'></textarea>
-  <div class="row"><button class="btn ghost sm" onclick="loadPasted()">载入粘贴的 JSON</button><span class="sub" id="pasteMsg"></span></div>
-</div>
+<details class="subfold" style="margin-top:12px">
+  <summary>🔧 macro.json 手动兜底（仅当页面读不到后端文件时用 · 默认收起）</summary>
+  <div class="srcbox" style="margin-top:8px">
+    <div class="dt1">粘贴 fetch_macro.py 生成的 macro.json 内容，点下方按钮即可载入</div>
+    <textarea id="jsonPaste" placeholder='把 fetch_macro.py 生成的 macro.json 内容整段粘进来，点下方按钮即可载入'></textarea>
+    <div class="row"><button class="btn ghost sm" onclick="loadPasted()">载入粘贴的 JSON</button><span class="sub" id="pasteMsg"></span></div>
+  </div>
+</details>
 
 <div class="box" id="tianShiBox" style="margin-top:14px">
   <div class="k">命理天时校验 · <span id="tianShiTag" style="color:var(--yellow)">—</span><span id="tianShiHit" style="color:var(--red);font-size:11px;margin-left:6px"></span></div>
