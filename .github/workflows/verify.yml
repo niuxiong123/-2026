@@ -1,0 +1,28 @@
+name: 站点一致性校验（防 AI 跑偏闸门）
+
+# 作用：每次推送/PR 都跑内部一致性校验，不通过则红灯。
+# 要成为“发布闸门”，需在 GitHub 后台对 main 开启分支保护并勾选本 check 为必过项（见 AI_RULES.md §6）。
+
+on:
+  push:
+    branches: [main, draft]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      - name: 装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 跑内部一致性校验
+        run: node tests/verify_site.js
