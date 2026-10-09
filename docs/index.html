@@ -1239,8 +1239,6 @@ const DIMS=[
 ];
 function colorOf(v){ return v<3.5?'var(--green)':(v<6.5?'var(--yellow)':'var(--red)'); }
 function renderDims(r){
-  const hs=document.getElementById('tempHeadScore');
-  if(hs){ hs.textContent = (r.tempAdj!=null)? r.tempAdj.toFixed(2) : '–'; hs.style.color = colorOf(r.tempAdj||5); }
   const map={trend:r.tr,liq:r.lq,emo:r.em,money:r.money,earn:r.earn,fx:r.fx,ust:r.ust,val:r.va};
   const wt={trend:r.w?r.w.tr:0, liq:r.w?r.w.lq:0, emo:r.w?r.w.em:0, money:r.w?r.w.money:0, earn:r.w?r.w.earn:0, fx:r.w?r.w.fx:0, ust:r.w?r.w.ust:0, val:0};
   document.getElementById('dimList').innerHTML=DIMS.map(d=>{
@@ -1520,10 +1518,6 @@ function renderStatus(){
   const s3=f.fx===null?'⏳':(f.fx?'🟢':'🟡');
   const rr=window.__r||{};
   const realDims=rr.realDims!=null?rr.realDims:0, K=rr.K||4;
-  const _sb=document.getElementById('srcBadge'); if(_sb) _sb.innerHTML=
-    s1+' 实时行情('+(statusFlags.api?'后端代理':'腾讯直连')+') ｜ '+s2+' 宏观'+(statusFlags.api?'API':'macro.json')+' ｜ '+s3+' 汇率'
-    + (SRV?' ｜ 🟢 决策由服务端计算':' ｜ ⚪ 本机计算')
-    + ' ｜ 📡 实时信号 <b style="color:'+(realDims>=3?'var(--green)':(realDims>=2?'var(--yellow)':'var(--red)'))+'">'+realDims+'/'+K+'</b>';
   const warn=document.getElementById('dataWarn');
   const lost=[];
   if(f.macro===false) lost.push('macro.json 未读到（用内置基线值，数值可能过时）——本页若托管在静态空间/资料库，必然读不到，需要自建后端');
@@ -1729,7 +1723,6 @@ function recalc(){
    数据编排
    ========================================================= */
 async function pullAll(){
-  const _sb=document.getElementById('srcBadge'); if(_sb) _sb.innerHTML='⏳ 正在拉取：行情 / 宏观 / 汇率 …';
   if(await loadServerState()){ recalc(); await loadFx().then(fx=>{ if(fx){ M.usdcny={value:fx.usdcny,asOf:todayStr(),src:'open.er-api.com'}; recalc(); } }); return; }
   const mj=await loadMacroJson();
   if(mj){ applyMacro(mj); M.generated=mj.generated_at; fillOvCrDefaults(true); }
@@ -1982,8 +1975,7 @@ function startAutoRefresh(){
   setInterval(async()=>{
     if(document.visibilityState!=='visible') return;
     if(!isMarketHours()) return;
-    const badge=document.getElementById('srcBadge');
-    if(badge) badge.innerHTML='⏳ 刷新行情…';
+    const badge=null;
     const byApi=await loadQuoteApi();
     if(byApi){ recalc(); if(badge) badge.innerHTML='✓ 行情已刷新 '+new Date().toLocaleTimeString('zh-CN'); return; }
     loadTencent(ok=>{
