@@ -200,7 +200,7 @@ def base_position(t: float) -> float:
 
 def quad_of(trend: float, val: float):
     cold_t, cold_v = trend < 5, val < 5
-    idx = (0 if cold_t else 1) + (0 if cold_v else 2)
+    idx = (0 if cold_t else 2) + (0 if cold_v else 1)  # 修复映射写反：冷冷=0熊末/冷热=1下跌中继/热冷=2牛初/热热=3牛顶
     names = ["熊末·黄金坑", "下跌中继", "牛初/牛中", "牛顶/过热"]
     advises = ["可分批建仓，不追涨", "便宜没到位，等", "持有为主", "逐步减仓"]
     return {"idx": idx, "name": names[idx], "advice": advises[idx]}
