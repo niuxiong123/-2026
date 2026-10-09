@@ -197,7 +197,7 @@
 
 <nav class="mininav">
   <div class="navlinks">
-    <a href="#m1">1·状态</a><a href="#m2">2·温度</a><a href="#m3">3·信号</a><a href="#m4">4·海外</a><a href="#m5">5·危机</a><a href="#m6">6·阶段</a><a href="#m7">7·配置</a><a href="#m8">8·换钱</a><a href="#m9">9·快照</a><a href="#m10">10·复盘</a>
+    <a href="#m1">1·状态</a><a href="#m2">2·温度</a><a href="#m3">3·换钱</a><a href="#m4">4·信号</a><a href="#m5">5·海外</a><a href="#m6">6·危机</a><a href="#m7">7·阶段</a><a href="#m8">8·配置</a><a href="#m9">9·快照</a><a href="#m10">10·复盘</a>
   </div>
   <div class="navprog"><span>阅读进度</span><div class="navprog-bar"><i id="navProg"></i></div></div>
 </nav>
@@ -311,7 +311,19 @@
   <div id="qualList"></div>
 </div>
 
-<h2 id="m3">3. 长牛八大信号 <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
+<h2 id="m3">3. 仓位换钱 · 今日该投多少钱</h2>
+<div class="srcbox" id="moneyBox" style="margin-top:8px"></div>
+<details class="subfold" style="margin-top:8px"><summary>🔗 与基金组合工具联动（点击展开）</summary>
+  <div class="sub" style="margin-top:6px">把基金组合健康诊断工具（后台口令 fund2026）里「持仓金额」汇总后自动填入上方「可投资产」，免手抄。支持：①粘贴该工具导出的 JSON/文本；②填其前端页导出的分享/同步链接后点抓取。</div>
+  <div class="row" style="margin-top:8px"><textarea id="fundPaste" placeholder="把基金组合健康诊断工具导出的持仓数据（JSON 或文本）整段粘进来，点下方按钮解析" style="width:100%;min-height:64px"></textarea></div>
+  <div class="row">
+    <input id="fundUrl" type="text" placeholder="或粘贴分享/同步链接（可选）" style="flex:1;min-width:0">
+    <button class="btn ghost sm" onclick="syncFromFund()">解析并同步总资产</button>
+    <span class="sub" id="fundMsg"></span>
+  </div>
+</details>
+
+<h2 id="m4">4. 长牛八大信号 <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
 <details class="subfold"><summary>ℹ️ 判定规则（点击展开）</summary>
 <div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。7/8 由 macro.json 真实数据自动判定（消费税为政策项需手动）。</div>
 </details>
@@ -319,7 +331,7 @@
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
-<h2 id="m4">4. 海外风险维度</h2>
+<h2 id="m5">5. 海外风险维度</h2>
 <details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 </details>
@@ -337,7 +349,7 @@
 </div>
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
-<h2 id="m5">5. 金融危机预警</h2>
+<h2 id="m6">6. 金融危机预警</h2>
 <details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 </details>
@@ -351,7 +363,7 @@
 </div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
 
-<h2 id="m6">6. 赢家四阶段定位</h2>
+<h2 id="m7">7. 赢家四阶段定位</h2>
   <div class="mod">
     <div class="k">当前阶段 · 操作节奏（下拉切换）</div>
   <details class="subfold"><summary>ℹ️ 模块说明（点击展开）</summary>
@@ -370,7 +382,7 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2 id="m7">7. 资产配置建议 + 应变分支</h2>
+<h2 id="m8">8. 资产配置建议 + 应变分支</h2>
 <details class="subfold"><summary>ℹ️ 使用说明（点击展开）</summary>
 <div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
 </details>
@@ -380,7 +392,7 @@
 </table></div>
 
 <div class="mod">
-  <div class="k">7-B. 应变分支</div>
+  <div class="k">8-B. 应变分支</div>
   <details class="subfold"><summary>ℹ️ 切换逻辑（点击展开）</summary>
   <div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
   </details>
@@ -395,9 +407,6 @@
   </div>
   <div class="mod-body" id="branchBody"></div>
 </div>
-
-<h2 id="m8">8. 仓位换钱 · 操作建议</h2>
-<div class="srcbox" id="moneyBox" style="margin-top:8px"></div>
 
 <details style="margin-top:12px">
   <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:6px 0;user-select:none">📋 数据源明细（自动值 + 新鲜度 + 可手动覆盖，默认收起 · 点击展开）</summary>
@@ -1496,12 +1505,71 @@ function renderMoney(r){
   const now=wan*cur/100;
   const diff=target-now;
   document.getElementById('moneyBox').innerHTML=
-    '<div class="dt1">可投资产 '+wan+' 万 → 目标权益类 '+target.toFixed(1)+' 万（'+r.final.toFixed(1)+'成）</div>'+
+    '<div class="dt1">可投资产 <input type="number" id="assetWan2" value="'+wan+'" style="width:72px;padding:4px 6px" onchange="syncAsset(this.value)"> 万 → 目标权益类 '+target.toFixed(1)+' 万（'+r.final.toFixed(1)+'成）</div>'+
     '<div style="display:flex;align-items:center;gap:8px;margin:8px 0">当前股票类占比 <input type="number" id="curRatio" value="'+cur+'" style="width:70px;padding:4px 6px" onchange="recalc()"> % → 约 '+(wan*cur/100).toFixed(1)+' 万</div>'+
     '<div style="font-size:14px">建议动作：<b style="color:'+(diff<0?'var(--green)':'var(--red)')+'">'+
     (Math.abs(diff)<0.5?'维持不动':(diff<0?('减仓 '+Math.abs(diff).toFixed(1)+' 万'):('加仓 '+diff.toFixed(1)+' 万')))+'</b>'+
     '（分 2-3 批执行，单批不超过 '+(wan*0.08).toFixed(1)+' 万）</div>'+
     '<div class="why" style="margin-top:8px">债基/货基（如易方达中短债 000621）不计入权益仓位，应急金 18-24 个月另留。</div>';
+}
+
+// 双向联动：模块内编辑可投资产 → 同步顶部 assetWan → 重算
+function syncAsset(v){
+  const a=document.getElementById('assetWan');
+  if(a){ a.value=v; }
+  recalc();
+}
+
+// ③ 与基金组合健康诊断工具联动：解析其导出的持仓总额 → 填入可投资产(万)
+function syncFromFund(){
+  const msg=document.getElementById('fundMsg');
+  const txt=(document.getElementById('fundPaste').value||'').trim();
+  const url=(document.getElementById('fundUrl').value||'').trim();
+  function applyTotal(total){
+    if(!isFinite(total)||total<=0){ msg.innerHTML='<span style="color:var(--red)">未解析到有效总资产，请检查粘贴内容或改用链接</span>'; return; }
+    const wan=(total/10000).toFixed(2);
+    const a=document.getElementById('assetWan'); if(a){ a.value=wan; }
+    msg.innerHTML='<span class="ok">已同步：总资产 ¥'+Math.round(total).toLocaleString()+' → 可投资产 '+wan+' 万 ✓</span>';
+    recalc();
+  }
+  if(url){
+    msg.innerHTML='⏳ 抓取中…';
+    fetch(url,{mode:'cors'}).then(r=>r.text()).then(t=>parseFund(t,applyTotal,msg)).catch(e=>{
+      msg.innerHTML='<span style="color:var(--red)">抓取失败（跨域或链接无效）：'+e.message+'，请改用粘贴方式</span>';
+    });
+    return;
+  }
+  if(txt){ parseFund(txt,applyTotal,msg); return; }
+  msg.innerHTML='<span style="color:var(--red)">请粘贴基金工具导出的数据，或填写分享/同步链接</span>';
+}
+
+function parseFund(txt, cb, msg){
+  let total=0, found=false;
+  try{
+    const j=JSON.parse(txt);
+    const arr=Array.isArray(j)?j:(j.holdings||j.data||j.funds||j.list||j.positions||null);
+    if(arr&&Array.isArray(arr)){
+      arr.forEach(h=>{ const v=numOf(h,['持仓金额','持仓金额(¥)','持仓金额¥','amount','value','marketValue','市值','market','资产','持仓']); if(v!=null){ total+=v; found=true; } });
+    } else if(j&&typeof j==='object'){
+      const v=numOf(j,['总资产','total','totalAmount','totalValue','持仓金额','amount','value','市值']);
+      if(v!=null){ total=v; found=true; }
+    }
+  }catch(e){ /* 非 JSON，走文本解析 */ }
+  if(!found){
+    const re=/持仓金额[（(]?¥?\)?\s*[:：]?\s*([\d,]+\.?\d*)/g; let m, sum=0, any=false;
+    while((m=re.exec(txt))){ sum+=parseFloat(m[1].replace(/,/g,'')); any=true; }
+    if(any){ total=sum; found=true; }
+  }
+  if(!found){
+    const nums=[...txt.matchAll(/([\d,]+\.?\d*)/g)].map(m=>parseFloat(m[1].replace(/,/g,''))).filter(n=>n>=1000);
+    if(nums.length){ total=nums.reduce((a,b)=>a+b,0); found=true; }
+  }
+  cb(total);
+}
+
+function numOf(obj, keys){
+  for(const k of keys){ if(obj[k]!=null){ const n=parseFloat(String(obj[k]).replace(/,/g,'')); if(!isNaN(n)) return n; } }
+  return null;
 }
 
 function tempTagOf(t){
