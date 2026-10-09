@@ -52,6 +52,7 @@
     3. ❌ Require conversation resolution / signed commits / linear history / deployments = 都不勾（单人项目无意义）
     4. 底部 Allow force pushes / Allow deletions = 不勾（即禁止强推与删分支，这是残留硬保护，勿动）
   - **闸门内移**：verify 校验已内置进 `daily.yml`（推送前自检，不过不推），数据链路自带校验。
+  - **定时（勿改回 18:30）**：`daily.yml` cron = `0 6 * * 1-5` = UTC 6:00 = 北京时间 14:00（工作日 1-5，含周五），提前30分钟触发，确保用户 14:30 收盘前打开即见当日最新宏观。GitHub Actions cron 固定按 UTC 计时，手动换算（北京=UTC+8）；不自动识别中国法定调休假日。趋势/流动/情绪/汇率/美债/广度/ERP/PE 由页面加载时实时拉取，不依赖此任务。
 - ⚠️ **已知安全边界（知情接受，非疏漏）**：现在直推 main 无技术拦截，AI 行为约束完全靠本宪法 §1/§2/§5 + `tests/verify_site.js` 本地自检 + verify.yml 每次推送亮红灯报警（不拦门）。AI 每次改动仍须：先读本文件 → 本地校验全绿 → 推 draft 留痕 → 再合 main。
 - ❌ **不要把 `daily.yml` 改成"开 PR + 自动合并"**（已否决方案，勿再提议）：`GITHUB_TOKEN` 触发的 `pull_request` 事件只会进入 **"需要审批"（approval-required）状态**而不会自动运行，必须有人手动点 "Approve workflows to run"；若依赖自动合并 + 必过 check，则数据更新永久卡住。要自动触发必须另配 PAT/GitHub App，复杂度远大于收益。
 - [ ] **GitHub 后台·用户本人点（可选）**：本机明文 PAT 降级为细粒度令牌（仅本仓库、contents:write）或 SSH deploy key。
