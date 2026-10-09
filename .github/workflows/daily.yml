@@ -8,7 +8,8 @@ name: 每日抓取宏观数据
 #   —— 周一到周五 = 1-5，周五(5)已含，必跑；不自动识别中国法定调休假日（局限见 AI_RULES.md）。
 on:
   schedule:
-    - cron: "0 6 * * 1-5"
+    - cron: "0 6 * * 1-5"      # 工作日 14:00 北京：主更新（保持 14:30 前完成）
+    - cron: "30 6 * * 0,6"     # 周末 14:30 北京：轻量更新（仅刷新数据+存快照，不告警）
   workflow_dispatch:        # 允许在网页上点按钮手动跑一次
 
 permissions:
@@ -30,6 +31,8 @@ jobs:
         run: pip install --quiet akshare requests
 
       - name: 抓数据+算仓位+告警
+        env:
+          NX_LIGHT: ${{ github.event.schedule == '30 6 * * 0,6' && '1' || '0' }}
         run: python3 daily_job.py
 
       - name: 自检 verify（校验不过就不推送）

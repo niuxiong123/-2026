@@ -82,7 +82,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-fetch", action="store_true", help="跳过抓取，只用库里现有数据")
+    ap.add_argument("--light", action="store_true", help="轻量模式：只刷新数据+存快照，不发送告警（周末用）")
     args = ap.parse_args()
+    if os.environ.get("NX_LIGHT") == "1":
+        args.light = True
 
     failed = []
     if not args.no_fetch:
@@ -143,6 +146,9 @@ def main():
                          f"趋势{r['dims']['trend']['v']} 估值{r['dims']['val']['v']} "
                          f"流动性{r['dims']['liq']['v']} 情绪{r['dims']['emo']['v']}"))
 
+    if args.light:
+        print("[LIGHT] 周末轻量模式：跳过告警推送，仅刷新数据+存快照")
+        return 0
     if msgs:
         for title, body in msgs:
             print(f"[ALERT] {title}")

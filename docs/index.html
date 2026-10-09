@@ -167,9 +167,19 @@
     .mod-sel select{min-width:0;max-width:100%}
   }
   @media(max-width:768px){ .hc-hide-md{display:none} }
+  /* 数据健康度面板 */
+  .health{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+  .health .ht{font-size:13px;color:var(--sub);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .health .hrow{display:flex;flex-wrap:wrap;gap:8px}
+  .hchip{flex:1 1 120px;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12px}
+  .hchip .hn{color:var(--sub);font-size:11px}
+  .hchip .hv{font-weight:700;font-size:13px;margin-top:3px}
+  .skip-link{position:absolute;left:-9999px;top:0;background:var(--acc);color:#06121f;padding:8px 12px;border-radius:0 0 8px 0;z-index:50;font-weight:700}
+  .skip-link:focus{left:0}
 </style>
 </head>
 <body>
+<a href="#m1" class="skip-link">跳到主内容</a>
 
 <h1>牛熊每日自查 v2+</h1>
 <details class="subfold"><summary>ℹ️ 使用说明与数据来源（点击展开）</summary>
@@ -179,23 +189,28 @@
 <div class="note" style="margin-top:8px;border-left-color:var(--yellow)">⚠️ 本页所有温度 / 仓位 / 信号均为量化模型自测结果，<b>仅供参考，不构成任何投资建议</b>。投资有风险，决策须独立判断。</div>
 
 <div class="topbar">
-  <div><label>日期</label><input type="date" id="dt"></div>
+  <div><label for="dt">日期</label><input type="date" id="dt" aria-label="查询日期"></div>
   <div><label>市场</label>
     <div class="switch">
-      <button id="mA" class="on" onclick="switchMarket('A')">A股</button>
-      <button id="mH" onclick="switchMarket('H')">H股</button>
+      <button id="mA" class="on" aria-label="切换到A股" onclick="switchMarket('A')">A股</button>
+      <button id="mH" aria-label="切换到H股" onclick="switchMarket('H')">H股</button>
     </div>
   </div>
-  <div><label>可投资产(万)</label><input type="number" id="assetWan" value="32" style="width:78px" onchange="recalc()"></div>
+  <div><label for="assetWan">可投资产(万)</label><input type="number" id="assetWan" value="32" style="width:78px" aria-label="可投资产金额（万元）" onchange="recalc()"></div>
   <div><button class="btn" onclick="pullAll()">🔄 刷新全部数据</button></div>
 </div>
 
-<div class="statusbar">
+<div class="statusbar" role="status" aria-live="polite">
   <span id="statusFresh">🟡 数据新鲜度：初始化…</span>
   <div class="status-right"><span id="statusMode">市场：A股</span></div>
 </div>
 
-<nav class="mininav">
+<div class="health" id="healthBox" aria-label="数据健康度面板">
+  <div class="ht">📡 数据健康度（各数据源新鲜度）</div>
+  <div class="hrow" id="healthRow"><div class="hchip"><div class="hn">实时行情</div><div class="hv">⏳ 等待中</div></div><div class="hchip"><div class="hn">宏观</div><div class="hv">⏳ 等待中</div></div><div class="hchip"><div class="hn">汇率</div><div class="hv">⏳ 等待中</div></div></div>
+</div>
+
+<nav class="mininav" aria-label="模块导航">
   <div class="navlinks">
     <a href="#m1">1·状态</a><a href="#m2">2·温度</a><a href="#m3">3·换钱</a><a href="#m4">4·信号</a><a href="#m5">5·海外</a><a href="#m6">6·危机</a><a href="#m7">7·阶段</a><a href="#m8">8·配置</a><a href="#m9">9·快照</a><a href="#m10">10·复盘</a>
   </div>
@@ -426,6 +441,9 @@
   <button class="btn ghost sm" onclick="exportCSV()">导出CSV</button>
   <button class="btn ghost sm" onclick="copySummary()">复制诊断摘要</button>
   <button class="btn ghost sm" onclick="clearAll()">清空历史</button>
+  <label class="btn ghost sm" style="cursor:pointer">导入快照<input type="file" id="impFile" accept=".csv,.json" onchange="importSnapshot(this)" style="display:none" aria-label="导入快照文件"></label>
+  <button class="btn ghost sm" onclick="shareSnapshot()">生成分享链接</button>
+  <span class="sub" id="impMsg"></span>
   <label class="sub" style="display:flex;align-items:center;gap:6px">
     <input type="checkbox" id="baziSwitch" checked onchange="recalc()" style="width:16px;height:16px"> 命理防追高系数（仅温度≥6.5生效，低温不打折）
   </label>
@@ -555,6 +573,7 @@ const EIGHT = [
 ];
 
 const HK='niuxiong_v2_hist', OVK='niuxiong_v2_override', QK='niuxiong_v2_qual';
+const CK='niuxiong_v2_cache';   // 上次成功拉取的数据缓存（缓存先渲染用）
 let mode='A';
 let M = JSON.parse(JSON.stringify(BASELINE));  // 当前生效数据
 Object.keys(M).forEach(k=>{ M[k].baseline=true; });   // 基线值：界面标灰，提示"非实时"
@@ -1602,6 +1621,19 @@ function renderStatus(){
   const sm=document.getElementById('statusMode');
   if(sm) sm.textContent='市场：'+(mode==='A'?'A股':'H股');
 }
+function renderHealth(){
+  const f=statusFlags; const row=document.getElementById('healthRow'); if(!row) return;
+  const chip=(n,state,detail)=>{ const c={null:'🟡',true:'🟢',false:'🔴'}[state]; return '<div class="hchip"><div class="hn">'+n+'</div><div class="hv">'+c+' '+(detail||'')+'</div></div>'; };
+  let html='';
+  html+=chip('实时行情', f.quote, f.quote===null?'等待中':(f.quote?'已连接':'失败·用基线'));
+  html+=chip('宏观 macro', f.macro, f.macro===null?'等待中':(f.macro?'已读入':'缺失·用基线'));
+  html+=chip('汇率', f.fx, f.fx===null?'等待中':(f.fx?'已读入':'缺失·用基线'));
+  const gen=M&&M.generated?String(M.generated).slice(0,10):null;
+  html+=chip('宏观更新于', gen?true:false, gen||'未知');
+  const amt=Q&&Q.ok?(Q.quoteTime||(Q.raw&&Q.raw.quoteTime)||''):'';
+  html+=chip('行情时点', amt?true:false, amt?String(amt).slice(0,10):'—');
+  row.innerHTML=html;
+}
 // 原始宏观值 → 0-10 风险分（与后端 fetch_macro.py 推导逻辑对齐）
 function scoreOil(p){ if(p==null) return 5; return clamp(2 + (p-60)*0.12); }     // 60→2, 100→6.8, 120→9.2
 function scoreDxy(d){ if(d==null) return 5; return clamp((d-90)*0.4); }            // 95→2, 100→4, 105→6, 110→8
@@ -1784,6 +1816,7 @@ function recalc(){
     if(sq.value!=='auto') renderQuadFocus(sq.value);
   }
   renderStatus();
+  renderHealth();
   renderBacktest();
 }
 
@@ -1791,18 +1824,19 @@ function recalc(){
    数据编排
    ========================================================= */
 async function pullAll(){
-  if(await loadServerState()){ recalc(); await loadFx().then(fx=>{ if(fx){ M.usdcny={value:fx.usdcny,asOf:todayStr(),src:'open.er-api.com'}; recalc(); } }); return; }
+  if(await loadServerState()){ saveCache(); recalc(); await loadFx().then(fx=>{ if(fx){ M.usdcny={value:fx.usdcny,asOf:todayStr(),src:'open.er-api.com'}; recalc(); } }); return; }
   const mj=await loadMacroJson();
   if(mj){ applyMacro(mj); M.generated=mj.generated_at; fillOvCrDefaults(true); }
   const fx=await loadFx();
   if(fx){ M.usdcny={value:fx.usdcny, asOf:todayStr(), src:'open.er-api.com'}; }
   const byApi = await loadQuoteApi();
-  if(byApi){ recalc(); return; }
+  if(byApi){ saveCache(); recalc(); return; }
   return new Promise(res=>{
     loadTencent(ok=>{
       statusFlags.quote = ok;
       if(ok){ const q=parseTencent(); if(q.ok){ Q=q; M.amt_yi={value:q.amtTotalYi,asOf:(q.raw.quoteTime||'').slice(0,10)||todayStr(),src:'腾讯实时'}; } else statusFlags.quote=false; }
       recalc();
+      saveCache();
       res();
     });
   });
@@ -1885,6 +1919,52 @@ function exportCSV(){
     csv+=[r.date,(r.mode==='A'?'A股':'H股'),r.temp,d.tr,d.va,d.lq,d.em,r.ov,r.cr,r.eightN,r.vix,r.pos].join(',')+'\n';});
   const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='牛熊自查v2历史.csv';a.click();
+}
+/* ---------- 缓存先渲染 / 导入 / 分享链接（不动计算逻辑） ---------- */
+function saveCache(){ try{ localStorage.setItem(CK, JSON.stringify({ts:Date.now(), mode, M, META, Q})); }catch(e){} }
+function restoreCache(){ try{ const raw=localStorage.getItem(CK); if(!raw) return false; const c=JSON.parse(raw); if(c.M) M=c.M; if(c.META) META=c.META; if(c.Q) Q=c.Q; if(c.mode) mode=c.mode; window.__cacheTs=c.ts; return true; }catch(e){ return false; } }
+// 从分享链接/文件导入历史快照（与导出对称）
+function importSnapshot(input){
+  const f=input.files&&input.files[0]; if(!f){ return; }
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const txt=String(rd.result).trim();
+      const st=JSON.parse(localStorage.getItem(HK)||'{}');
+      let added=0;
+      if(f.name.toLowerCase().endsWith('.json') || txt[0]==='{'){
+        const j=JSON.parse(txt);
+        const arr=Array.isArray(j)?j:(j.snapshots&&Array.isArray(j.snapshots)?j.snapshots:null);
+        if(arr){ arr.forEach(r=>{ if(r&&r.date){ st[r.date]=r; added++; } }); }
+        else if(j&&typeof j==='object'){ Object.keys(j).forEach(k=>{ if(k!=='object'){ st[k]=j[k]; added++; } }); }
+      } else { // CSV（与 exportCSV 同表头）
+        const lines=txt.split('\n').filter(Boolean); const hdr=lines[0].split(',');
+        for(let i=1;i<lines.length;i++){ const c=lines[i].split(','); if(c.length<hdr.length) continue; const rec={}; hdr.forEach((h,idx)=>rec[h]=c[idx]); const key=rec['日期']||rec.date; if(key){ st[key]={date:key,mode:(rec['市场']==='H股'?'H':'A'),temp:+(rec['温度']||0),reson:0,pos:+(rec['仓位']||0),dims:{tr:+(rec['趋势']||0),va:+(rec['估值']||0),lq:+(rec['流动性']||0),em:+(rec['情绪']||0)},ov:+(rec['海外']||0),cr:+(rec['危机']||0),eightN:+(rec['信号数']||0),vix:rec['VIX']?+rec['VIX']:null,hs300:null}; added++; } }
+      }
+      localStorage.setItem(HK,JSON.stringify(st));
+      document.getElementById('impMsg').innerHTML='<span class="ok">已导入 '+added+' 条 ✓</span>';
+      renderHist(); renderReview();
+    }catch(e){ document.getElementById('impMsg').textContent='导入失败：'+e.message; }
+  };
+  rd.readAsText(f); input.value='';
+}
+// 生成分享链接（把历史编码进 URL hash，跨设备打开即载入——静态页的“云端”替代方案）
+function shareSnapshot(){
+  try{
+    const st=localStorage.getItem(HK)||'{}'; const n=Object.keys(JSON.parse(st)).length;
+    const enc=btoa(unescape(encodeURIComponent(st)));
+    const url=location.origin+location.pathname+'#nx='+enc;
+    const ta=document.createElement('textarea'); ta.value=url; document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+    document.getElementById('saveMsg').textContent='分享链接已复制（含 '+n+' 条快照）✓ 打开即载入，无需后端';
+  }catch(e){ document.getElementById('saveMsg').textContent='生成失败：'+e.message; }
+}
+function tryLoadFromHash(){
+  if(location.hash && location.hash.indexOf('#nx=')===0){
+    try{ const st=decodeURIComponent(escape(atob(location.hash.slice(4)))); const n=Object.keys(JSON.parse(st)).length; localStorage.setItem(HK,st); document.getElementById('saveMsg').innerHTML='<span class="ok">已从分享链接载入 '+n+' 条快照 ✓</span>'; renderHist(); renderReview(); }
+    catch(e){}
+  }
 }
 
 /* ---------- 回测校验：用历史极点验证顶底公式（硬伤④） ---------- */
@@ -2020,6 +2100,13 @@ function init(){
   document.getElementById('dt').value=todayStr();
   loadLocal();
   fillOvCrDefaults();
+  tryLoadFromHash();
+  // 缓存先渲染：先显示上次成功拉取的数据，避免弱网易空白，随后 pullAll 刷新为实时
+  if(restoreCache()){
+    const ct=window.__cacheTs?new Date(window.__cacheTs).toLocaleString('zh-CN'):'';
+    const sf=document.getElementById('statusFresh'); if(sf) sf.innerHTML='🟡 显示缓存数据（'+ct+'）· 正在刷新…';
+    const sm=document.getElementById('statusMode'); if(sm) sm.textContent='市场：'+(mode==='A'?'A股':'H股');
+  }
   // 海外/危机输入框变动时重算
   ['in_oil','in_ai','in_hormuz','in_usd','in_job','in_path','in_win','in_china']
     .forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('input',recalc);});
