@@ -143,7 +143,7 @@
 
 <div class="panel">
   <div class="box">
-    <div class="k">市场温度（贵贱）· 0=冰点机会 · 10=过热风险</div>
+    <div class="k">市场温度（贵贱）· <span id="tempModeName">A股</span> · 0=冰点机会 · 10=过热风险</div>
     <div class="big"><span id="tempVal">–</span><span style="font-size:16px;color:var(--sub)"> / 10</span></div>
     <div class="tempbar"><div class="pin" id="tempPin" style="left:50%"></div></div>
     <div class="tag shake" id="tempTag">待计算</div>
@@ -1162,7 +1162,7 @@ function renderDims(r){
 }
 function renderQuad(r){
   const coldTr=r.tr.v<5, coldVa=r.va.v<5;
-  const idx=(r.quad&&r.quad.idx!=null)?r.quad.idx:((coldTr?0:1)+(coldVa?0:2));
+  const idx=(r.quad&&r.quad.idx!=null)?r.quad.idx:((coldTr?0:2)+(coldVa?0:1));   // 修复四象限映射写反：冷冷=0熊末/冷热=1下跌中继/热冷=2牛初/热热=3牛顶
   const items=[
     {t:'熊末·黄金坑', d:'趋势冷 + 估值冷<br><span style="color:var(--green)">可分批建仓，不追涨</span>'},
     {t:'下跌中继',   d:'趋势冷 + 估值热<br><span style="color:var(--yellow)">便宜没到位，等</span>'},
@@ -1412,7 +1412,8 @@ function renderMoney(r){
 
 function tempTagOf(t){
   if(t<2.5)return{cls:'cold',txt:'极冷 · 底部区间'};
-  if(t<5)return{cls:'shake',txt:'偏冷 · 结构性机会'};
+  if(t<4.5)return{cls:'cold',txt:'偏冷 · 结构性机会'};
+  if(t<5.5)return{cls:'shake',txt:'中性 · 震荡市'};
   if(t<7.5)return{cls:'hot',txt:'偏热 · 风险积累'};
   return{cls:'over',txt:'过热 · 大顶前兆'};
 }
@@ -1562,10 +1563,13 @@ function recalc(){
   }
   renderDims(r); renderQuad(r); renderFG(); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
   const tag=tempTagOf(r.tempAdj);
-  document.getElementById('tempVal').textContent=r.tempAdj.toFixed(2);
+  // ③ 半盲守卫：实时覆盖<50% 时温度值加"≈"前缀并明示"基线估算"，不再伪装成精确两位小数
+  const semiBlind=((r.realDims!=null)&&(r.K!=null)&&(r.realDims/r.K)<0.5);
+  document.getElementById('tempVal').textContent=(semiBlind?'≈':'')+r.tempAdj.toFixed(2);
   document.getElementById('tempPin').style.left=(r.tempAdj*10)+'%';
   const te=document.getElementById('tempTag'); te.className='tag '+tag.cls; te.textContent=tag.txt;
   if(!r.va.real) te.textContent += ' ⚠估值缺位';   // D 半盲提示：估值被静默置中时明确告知，温度=半盲
+  if(semiBlind) te.textContent += ' ⚠半盲·基线估算(实时'+r.realDims+'/'+r.K+')';
   document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:16px">成</span>';
   document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
   renderTianShi(r);
@@ -1647,6 +1651,7 @@ function switchMarket(m){
   document.getElementById('mA').classList.toggle('on',m==='A');
   document.getElementById('mH').classList.toggle('on',m==='H');
   document.getElementById('modeName').textContent=m==='A'?'A股':'H股';
+  const tmn=document.getElementById('tempModeName'); if(tmn) tmn.textContent=(m==='A'?'A股':'H股');   // ④ 温度卡明示当前市场
   recalc();
 }
 function loadPasted(){
@@ -1762,7 +1767,7 @@ function renderReview(){
   const box=document.getElementById('reviewBox'), nd=document.getElementById('reviewNoData');
   if(keys.length<3){ box.style.display='none'; nd.style.display='block'; return; }
   box.style.display='block'; nd.style.display='none';
-  const arr=keys.map(k=>st[k]);
+  const arr=keys.map(k=>st[k]).filter(r=>!r.mode||r.mode===mode);   // ④ 修复：z-score 历史只取当前市场(A/H)，不再混算两种温度
   const temps=arr.map(r=>r.temp);
   const n=arr.length;
   // 1) 线性回归斜率（温度随时间变化）
