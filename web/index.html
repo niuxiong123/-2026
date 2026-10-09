@@ -124,10 +124,9 @@
   details.subfold>summary::before{content:"▸";display:inline-block;width:14px;color:var(--sub);transition:transform .15s ease}
   details.subfold[open]>summary::before{transform:rotate(90deg)}
   details.subfold .sub{margin:4px 0 2px}
-  /* 模块最后更新时间角标：统一右置、轻量不抢视线 */
-  .mod-upd{float:right;font-size:11px;font-weight:400;line-height:1.6;color:var(--sub);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:1px 9px;margin-left:10px;white-space:nowrap}
   h2::after{clear:both;content:"";display:block}
-  @media(max-width:560px){.panel,.resgrid,.quad,.grid2,.dimgrid,#dimList,#qualList{grid-template-columns:1fr}}
+  @media(max-width:560px){.panel,.resgrid,.quad,.grid2,.dimgrid,#dimList,#qualList,.twin{grid-template-columns:1fr}}
+  .twin{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;align-items:start}
 </style>
 </head>
 <body>
@@ -146,9 +145,6 @@
     </div>
   </div>
   <div><label>可投资产(万)</label><input type="number" id="assetWan" value="32" style="width:78px" onchange="recalc()"></div>
-  <div style="flex:1;min-width:150px"><label>数据源状态</label>
-    <div class="sub" id="srcBadge" style="margin:0">⏳ 初始化…</div>
-  </div>
   <div><button class="btn" onclick="pullAll()">🔄 刷新全部数据</button></div>
 </div>
 
@@ -178,7 +174,7 @@
     </details>
   </div>
   <div class="box">
-    <div class="k">顶底概率<span class="mod-upd" id="upd_tbp">🕘 更新于 –</span></div>
+    <div class="k">顶底概率</div>
     <div style="display:flex;gap:16px;margin-top:6px">
       <div><div style="font-size:11px;color:var(--sub)">P(底部)</div><div class="big" id="pBottom" style="color:var(--green);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scBottom" style="color:var(--green)">–</b>/10</div></div>
       <div><div style="font-size:11px;color:var(--sub)">P(顶部)</div><div class="big" id="pTop" style="color:var(--red);font-size:28px">–%</div><div style="font-size:11px;color:var(--sub)">信号强度 <b id="scTop" style="color:var(--red)">–</b>/10</div></div>
@@ -211,20 +207,26 @@
   </div>
 </div>
 
-<div class="mod">
-  <div class="k">牛熊钟定位（趋势 × 估值）</div>
-  <div class="quad" id="quad"></div>
-  <div class="mod-sel">
-    <label>定位聚焦</label>
-    <select id="selQuad" onchange="renderQuadFocus(this.value)">
-      <option value="auto" selected>自动（当前落点）</option>
-      <option value="LU">低估 + 趋势向上（牛初 / 牛中）</option>
-      <option value="LD">低估 + 趋势向下（熊末·黄金坑）</option>
-      <option value="HU">高估 + 趋势向上（牛顶 / 过热）</option>
-      <option value="HD">高估 + 趋势向下（下跌中继）</option>
-    </select>
+<div class="twin">
+  <div class="mod">
+    <h2 style="margin-top:0">八、仓位换钱</h2>
+    <div class="srcbox" id="moneyBox" style="margin-top:8px"></div>
   </div>
-  <div class="why sub" id="quadWhy" style="margin-top:4px"></div>
+  <div class="mod">
+    <div class="k">牛熊钟定位（趋势 × 估值）</div>
+    <div class="quad" id="quad"></div>
+    <div class="mod-sel">
+      <label>定位聚焦</label>
+      <select id="selQuad" onchange="renderQuadFocus(this.value)">
+        <option value="auto" selected>自动（当前落点）</option>
+        <option value="LU">低估 + 趋势向上（牛初 / 牛中）</option>
+        <option value="LD">低估 + 趋势向下（熊末·黄金坑）</option>
+        <option value="HU">高估 + 趋势向上（牛顶 / 过热）</option>
+        <option value="HD">高估 + 趋势向下（下跌中继）</option>
+      </select>
+    </div>
+    <div class="why sub" id="quadWhy" style="margin-top:4px"></div>
+  </div>
 </div>
 
 <div class="box" style="margin-top:12px">
@@ -242,7 +244,7 @@
 
 <!-- ===================== 一、赢家四阶段 ===================== -->
 <div class="mod">
-  <div class="k">一、赢家四阶段定位<span class="mod-upd" id="upd_stage">🕘 更新于 –</span></div>
+  <div class="k">一、赢家四阶段定位</div>
   <details class="subfold"><summary>ℹ️ 模块说明（点击展开）</summary>
   <div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
   </details>
@@ -259,7 +261,7 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2>二、市场温度　<b style="font-size:20px">当前 <span id="tempHeadScore" style="color:var(--yellow)">–</span><span style="font-size:13px;color:var(--sub)"> / 10</span></b><span class="mod-upd" id="upd_market">🕘 更新于 –</span></h2>
+<h2>二、市场温度　<b style="font-size:20px">当前 <span id="tempHeadScore" style="color:var(--yellow)">–</span><span style="font-size:13px;color:var(--sub)"> / 10</span></b></h2>
 <details style="margin-top:4px">
   <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:5px 0">🌡️ 展开八维打分明细（趋势/流动/情绪 + 环境四柱 + 估值）</summary>
   <div class="sub" style="margin:4px 0 8px">本模块 = <b>纯市场温度（贵贱）</b>：只吃 趋势/流动/情绪（各约 40/30/30），反映股票真实冷热；<b>货币/盈利/汇率/美债已移出温度</b>，改为「环境分」仅做轻度调节(envAdj)，避免港股跌时仍被美债/汇率托高假热。估值0%已移出温度→独家喂顶底。温度经 tanh→bp 进仓位。</div>
@@ -267,7 +269,7 @@
 </details>
 
 <!-- ===================== 三、海外风险维度 ===================== -->
-<h2>三、海外风险维度<span class="mod-upd" id="upd_overseas">🕘 更新于 –</span></h2>
+<h2>三、海外风险维度</h2>
 <details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 </details>
@@ -286,7 +288,7 @@
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
 <!-- ===================== 四、金融危机预警 ===================== -->
-<h2>四、金融危机预警<span class="mod-upd" id="upd_crisis">🕘 更新于 –</span></h2>
+<h2>四、金融危机预警</h2>
 <details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
 <div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
 </details>
@@ -312,7 +314,7 @@
 </div>
 </details>
 
-<h2>六、长牛八大信号<span class="mod-upd" id="upd_eight">🕘 更新于 –</span> <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
+<h2>六、长牛八大信号 <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
 <details class="subfold"><summary>ℹ️ 判定规则（点击展开）</summary>
 <div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。7/8 由 macro.json 真实数据自动判定（消费税为政策项需手动）。</div>
 </details>
@@ -320,17 +322,14 @@
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
-<h2>七、定性项<span class="mod-upd" id="upd_qual">🕘 更新于 –</span> <button class="btn ghost sm" onclick="resetAllQual()" style="float:right;font-size:12px">↩ 全部恢复自动</button></h2>
+<h2>七、定性项 <button class="btn ghost sm" onclick="resetAllQual()" style="float:right;font-size:12px">↩ 全部恢复自动</button></h2>
 <details class="subfold"><summary>ℹ️ 自动推导逻辑（点击展开）</summary>
 <div class="sub">四项均由 fetch_macro.py 用「历史分位法」自动算出（优中选优），无需手动打；拖动滑条可临时覆盖，点「恢复自动」即回真实数据。</div>
 </details>
 <div id="qualList"></div>
 
-<h2>八、仓位换钱<span class="mod-upd" id="upd_money">🕘 更新于 –</span></h2>
-<div class="srcbox" id="moneyBox"></div>
-
 <!-- ===================== 九、资产配置建议 + 应变分支 ===================== -->
-<h2>九、资产配置建议<span class="mod-upd" id="upd_alloc">🕘 更新于 –</span></h2>
+<h2>九、资产配置建议</h2>
 <details class="subfold"><summary>ℹ️ 使用说明（点击展开）</summary>
 <div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
 </details>
@@ -340,7 +339,7 @@
 </table></div>
 
 <div class="mod">
-  <div class="k">九-B、应变分支<span class="mod-upd" id="upd_branch">🕘 更新于 –</span></div>
+  <div class="k">九-B、应变分支</div>
   <details class="subfold"><summary>ℹ️ 切换逻辑（点击展开）</summary>
   <div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
   </details>
@@ -356,7 +355,7 @@
   <div class="mod-body" id="branchBody"></div>
 </div>
 
-<h2>十、快照与历史<span class="mod-upd" id="upd_hist">🕘 更新于 –</span></h2>
+<h2>十、快照与历史</h2>
 <div class="row">
   <button class="btn sm" onclick="saveToday()">保存今日快照</button>
   <button class="btn ghost sm" onclick="exportCSV()">导出CSV</button>
@@ -370,7 +369,7 @@
 <div style="overflow-x:auto"><table id="histTable"><thead><tr><th>日期</th><th>市场</th><th>温度</th><th>趋势</th><th>估值</th><th>流动</th><th>情绪</th><th>海外</th><th>危机</th><th>信号</th><th>VIX</th><th>仓位</th><th>操作</th></tr></thead><tbody></tbody></table></div>
 
 <!-- ===================== 十一、回测校验（让工具可被证伪） ===================== -->
-<h2 style="margin-top:18px">十一、回测校验<span class="mod-upd" id="upd_bt">🕘 更新于 –</span></h2>
+<h2 style="margin-top:18px">十一、回测校验</h2>
 <details class="subfold"><summary>ℹ️ 校验逻辑（点击展开）</summary>
 <div class="sub">用 6 个历史极点喂入同一套顶底公式：牛顶应 P(顶部)&gt;60%，熊底应 P(底部)&gt;60%。对不上=公式错，不是市场错。</div>
 </details>
@@ -378,7 +377,7 @@
 <div id="btNote" class="why" style="margin-top:6px"></div>
 
 <!-- ===================== 十-B、复盘分析（数学建模） ===================== -->
-<h2 style="margin-top:18px">十-B、复盘分析<span class="mod-upd" id="upd_review">🕘 更新于 –</span></h2>
+<h2 style="margin-top:18px">十-B、复盘分析</h2>
 <div class="sub" id="reviewNoData" style="display:none">暂无足够快照（需≥3条）做统计分析，请先保存几次日常快照。</div>
 <div id="reviewBox" style="display:none">
   <div class="grid2" style="margin-top:6px">
@@ -1467,7 +1466,7 @@ function renderStatus(){
   const s3=f.fx===null?'⏳':(f.fx?'🟢':'🟡');
   const rr=window.__r||{};
   const realDims=rr.realDims!=null?rr.realDims:0, K=rr.K||4;
-  document.getElementById('srcBadge').innerHTML=
+  const _sb=document.getElementById('srcBadge'); if(_sb) _sb.innerHTML=
     s1+' 实时行情('+(statusFlags.api?'后端代理':'腾讯直连')+') ｜ '+s2+' 宏观'+(statusFlags.api?'API':'macro.json')+' ｜ '+s3+' 汇率'
     + (SRV?' ｜ 🟢 决策由服务端计算':' ｜ ⚪ 本机计算')
     + ' ｜ 📡 实时信号 <b style="color:'+(realDims>=3?'var(--green)':(realDims>=2?'var(--yellow)':'var(--red)'))+'">'+realDims+'/'+K+'</b>';
@@ -1592,16 +1591,6 @@ function renderFG(){
     '<br>反向读法：众人恐惧=便宜筹码出现，众人贪婪=风险累积。极值区才是顶底信号，中间区跟仓位走。';
 }
 
-/* 统一模块「最后更新时间」角标：recalc 每次重算后刷新所有模块标题的时间戳 */
-function fmtStamp(d){
-  const p=n=>String(n).padStart(2,'0');
-  return p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
-}
-function stampUpdates(){
-  const s='🕘 更新于 '+fmtStamp(new Date());
-  document.querySelectorAll('.mod-upd').forEach(el=>{ el.textContent=s; });
-}
-
 function recalc(){
   const r=computeAll();
   if(SRV && SRV[mode]){                       // 服务端算好的：直接采用，保证前后端一致
@@ -1676,14 +1665,13 @@ function recalc(){
   }
   renderStatus();
   renderBacktest();
-  stampUpdates();   // 每次重算后刷新所有模块「最后更新时间」角标
 }
 
 /* =========================================================
    数据编排
    ========================================================= */
 async function pullAll(){
-  document.getElementById('srcBadge').innerHTML='⏳ 正在拉取：行情 / 宏观 / 汇率 …';
+  const _sb=document.getElementById('srcBadge'); if(_sb) _sb.innerHTML='⏳ 正在拉取：行情 / 宏观 / 汇率 …';
   if(await loadServerState()){ recalc(); await loadFx().then(fx=>{ if(fx){ M.usdcny={value:fx.usdcny,asOf:todayStr(),src:'open.er-api.com'}; recalc(); } }); return; }
   const mj=await loadMacroJson();
   if(mj){ applyMacro(mj); M.generated=mj.generated_at; fillOvCrDefaults(true); }
