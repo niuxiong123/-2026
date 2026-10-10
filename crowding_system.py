@@ -12,6 +12,7 @@ crowding_system.py —— 单文件版 ETF 拥挤度计算（对接 sector_rollu
 import json
 import os
 import sys
+import time
 import datetime
 import socket
 import concurrent.futures as cf
@@ -53,7 +54,7 @@ ETF_POOL = [
 PERCENTILE_WINDOWS = [120, 250, 500]
 MIN_HISTORY = 60
 CALL_TIMEOUT = 25
-MAX_WORKERS = 4
+MAX_WORKERS = 3
 
 
 def call_timeout(func, timeout=CALL_TIMEOUT, label=""):
@@ -111,7 +112,7 @@ def _fetch_em(code):
 
 
 def _fetch_sina(code):
-    df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code), start_date="20000101", end_date="20261231")
+    df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code))
     print("   ℹ sina %s raw_len=%d" % (code, len(df) if df is not None else -1))
     if df is None or len(df) < MIN_HISTORY:
         return None
@@ -121,10 +122,17 @@ def _fetch_sina(code):
 
 
 def fetch_hist(code):
-    for src, fn in (("em", lambda: _fetch_em(code)), ("sina", lambda: _fetch_sina(code))):
-        r = call_timeout(fn, CALL_TIMEOUT + 5, "hist:%s:%s" % (src, code))
+    """东财主源（GitHub 美区间歇性被拦 → 带重试退避）→ 新浪兜底。"""
+    for attempt in range(3):
+        r = call_timeout(lambda: _fetch_em(code), CALL_TIMEOUT + 5,
+                         "hist:em:%s(#%d)" % (code, attempt + 1))
         if r is not None and len(r) >= MIN_HISTORY:
             return r
+        if attempt < 2:
+            time.sleep(2 + attempt * 3)
+    r = call_timeout(lambda: _fetch_sina(code), CALL_TIMEOUT + 5, "hist:sina:%s" % code)
+    if r is not None and len(r) >= MIN_HISTORY:
+        return r
     return None
 
 
