@@ -3,55 +3,30 @@
 """
 crowding_system.py —— 单文件版 ETF 拥挤度计算（对接 sector_rollup.py 契约）
 
-依据《ETF 拥挤度指标系统》设计底稿（拥挤度README）的方法论实现：
-  · 时间序列滚动百分位标准化（窗口 [120,250,500] 取中位数降极值扰动，严禁未来函数）
-  · 分块等权合成 C = 100·mean(s)（s 为各指标滚动百分位，[0,1]，越高越拥挤）
-  · C_rel = C − M_t（regime 自适应基准，M_t = 全样本 C 的中位数）
-  · 横截面分位 p + 三档信号（p<20 买 / 20-80 观望 / p>80 卖）
-  · 绝对极端覆盖（C>=90 强卖 / C<=10 强买，优先级最高）
-  · regime 标签（基于 C_rel：>20 高 / <-20 低 / 其余中性）
-
-【为什么是单文件】
-  底稿描述的多文件包（run_crowding.py/config.py/data_layer.py/indicators.py/composite.py）
-  在本仓库落地为单文件，输出契约与 sector_rollup.py 严格对齐：
-       crowding_output.json = list of {code,name,C(0-100),signal,regime,p}
-  sector_rollup.py 再把它聚合成 docs/sectors_crowd.json（22 板块，source=real）。
-
-【真数据来源】
-  本文件由 GitHub Action（ubuntu-latest，真实外网 + akshare）每日运行：
-      python3 crowding_system.py   →   crowding_output.json（仓根）
-      python3 sector_rollup.py      →   docs/sectors_crowd.json（source=real）
-  本机沙箱网络屏蔽东方财富 push2 接口，无法取真实行情；但 Action 环境正常，可真实计算。
-
-【可计算指标 vs 受限指标（诚实标注，绝不伪造）】
-  本单文件版从「历史 K 线 + 实时 spot 快照」可稳健算出的指标：
-      #5 价格动量(20/60/120)  #6 RS vs 沪深300(60/120)  #9 换手率(20)
-      #10 成交额占全市场ETF比重(20/60)  #12 收益率波动率(20/60,年化)
-  底稿中需要「spot 历史落库缓存」才能算的指标（#1 份额变化率 / #2 主力净额 /
-      #3 AUM增速 / #4 溢价-IOPV）在单次 Action 运行（无跨日缓存）下标记为不可用；
-      #7 跟踪指数PE分位 因缺申万映射表暂标记不可用。缺失即降级重归一，不伪造。
-  有效指标 < 3 或 有效块 < 3 的 ETF 不输出 C（网页对该板块回退「代理估算」）。
+依据《ETF 拥挤度指标系统》设计底稿（拥挤度README）方法论实现；详见底稿。
+关键工程现实（已实测）：GitHub Actions 美区 runner 拉东方财富(eastmoney)接口常被拦/超时。
+本文件：主源用东财(fund_etf_hist_em)，失败自动兜底新浪(fund_etf_daily / stock_zh_index_daily)，
+并对每个 akshare 调用打印真实异常原因（便于排查），全程线程级超时防挂死。
+若两源都不可达 → 0 有效结果 → 非 0 退出，Action 不推送坏数据，网页保持 demo/代理。
 """
 import json
 import os
 import sys
 import datetime
-import time
+import socket
+import concurrent.futures as cf
 
 import numpy as np
 import pandas as pd
 
 try:
     import akshare as ak
-except Exception as e:  # akshare 缺包时明确报错退出，避免静默产出空数据
+except Exception as e:
     print("❌ akshare 不可用：%s" % e)
     sys.exit(1)
 
+socket.setdefaulttimeout(45)
 
-# ---------------------------------------------------------------------------
-# ETF 池：覆盖网页 22 板块（代码与 sector_rollup.ETF_MAP 对齐，便于聚合映射）
-# 每个板块取 1-2 只代表性 ETF；代码优先，sector_rollup 再按名称/代码归类。
-# ---------------------------------------------------------------------------
 ETF_POOL = [
     ("588200", "科创芯片ETF"), ("159995", "芯片ETF"), ("512760", "半导体ETF"),
     ("159928", "主要消费ETF"), ("512690", "酒ETF"),
@@ -76,59 +51,99 @@ ETF_POOL = [
 ]
 
 PERCENTILE_WINDOWS = [120, 250, 500]
-MIN_HISTORY = 60          # 最少历史交易日才出有效值（与底稿一致）
+MIN_HISTORY = 60
+CALL_TIMEOUT = 25
+MAX_WORKERS = 4
 
 
-# ---------------------------------------------------------------------------
-# 数据接入（字段安全 + 重试）
-# ---------------------------------------------------------------------------
-def fetch_hist(code):
-    """拉取 ETF 日线历史 K 线（收盘/成交额/换手率）。失败重试 3 次。"""
-    for _ in range(3):
+def call_timeout(func, timeout=CALL_TIMEOUT, label=""):
+    """线程里跑 func，超时/异常都打印原因并返回 None（绝不无限挂起，且不再吞异常）。"""
+    with cf.ThreadPoolExecutor(max_workers=1) as ex:
+        fut = ex.submit(func)
         try:
-            df = ak.fund_etf_hist_em(symbol=code, period="daily", adjust="")
-            if df is not None and len(df) >= MIN_HISTORY:
-                df = df.copy()
-                df["日期"] = pd.to_datetime(df["日期"])
-                df = df.sort_values("日期").reset_index(drop=True)
-                return df
-        except Exception:
-            time.sleep(2)
+            return fut.result(timeout=timeout)
+        except cf.TimeoutError:
+            print("   ⏱ 超时(%ss): %s" % (timeout, label))
+            return None
+        except Exception as e:
+            print("   ⚠ 异常: %s | %s" % (label, repr(e)[:200]))
+            return None
+
+
+def _sina_symbol(code):
+    """ETF 代码 → 新浪代码（51/55/56/58 沪市 sh；15/16 深市 sz）。"""
+    return ("sh" if code[:1] == "5" else "sz") + code
+
+
+# ---------------------------------------------------------------------------
+# 历史 K 线：东财主源 + 新浪兜底
+# ---------------------------------------------------------------------------
+def _fetch_em(code):
+    df = ak.fund_etf_hist_em(symbol=code, period="daily", adjust="")
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    df = df.copy()
+    df["日期"] = pd.to_datetime(df["日期"])
+    return df.sort_values("日期").reset_index(drop=True)
+
+
+def _fetch_sina(code):
+    df = ak.fund_etf_daily(symbol=_sina_symbol(code))
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    df = df.copy()
+    df["日期"] = pd.to_datetime(df["日期"])
+    return df.sort_values("日期").reset_index(drop=True)
+
+
+def fetch_hist(code):
+    for src, fn in (("em", lambda: _fetch_em(code)), ("sina", lambda: _fetch_sina(code))):
+        r = call_timeout(fn, CALL_TIMEOUT + 5, "hist:%s:%s" % (src, code))
+        if r is not None and len(r) >= MIN_HISTORY:
+            return r
     return None
 
 
+def _bench_em():
+    df = ak.index_zh_a_hist(symbol="000300", period="daily", adjust="")
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    df = df.copy()
+    df["日期"] = pd.to_datetime(df["日期"])
+    return df.sort_values("日期").set_index("日期")["收盘"].astype(float)
+
+
+def _bench_sina():
+    df = ak.stock_zh_index_daily(symbol="sh000300")
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    df = df.copy()
+    df["日期"] = pd.to_datetime(df["日期"])
+    return df.sort_values("日期").set_index("日期")["close"].astype(float)
+
+
 def fetch_benchmark():
-    """沪深300 收盘序列（#6 RS 基准）。"""
-    try:
-        df = ak.index_zh_a_hist(symbol="000300", period="daily", adjust="")
-        if df is not None and len(df) >= MIN_HISTORY:
-            df = df.copy()
-            df["日期"] = pd.to_datetime(df["日期"])
-            s = df.sort_values("日期").set_index("日期")["收盘"].astype(float)
-            return s
-    except Exception:
-        pass
+    for src, fn in (("em", _bench_em), ("sina", _bench_sina)):
+        r = call_timeout(fn, CALL_TIMEOUT + 5, "bench:%s" % src)
+        if r is not None:
+            return r
     return None
 
 
 def fetch_total_amount():
-    """全市场 ETF 当日总成交额（#10 成交额占比分母）。"""
-    try:
+    """全市场 ETF 成交额（东财 spot），失败则 None（#10 指标跳过）。"""
+    def _inner():
         spot = ak.fund_etf_spot_em()
-        if spot is not None and "成交额" in spot.columns:
-            return float(pd.to_numeric(spot["成交额"], errors="coerce").sum())
-    except Exception:
-        pass
-    return None
+        if spot is None or "成交额" not in spot.columns:
+            return None
+        return float(pd.to_numeric(spot["成交额"], errors="coerce").sum())
+    return call_timeout(_inner, CALL_TIMEOUT + 5, "spot_total")
 
 
 # ---------------------------------------------------------------------------
-# 标准化：时间序列滚动百分位
+# 标准化 + 计算（与底稿一致：时间序列滚动百分位、分块等权、C_rel/p/三档信号）
 # ---------------------------------------------------------------------------
 def ts_percentile(series, windows=PERCENTILE_WINDOWS):
-    """返回序列最新值的时间序列滚动百分位 [0,1]；样本不足返回 nan。
-    对每个窗口 w，取最近 w 个值，计算 当前值 在窗口内的分位 (x<cur).mean()，
-    多窗口取中位数降极值扰动。所有计算仅用 t 及以前数据（严禁未来函数）。"""
     s = pd.Series(series, dtype="float64").dropna()
     if len(s) < MIN_HISTORY:
         return float("nan")
@@ -137,27 +152,18 @@ def ts_percentile(series, windows=PERCENTILE_WINDOWS):
     for w in windows:
         if len(s) < w:
             continue
-        win = s.iloc[-w:]
-        pris.append((win < cur).mean())
-    if not pris:
-        return float("nan")
-    return float(np.median(pris))
+        pris.append((s.iloc[-w:] < cur).mean())
+    return float(np.median(pris)) if pris else float("nan")
 
 
 def pct_of_return(close, horizon):
-    """horizon 日收益率序列 → 最新值的滚动百分位。"""
     close = pd.Series(close, dtype="float64")
     if len(close) < horizon + MIN_HISTORY:
         return float("nan")
-    ret = close.pct_change(horizon)
-    return ts_percentile(ret)
+    return ts_percentile(close.pct_change(horizon))
 
 
-# ---------------------------------------------------------------------------
-# 单 ETF 计算
-# ---------------------------------------------------------------------------
 def compute_etf(df, bench_close, total_amount):
-    """返回 (C, valid_list)；样本/有效指标不足返回 None。"""
     try:
         close = pd.to_numeric(df["收盘"], errors="coerce").reset_index(drop=True)
         amount = pd.to_numeric(df["成交额"], errors="coerce").reset_index(drop=True) if "成交额" in df else None
@@ -166,78 +172,68 @@ def compute_etf(df, bench_close, total_amount):
         return None
 
     ret = close.pct_change()
-    vol = ret.rolling(60).std() * np.sqrt(252)   # #12 收益率波动率（年化）
+    vol = ret.rolling(60).std() * np.sqrt(252)
 
-    s_list = []  # (key, s in [0,1])
-
-    # #5 价格动量（20/60/120 日收益率的滚动百分位）
+    s_list = []
     for h in (20, 60, 120):
-        s_list.append(("mom%d" % h, pct_of_return(close, h)))
-
-    # #6 RS vs 沪深300（ETF收益 − 宽基收益 的滚动百分位）
+        s_list.append(pct_of_return(close, h))
     if bench_close is not None:
         try:
             b = bench_close.reindex(df["日期"]).ffill()
             if len(b) == len(close):
-                bret = b.diff(60)
-                spread = close.pct_change(60) - bret
-                s_list.append(("rs", ts_percentile(spread.dropna())))
+                spread = close.pct_change(60) - b.diff(60)
+                s_list.append(ts_percentile(spread.dropna()))
         except Exception:
             pass
-
-    # #9 换手率（20 日均值的滚动百分位）
     if turn is not None:
-        s_list.append(("turn", ts_percentile(turn.rolling(20).mean().dropna())))
-
-    # #10 成交额占全市场 ETF 比重（20/60 日均值的滚动百分位）
+        s_list.append(ts_percentile(turn.rolling(20).mean().dropna()))
     if amount is not None and total_amount:
         try:
-            ratio = (amount / total_amount).rolling(20).mean().dropna()
-            s_list.append(("amt", ts_percentile(ratio)))
+            s_list.append(ts_percentile((amount / total_amount).rolling(20).mean().dropna()))
         except Exception:
             pass
+    s_list.append(ts_percentile(vol.dropna()))
 
-    # #12 收益率波动率（滚动百分位）
-    s_list.append(("vol", ts_percentile(vol.dropna())))
-
-    valid = [(k, v) for k, v in s_list if v == v]
-    # 底稿：有效指标 < 3 不输出。此处 5 个指标来自 3 个语义块（动能/交易热度/波动），
-    # 至少需 3 个有效指标才出分（等价有效块>=3）。
+    valid = [v for v in s_list if v == v]
     if len(valid) < 3:
         return None
-
-    # 分块等权合成（简化：全部有效 s 等权均值；缺失块自动重归一）
-    C = 100.0 * float(np.mean([v for _, v in valid]))
-    C = min(max(C, 0.0), 100.0)
-    return round(C, 1), valid
+    C = 100.0 * float(np.mean(valid))
+    return round(min(max(C, 0.0), 100.0), 1)
 
 
-# ---------------------------------------------------------------------------
-# 主流程
-# ---------------------------------------------------------------------------
+def compute_one(args, bench_close, total_amount):
+    code, name = args
+    df = fetch_hist(code)
+    if df is None:
+        return None
+    C = compute_etf(df, bench_close, total_amount)
+    return {"code": code, "name": name, "C": C} if C is not None else None
+
+
 def main():
     as_of = datetime.date.today().isoformat()
     bench = fetch_benchmark()
     total_amount = fetch_total_amount()
+    print("ℹ 基准沪深300：%s | 全市场ETF成交额：%s" % (
+        "OK" if bench is not None else "缺失(降级)",
+        ("%.0f" % total_amount) if total_amount else "缺失(降级)"))
 
     results = []
-    for code, name in ETF_POOL:
-        df = fetch_hist(code)
-        if df is None:
-            print("⚠ 跳过 %s（无足够历史）" % code)
-            continue
-        r = compute_etf(df, bench, total_amount)
-        if r is None:
-            print("⚠ 跳过 %s（有效指标<3）" % code)
-            continue
-        C, valid = r
-        results.append({"code": code, "name": name, "C": C})
+    done = 0
+    with cf.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+        futs = {ex.submit(compute_one, a, bench, total_amount): a for a in ETF_POOL}
+        for fut in cf.as_completed(futs):
+            done += 1
+            r = fut.result()
+            if r:
+                results.append(r)
+            if done % 10 == 0 or done == len(ETF_POOL):
+                print("   进度 %d/%d，已得有效 %d 只" % (done, len(ETF_POOL), len(results)))
 
     if not results:
-        print("❌ 无有效 ETF 结果，未产出 crowding_output.json（网页将保持 demo/代理）")
+        print("❌ 无有效 ETF 结果（两数据源可能均不可达），未产出 crowding_output.json；网页保持 demo/代理")
         sys.exit(1)
 
-    # 横截面：M_t / C_rel / p / signal / regime
     Cs = np.array([x["C"] for x in results], dtype=float)
     M_t = float(np.median(Cs))
     for x in results:
@@ -262,14 +258,12 @@ def main():
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "crowding_output.json")
     with open(out, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
-
-    print("✅ %s 计算 %d 只 ETF，M_t=%.1f，写入 %s" % (as_of, len(results), M_t, out))
-    print("   最拥挤 Top5：")
+    print("✅ %s 计算 %d 只 ETF（候选 %d），M_t=%.1f，写入 %s" % (
+        as_of, len(results), len(ETF_POOL), M_t, out))
     for x in sorted(results, key=lambda z: -z["C"])[:5]:
-        print("     %s %s  C=%s  p=%s%%  %s/%s" % (x["code"], x["name"], x["C"], x["p"], x["signal"], x["regime"]))
-    print("   最不拥挤 Bottom5：")
+        print("     最拥挤 %s %s C=%s p=%s%% %s/%s" % (x["code"], x["name"], x["C"], x["p"], x["signal"], x["regime"]))
     for x in sorted(results, key=lambda z: z["C"])[:5]:
-        print("     %s %s  C=%s  p=%s%%  %s/%s" % (x["code"], x["name"], x["C"], x["p"], x["signal"], x["regime"]))
+        print("     最不拥挤 %s %s C=%s p=%s%% %s/%s" % (x["code"], x["name"], x["C"], x["p"], x["signal"], x["regime"]))
 
 
 if __name__ == "__main__":
