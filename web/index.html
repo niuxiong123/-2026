@@ -1143,7 +1143,7 @@ function computeAll(){
     if(y <= 2027){
       tianShi = { tag:'财杀年 · 守', cap:4.5, hit:false,
         txt:'2026–2027 财杀年：守 = 不追高、控杠杆、不是不抄底——资金面关键项（M1/社融/住户存款）逐步亮时允许左侧小幅建仓（保险丝已按共振放宽至3.5/4.5成），但总仓位硬上限 4.5 成防追高；真正行动窗口 2028+ 水木大运年。' };
-      if(final > tianShi.cap){ tianShi.hit=true; final = Math.max(1, Math.min(final, tianShi.cap)); }
+      if(moneyLit<3 && final > tianShi.cap){ tianShi.hit=true; final = Math.max(1, Math.min(final, tianShi.cap)); }
     } else {
       tianShi = { tag:'水木年 · 行动窗', cap:9.5, hit:false,
         txt:'2028+ 水木大运年：用神当令，按温度/信号正常执行仓位，无命理硬上限。' };
@@ -1787,8 +1787,8 @@ function renderBacktest(){
   });
   const bt=document.getElementById('btNote');
   if(bt) bt.innerHTML='校验结果：'+(6-failTop-failBot)+'/6 通过。'+
-    (failTop? ' 漏顶 '+failTop+' 个（应调高 valT 阈值）':'')+
-    (failBot? ' 漏底 '+failBot+' 个（应调高 valB 阈值）':'')+
+    (failTop? ' 漏顶 '+failTop+' 个':'')+
+    (failBot? ' 漏底 '+failBot+' 个':'')+
     ' 全部通过=本公式在历史上能区分顶底。';
 }
 
