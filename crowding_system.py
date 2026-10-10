@@ -85,6 +85,9 @@ _COL_RENAME = {
 
 def _norm_cols(df):
     df = df.copy()
+    # 日期可能在索引里（如 stock_zh_index_daily 返回 date 为索引）
+    if isinstance(df.index, pd.DatetimeIndex) or (df.index.name in ("日期", "date")):
+        df = df.reset_index()
     df = df.rename(columns={k: v for k, v in _COL_RENAME.items() if k in df.columns})
     if "日期" in df.columns:
         df["日期"] = pd.to_datetime(df["日期"])
@@ -108,7 +111,8 @@ def _fetch_em(code):
 
 
 def _fetch_sina(code):
-    df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code))
+    df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code), start_date="20000101", end_date="20261231")
+    print("   ℹ sina %s raw_len=%d" % (code, len(df) if df is not None else -1))
     if df is None or len(df) < MIN_HISTORY:
         return None
     df = _norm_cols(df).sort_values("日期").reset_index(drop=True)
