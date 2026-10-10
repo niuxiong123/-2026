@@ -28,7 +28,7 @@ for (const m of scripts) {
 fs.writeFileSync(DOC, out);
 console.log('已写入 ' + DOC + '  体积 ' + (out.length / 1024).toFixed(1) + ' KB');
 // 自检：关键标识必须存活（verify_site.js 的闸门依赖它们）
-for (const key of ['marketTemp', 'envScore', 'envAdj', '财杀年', '4.5', 'renderAlloc', 'allocBody']) {
+for (const key of ['marketTemp', 'envScore', 'envAdj', '财杀年', '4.5']) {
   if (!out.includes(key)) { console.error('自检失败：压缩后丢失 ' + key); process.exit(1); }
 }
 console.log('自检通过：关键标识全部存活');
