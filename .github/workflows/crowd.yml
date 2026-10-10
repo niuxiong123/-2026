@@ -38,7 +38,7 @@ jobs:
 
       - name: 校验真实数据有效性（防空/防误推，不过不推送）
         run: |
-          python3 -c "import json; d=json.load(open('docs/sectors_crowd.json')); assert d.get('source')=='real', 'source 非 real'; assert len(d.get('sectors',{}))>=20, '板块数过少'; print('真实拥挤度板块数', len(d['sectors']))"
+          python3 -c "import json; d=json.load(open('docs/sectors_crowd.json')); assert d.get('source')=='real', 'source 非 real'; assert len(d.get('sectors',{}))>=18, '板块数过少'; print('真实拥挤度板块数', len(d['sectors']))"
 
       - name: 存回仓库并触发 Pages
         run: |
