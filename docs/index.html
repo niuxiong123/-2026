@@ -253,21 +253,7 @@
     <div class="tempbar"><div class="pin" id="tempPin" style="left:50%"></div></div>
     <div class="tag shake" id="tempTag">待计算</div>
   </div>
-  <div class="box">
-    <div class="k">今日建议仓位（<span id="modeName">A股</span>）· 双口径对照</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
-      <div style="background:var(--card2);border-radius:10px;padding:9px 8px;text-align:center">
-        <div style="font-size:11px;color:var(--sub)">A · 信号总闸版（保险丝）</div>
-        <div class="pos" id="posVal" style="font-size:36px;margin-top:0">–<span style="font-size:16px">成</span></div>
-        <div class="reson" id="posReason" style="margin-top:2px;font-size:11.5px">等待数据…</div>
-      </div>
-      <details style="background:var(--card2);border-radius:10px;padding:9px 8px">
-        <summary style="cursor:pointer;font-size:11px;color:var(--sub);user-select:none">B · 温度穿线版（无关信号 · 点开查看）</summary>
-        <div class="pos" id="posValB" style="font-size:36px;margin-top:2px">–<span style="font-size:16px">成</span></div>
-        <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
-      </details>
-    </div>
-      </div>
+  <span id="modeName" style="display:none">A股</span>
   <div class="box">
     <div class="k">顶底概率</div>
     <div style="display:flex;gap:16px;margin-top:6px">
@@ -1795,13 +1781,7 @@ function recalc(){
   const te=document.getElementById('tempTag'); te.className='tag '+tag.cls; te.textContent=tag.txt;
   if(!r.va.real) te.textContent += ' ⚠估值缺位';   // D 半盲提示：估值被静默置中时明确告知，温度=半盲
   if(semiBlind) te.textContent += ' ⚠半盲·基线估算(实时'+r.realDims+'/'+r.K+')';
-  document.getElementById('posVal').innerHTML=r.final.toFixed(1)+'<span style="font-size:16px">成</span>';
-  document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
   renderTianShi(r);
-  const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
-  document.getElementById('posReason').innerHTML='综合市场温度与顶底信号，当前建议 <b>'+r.final.toFixed(1)+'成</b> 仓位'+(r.gateTxt?'（'+r.gateTxt+'）':'')+(r.eightGate?'；🔒 '+r.eightGate:'')+'。'+(csTxt?'<br><span style="font-size:11.5px">'+csTxt+'</span>':'');
-  // B 版：温度穿线（与八大信号无关）
-  document.getElementById('posReasonB').innerHTML='纯温度穿线口径（不受八大信号影响）：当前 <b>'+r.tempPos.toFixed(1)+'成</b>，状态「'+r.tempBand+'」'+(r.eightGate?'（A版因信号未集齐已封顶，B版不受影响）':'');
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
