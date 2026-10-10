@@ -71,8 +71,8 @@ def call_timeout(func, timeout=CALL_TIMEOUT, label=""):
 
 
 def _sina_symbol(code):
-    """ETF 代码 → 新浪代码（51/55/56/58 沪市 sh；15/16 深市 sz）。"""
-    return ("sh" if code[:1] == "5" else "sz") + code
+    """ETF 代码 → 新浪代码（沪市 SH / 深市 SZ，akshare 要求大写前缀）。"""
+    return ("SH" if code[:1] == "5" else "SZ") + code
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ def _fetch_em(code):
 
 
 def _fetch_sina(code):
-    df = ak.fund_etf_daily(symbol=_sina_symbol(code))
+    df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code))
     if df is None or len(df) < MIN_HISTORY:
         return None
     df = df.copy()
