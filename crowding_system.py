@@ -5,8 +5,8 @@ crowding_system.py —— 单文件版 ETF 拥挤度计算（对接 sector_rollu
 
 依据《ETF 拥挤度指标系统》设计底稿（拥挤度README）方法论实现；详见底稿。
 关键工程现实（已实测）：GitHub Actions 美区 runner 拉东方财富(eastmoney)接口常被拦/超时。
-本文件：主源用东财(fund_etf_hist_em)，失败自动兜底新浪(fund_etf_daily / stock_zh_index_daily)，
-并对每个 akshare 调用打印真实异常原因（便于排查），全程线程级超时防挂死。
+本文件：主源用东财(fund_etf_hist_em)，失败自动兜底腾讯(stock_zh_a_hist_tx，实测可达性最好)、
+再兜底新浪(fund_etf_hist_sina)；对每个 akshare 调用打印真实异常原因，全程线程级超时防挂死。
 若两源都不可达 → 0 有效结果 → 非 0 退出，Action 不推送坏数据，网页保持 demo/代理。
 """
 import json
@@ -121,8 +121,21 @@ def _fetch_sina(code):
     return df
 
 
+def _tx_symbol(code):
+    """ETF 代码 → 腾讯代码（小写 sh/sz 前缀，腾讯接口要求）。"""
+    return ("sh" if code[:1] == "5" else "sz") + code
+
+
+def _fetch_tx(code):
+    """腾讯源（实测可达性好）：列 date/close/turnover(=真换手率0-1)/amount(成交额)。"""
+    df = ak.stock_zh_a_hist_tx(symbol=_tx_symbol(code), start_date="20180101", end_date="20261231")
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    return _norm_cols(df).sort_values("日期").reset_index(drop=True)
+
+
 def fetch_hist(code):
-    """东财主源（GitHub 美区间歇性被拦 → 带重试退避）→ 新浪兜底。"""
+    """东财主源(带重试退避) → 腾讯兜底 → 新浪末选。"""
     for attempt in range(3):
         r = call_timeout(lambda: _fetch_em(code), CALL_TIMEOUT + 5,
                          "hist:em:%s(#%d)" % (code, attempt + 1))
@@ -130,6 +143,9 @@ def fetch_hist(code):
             return r
         if attempt < 2:
             time.sleep(2 + attempt * 3)
+    r = call_timeout(lambda: _fetch_tx(code), CALL_TIMEOUT + 5, "hist:tx:%s" % code)
+    if r is not None and len(r) >= MIN_HISTORY:
+        return r
     r = call_timeout(lambda: _fetch_sina(code), CALL_TIMEOUT + 5, "hist:sina:%s" % code)
     if r is not None and len(r) >= MIN_HISTORY:
         return r
@@ -154,8 +170,18 @@ def _bench_sina():
     return df.sort_values("日期").set_index("日期")["收盘"].astype(float)
 
 
+def _bench_tx():
+    df = ak.stock_zh_a_hist_tx(symbol="sh000300", start_date="20180101", end_date="20261231")
+    if df is None or len(df) < MIN_HISTORY:
+        return None
+    df = _norm_cols(df)
+    if "日期" not in df.columns or "收盘" not in df.columns:
+        return None
+    return df.sort_values("日期").set_index("日期")["收盘"].astype(float)
+
+
 def fetch_benchmark():
-    for src, fn in (("em", _bench_em), ("sina", _bench_sina)):
+    for src, fn in (("em", _bench_em), ("tx", _bench_tx), ("sina", _bench_sina)):
         r = call_timeout(fn, CALL_TIMEOUT + 5, "bench:%s" % src)
         if r is not None:
             return r
