@@ -174,6 +174,22 @@
   .hchip{flex:1 1 120px;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12px}
   .hchip .hn{color:var(--sub);font-size:11px}
   .hchip .hv{font-weight:700;font-size:13px;margin-top:3px}
+  .fanhero{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--acc);border-radius:14px;padding:16px;margin-top:14px}
+  .fanhero .fh-top{display:flex;flex-wrap:wrap;gap:14px}
+  .fh-item{flex:1 1 150px;min-width:140px}
+  .fh-k{font-size:12px;color:var(--sub)}
+  .fh-v{font-size:28px;font-weight:800;line-height:1.15;margin-top:3px}
+  .fh-tag{display:inline-block;padding:5px 16px;border-radius:22px;font-size:16px;font-weight:800;margin-top:8px}
+  .sig-buy{background:rgba(39,174,96,.18);color:var(--green);border:1px solid var(--green)}
+  .sig-sell{background:rgba(231,76,60,.18);color:var(--red);border:1px solid var(--red)}
+  .sig-hold{background:rgba(241,196,15,.16);color:var(--yellow);border:1px solid var(--yellow)}
+  .cat-title{font-size:13px;font-weight:800;margin-top:14px;color:var(--acc)}
+  .sectorgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:10px;margin-top:8px}
+  .sector{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 11px}
+  .sector .sn{font-weight:700;font-size:13.5px}
+  .sector .scat{font-size:11px;color:var(--sub);margin-top:2px}
+  .sector .swhy{font-size:11px;color:var(--sub);margin-top:5px;line-height:1.45}
+  @media(max-width:560px){ .sectorgrid{grid-template-columns:1fr 1fr} .fh-item{min-width:0;flex:1 1 100%} }
   .skip-link{position:absolute;left:-9999px;top:0;background:var(--acc);color:#06121f;padding:8px 12px;border-radius:0 0 8px 0;z-index:50;font-weight:700}
   .skip-link:focus{left:0}
 </style>
@@ -210,9 +226,18 @@
   <div class="hrow" id="healthRow"><div class="hchip"><div class="hn">实时行情</div><div class="hv">⏳ 等待中</div></div><div class="hchip"><div class="hn">宏观</div><div class="hv">⏳ 等待中</div></div><div class="hchip"><div class="hn">汇率</div><div class="hv">⏳ 等待中</div></div></div>
 </div>
 
+<div class="fanhero" id="fanHero" aria-label="粉丝总览：市场高低点与买卖信号">
+  <div class="fh-top">
+    <div class="fh-item"><div class="fh-k">📍 当前市场高低点</div><div class="fh-v" id="fhLoc">—</div></div>
+    <div class="fh-item"><div class="fh-k">🎯 今日总买卖信号</div><div class="fh-tag" id="fhSig">—</div></div>
+    <div class="fh-item"><div class="fh-k">💰 建议总仓位（<span id="fhMode">A股</span>）</div><div class="fh-v" id="fhPos">—</div></div>
+  </div>
+  <div class="sub" id="fhNote" style="margin-top:8px;font-size:12px"></div>
+</div>
+
 <nav class="mininav" aria-label="模块导航">
   <div class="navlinks">
-    <a href="#m1">1·状态</a><a href="#m2">2·温度</a><a href="#m3">3·换钱</a><a href="#m4">4·信号</a><a href="#m5">5·海外</a><a href="#m6">6·危机</a><a href="#m7">7·阶段</a><a href="#m8">8·配置</a><a href="#m9">9·快照</a><a href="#m10">10·复盘</a>
+    <a href="#m1">1·状态</a><a href="#m2">2·温度</a><a href="#m3">3·换钱</a><a href="#m4">4·板块</a><a href="#m5">5·信号</a><a href="#m6">6·海外</a><a href="#m7">7·危机</a><a href="#m8">8·阶段</a><a href="#m9">9·配置</a><a href="#m10">10·快照</a><a href="#m11">11·复盘</a>
   </div>
   <div class="navprog"><span>阅读进度</span><div class="navprog-bar"><i id="navProg"></i></div></div>
 </nav>
@@ -242,10 +267,7 @@
         <div class="reson" id="posReasonB" style="margin-top:2px;font-size:11.5px">等待数据…</div>
       </details>
     </div>
-    <details class="subfold"><summary>ℹ️ A版/B版保险丝判定逻辑（点击展开）</summary>
-    <div class="sub" style="margin-top:6px;font-size:11px;line-height:1.5">A版=八大信号保险丝·共振分级<b>（判定门：只封顶仓位，不进温度权重——避免与货币/流动性等维度重复计分）</b>（信号&lt;4默认封顶3成；资金面三柱 M1/社融/住户存款 亮1柱放宽3.5、亮2柱4.5、三柱全亮或信号≥4不封顶）；B版=纯温度穿破上线/下线，与信号无关。两版差异即「信号 vs 市场」的背离提示。</div>
-    </details>
-  </div>
+      </div>
   <div class="box">
     <div class="k">顶底概率</div>
     <div style="display:flex;gap:16px;margin-top:6px">
@@ -320,10 +342,7 @@
 
 <div class="mod" style="margin-top:12px">
   <div class="k">2-B. 定性项（自动推导 · 可临时覆盖）</div>
-  <details class="subfold"><summary>ℹ️ 自动推导逻辑（点击展开）</summary>
-  <div class="sub">四项均由 fetch_macro.py 用「历史分位法」自动算出（优中选优），无需手动打；拖动滑条可临时覆盖，点「恢复自动」即回真实数据。</div>
-  </details>
-  <div id="qualList"></div>
+    <div id="qualList"></div>
 </div>
 
 <h2 id="m3">3. 仓位换钱 · 今日该投多少钱</h2>
@@ -338,18 +357,16 @@
   </div>
 </details>
 
-<h2 id="m4">4. 长牛八大信号 <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
-<details class="subfold"><summary>ℹ️ 判定规则（点击展开）</summary>
-<div class="sub">满=满足(绿) / 临=临界(黄) / 未=未满足(红)。7/8 由 macro.json 真实数据自动判定（消费税为政策项需手动）。</div>
-</details>
+<h2 id="m4">4. 板块买卖信号 · 当前该买 / 卖什么</h2>
+<div class="sub" id="secSummary" style="font-size:12.5px;color:var(--sub);margin-top:4px"></div>
+<div id="secWrap"></div>
+
+<h2 id="m5">5. 长牛八大信号 <button class="btn ghost sm" onclick="refreshEight()" style="float:right;font-size:12px">🔄 刷新数据</button></h2>
 <div class="resgrid" id="resEight"></div>
 <div class="progress" style="height:12px;background:var(--card2);border-radius:7px;overflow:hidden;margin:10px 0 4px"><i id="resBar" style="display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--yellow),var(--green))"></i></div>
 <div class="sub" id="resText"></div>
 
-<h2 id="m5">5. 海外风险维度</h2>
-<details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
-<div class="sub">危机四路径核心变量，按重要程度赋权，纳入综合温度（推高温度→降仓位）。<b>本模块→风险叠加层（与危机预警各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
-</details>
+<h2 id="m6">6. 海外风险维度</h2>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">布伦特油价</div><div class="sc" id="sc_oil">—</div></div><div class="bar"><i id="bar_oil"></i></div>
   <div class="row"><span class="lab">战争推升→输入型通胀+美联储再加息</span><input id="in_oil" step="0.1" type="number" readonly class="ro" title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重25%</span></div></div>
@@ -364,10 +381,7 @@
 </div>
 <div class="sub" id="out_overseas">→ 海外风险分 —</div>
 
-<h2 id="m6">6. 金融危机预警</h2>
-<details class="subfold"><summary>ℹ️ 运算逻辑与锁定说明（点击展开）</summary>
-<div class="sub">四路径状态 + 高危窗口 + 中国脆弱点，纳入综合温度。<b>本模块→风险叠加层（与海外风险各占50%），仅收缩仓位，不计入温度/顶底概率。</b><span style="color:var(--purple)">🔒 改4：以下输入均为静态保守假设（无后端回落基线·非实时数据），已锁定不可手动修改，防止误操作压低仓位。</span></div>
-</details>
+<h2 id="m7">7. 金融危机预警</h2>
 <div class="dimgrid">
 <div class="dim"><div class="hd"><div class="nm">四路径点燃度</div><div class="sc" id="sc_path">—</div></div><div class="bar"><i id="bar_path"></i></div>
   <div class="row"><span class="lab">地缘/AI泡沫/疫情/金融传染</span><input id="in_path" step="0.1" type="number" readonly class="ro" title="静态保守假设·非实时数据·自动回填，不可手动改"><span class="w">权重35%</span></div></div>
@@ -378,13 +392,10 @@
 </div>
 <div class="sub" id="out_crisis">→ 危机预警分 —</div>
 
-<h2 id="m7">7. 赢家四阶段定位</h2>
+<h2 id="m8">8. 赢家四阶段定位</h2>
   <div class="mod">
     <div class="k">当前阶段 · 操作节奏（下拉切换）</div>
-  <details class="subfold"><summary>ℹ️ 模块说明（点击展开）</summary>
-  <div class="sub">把理论变成操作节奏。无论危机还是日常，利润来自「发现稀缺/缺口」。</div>
-  </details>
-  <div class="mod-sel">
+    <div class="mod-sel">
     <label>当前阶段</label>
     <select id="selStage" onchange="renderStage(this.value)">
       <option value="all">全部（总览）</option>
@@ -397,10 +408,7 @@
   <div class="mod-body" id="stageBody"></div>
 </div>
 
-<h2 id="m8">8. 资产配置建议 + 应变分支</h2>
-<details class="subfold"><summary>ℹ️ 使用说明（点击展开）</summary>
-<div class="sub">依据综合温度与阶段。具体标的仅供参考，非投资建议。</div>
-</details>
+<h2 id="m9">9. 资产配置建议 + 应变分支</h2>
 <div style="overflow-x:auto"><table>
   <thead><tr><th style="width:38px" title="按建议强度排序：1=最强烈(优先执行)">序</th><th>动作</th><th>资产 / 具体标的</th><th>操作</th><th>对应逻辑</th></tr></thead>
   <tbody id="allocBody"></tbody>
@@ -408,10 +416,7 @@
 
 <div class="mod">
   <div class="k">8-B. 应变分支</div>
-  <details class="subfold"><summary>ℹ️ 切换逻辑（点击展开）</summary>
-  <div class="sub">当前综合温度决定主策略；下面三档给出"触发条件→动作"，信号提前点亮时按对应档切换。</div>
-  </details>
-  <div class="mod-sel">
+    <div class="mod-sel">
     <label>应变档位</label>
     <select id="selBranch" onchange="renderBranch(this.value)">
       <option value="auto" selected>自动（按当前温度）</option>
@@ -435,7 +440,7 @@
 </div>
 </details>
 
-<h2 id="m9">9. 快照与历史</h2>
+<h2 id="m10">10. 快照与历史</h2>
 <div class="row">
   <button class="btn sm" onclick="saveToday()">保存今日快照</button>
   <button class="btn ghost sm" onclick="exportCSV()">导出CSV</button>
@@ -451,7 +456,7 @@
 <div id="saveMsg" class="ok" style="margin-top:8px;font-size:13px"></div>
 <div style="overflow-x:auto"><table id="histTable"><thead><tr><th>日期</th><th>市场</th><th>温度</th><th class="hc-hide">趋势</th><th class="hc-hide">估值</th><th class="hc-hide">流动</th><th class="hc-hide">情绪</th><th class="hc-hide">海外</th><th class="hc-hide">危机</th><th>信号</th><th class="hc-hide">VIX</th><th>仓位</th><th>操作</th></tr></thead><tbody></tbody></table></div>
 
-<h2 id="m10">10. 复盘分析 + 回测校验</h2>
+<h2 id="m11">11. 复盘分析 + 回测校验</h2>
 <div class="sub" id="reviewNoData" style="display:none">暂无足够快照（需≥3条）做统计分析，请先保存几次日常快照。</div>
 <div id="reviewBox" style="display:none">
   <div class="grid2" style="margin-top:6px">
@@ -471,21 +476,6 @@
 <div id="btNote" class="why" style="margin-top:6px"></div>
 </details>
 
-<details style="margin-top:12px">
-  <summary style="cursor:pointer;font-size:12.5px;color:var(--sub);padding:6px 0">📖 仓位算法 / 方法说明（点击展开，全文默认收起）</summary>
-<div class="note" style="margin-top:6px">
-  <b>仓位算法（数学建模版 · 顶底/仓位/温度三表同步）：</b><br>
-  ① 市场温度 = 趋势/流动性/情绪 三柱合成（各 40/30/30），反映股票真实贵贱；货币/盈利/汇率/美债<b>移出温度</b>改为「环境分」仅轻度调节(envAdj)，杜绝港股跌时仍显假热。估值独家喂顶底概率不进温度。海外风险+危机预警仅作「仓位叠加层」(核心仓位×1−风险/20)，不再污染顶底温度。<br>
-  ② 七维打分均采用 <b>sigmoid</b> 映射：指标先标准化为 z=(x−μ)/σ，再 score=10×sigmoid(z) 或 10×(1−sigmoid(z))，消除硬阈值。<br>
-  ③ 温度→基础仓位用 <b>tanh</b> 平滑：bp(t) = 5.5 − 4.2·tanh(0.38·(t−5))，t=0→9.5成，t=5→5.5成，t=10→1.5成。<br>
-  ④ 【同步核心】<b>顶底概率进入仓位公式</b>：核心仓位 = tanh温度仓位 × 顶底联动系数(1±4%×底顶分差，范围0.6~1.4)。三大面板共用同一根信号，不再各算各的。<br>
-  ⑤ 【共振硬闸门】底≥7且顶≤3 → 仓位下限6.5成（月线空头时降至4.5成，只许左侧小仓）；顶≥7且底≤3 → 仓位上限2.5成。风险叠加层与保守系数只在该区间内活动。<br>
-  ⑥ 最终 = 核心仓位 × 风险叠加(×1−风险/20) × 保守系数(默认0.85)。<br>
-  ⑦ 【本轮迭代】①月线方向过滤：月线向下（大级别空头）时底部闸门下限6.5→4.5成，不逆势重仓；②6历史极点相似度以0.20权重并入顶底概率（ERP高斯核σ=1.2+背离方向匹配）；⑧恐贪指数显性化（宽度30%+VIX25%+估值分位20%+5日动量15%+当日10%，反向读法）；⑨情绪维度当日涨跌降权0.7→0.25、5日动量0.45补位（防单日噪声让仓位跳变）。<br>
-  <b>为何删除原"四道软约束"：</b>货币/趋势/流动/盈利/美债/汇率已占温度七维权重，再 softCap 一次属重复计账；且一切底部都"趋势差"，软约束必然卡死抄底仓位，与判底目的正面冲突。<br>
-  <b>命理提醒：</b>乙木身弱财旺、财杀攻身之年（2026–2027），市场越跌越易手痒抄底。<b>「守」的准确语义 = 不追高、控杠杆、不是不抄底</b>——资金面关键项逐步亮时可左侧小幅建仓（见命理天时校验卡），但仍请留足 18-24 个月应急金，不杠杆。真正行动窗口 2028+ 水木大运年。仅供参考，不构成投资建议。
-</div>
-</details>
 
 <details class="subfold" style="margin-top:12px">
   <summary>🔧 macro.json 手动兜底（仅当页面读不到后端文件时用 · 默认收起）</summary>
@@ -1449,6 +1439,61 @@ function setOverride(k){
 }
 function clearOverride(){ override={}; saveLocal(); document.getElementById('ovMsg').textContent='已清除全部覆盖'; recalc(); }
 
+function renderFanHero(r){
+  var fhl=document.getElementById('fhLoc'), fhm=document.getElementById('fhMode'), fhp=document.getElementById('fhPos'), fs=document.getElementById('fhSig'), fn=document.getElementById('fhNote');
+  if(!fhl) return;
+  var low=r.tempAdj<=4, high=r.tempAdj>=6.5, up=r.tr>=6, down=r.tr<5;
+  var loc;
+  if(low&&up) loc='低估 · 趋势向上（牛初/牛中）';
+  else if(low&&down) loc='低估 · 趋势向下（熊末·黄金坑）';
+  else if(high&&up) loc='高估 · 趋势向上（牛顶/过热）';
+  else if(high&&down) loc='高估 · 趋势向下（下跌中继）';
+  else loc='估值中性 · 趋势震荡（区间）';
+  fhl.textContent=loc;
+  if(fhm) fhm.textContent=(document.getElementById('modeName')?document.getElementById('modeName').textContent:'A股');
+  if(fhp) fhp.innerHTML=r.final.toFixed(1)+'<span style="font-size:14px;color:var(--sub)"> 成</span>';
+  var strongBottom=(r.tb.pBottom>=70 && r.tb.pTop<=30), strongTop=(r.tb.pTop>=70 && r.tb.pBottom<=30);
+  var sig, cls;
+  if(strongBottom || (low && r.tb.pBottom>=55)){ sig='偏买 🟢'; cls='sig-buy'; }
+  else if(strongTop || (high && r.tb.pTop>=55)){ sig='偏卖 🔴'; cls='sig-sell'; }
+  else { sig='持有 🟡'; cls='sig-hold'; }
+  if(fs){ fs.textContent=sig; fs.className='fh-tag '+cls; }
+  if(fn) fn.innerHTML='底部概率 <b style="color:var(--green)">'+r.tb.pBottom+'%</b> ｜ 顶部概率 <b style="color:var(--red)">'+r.tb.pTop+'%</b> ｜ 市场温度 '+r.tempAdj.toFixed(1)+'/10。'+(r.mUp===false?' 月线空头，只许左侧小仓。':'')+' 仅供参考，买卖与仓位由您独立判断。';
+}
+function renderSectors(r){
+  var box=document.getElementById('secWrap'); if(!box) return;
+  var low=r.tempAdj<=4, high=r.tempAdj>=6.5, up=r.tr>=6, liqWide=r.lq>=6, crisisHi=r.cr>=6;
+  var strongBottom=(r.tb.pBottom>=70 && r.tb.pTop<=30), strongTop=(r.tb.pTop>=70 && r.tb.pBottom<=30);
+  var S=[
+    {n:'科技/AI/创业板',cat:'进攻成长',sig:(strongBottom||(low&&up))?'buy':(high?'sell':'hold'),why:low?'温度低位+底部概率高，左侧布局区':(high?'趋势过热，减仓锁定':'区间震荡，按仓位持有')},
+    {n:'港股成长',cat:'进攻成长',sig:low?'buy':(high?'sell':'hold'),why:low?'估值历史低位，关注左侧':'高位谨慎'},
+    {n:'小盘/中证1000',cat:'进攻成长',sig:(low&&up)?'buy':(strongTop?'sell':'hold'),why:up?'趋势向上可跟':'趋势未明，观望'},
+    {n:'券商/保险',cat:'周期金融',sig:(up&&liqWide)?'buy':(strongTop?'sell':'hold'),why:liqWide?'流动性宽+趋势向上，弹性方向':'等待确认'},
+    {n:'有色/煤炭',cat:'周期资源',sig:liqWide?'buy':(high?'sell':'hold'),why:liqWide?'流动性宽松利好资源':'高位回避'},
+    {n:'地产链',cat:'周期困境',sig:strongBottom?'buy':(high?'sell':'hold'),why:strongBottom?'极端低估，仅左侧小仓':'仍处下行，回避'},
+    {n:'红利/高股息',cat:'防御价值',sig:(crisisHi||high)?'buy':'hold',why:crisisHi?'危机期避险首选':'稳健底仓'},
+    {n:'消费/医药',cat:'防御价值',sig:'hold',why:'底仓持有，低估时左侧小幅'},
+    {n:'公用事业/电力',cat:'防御价值',sig:'hold',why:'稳健底仓，波动小'},
+    {n:'黄金',cat:'避险资产',sig:(crisisHi||r.ov>=6)?'buy':'hold',why:crisisHi?'避险需求升':'跟随实际利率'},
+    {n:'利率债/货基',cat:'现金管理',sig:high?'buy':'hold',why:high?'高位增配现金防守':'保持流动性'},
+    {n:'美元/外币资产',cat:'外币',sig:(r.ov>=6)?'sell':'hold',why:r.ov>=6?'海外风险高，减配':'中性'}
+  ];
+  var cats={}; S.forEach(function(x){(cats[x.cat]=cats[x.cat]||[]).push(x);});
+  var html='';
+  Object.keys(cats).forEach(function(c){
+    html+='<div class="cat-title">'+c+'</div><div class="sectorgrid">';
+    cats[c].forEach(function(x){
+      var cls=x.sig==='buy'?'sig-buy':(x.sig==='sell'?'sig-sell':'sig-hold');
+      var lab=x.sig==='buy'?'买 ▲':(x.sig==='sell'?'卖 ▼':'持有 ●');
+      html+='<div class="sector"><div class="sn">'+x.n+'</div><div class="scat">'+x.cat+'</div><div class="stag"><span class="fh-tag '+cls+'" style="font-size:13px;padding:3px 10px;margin-top:6px">'+lab+'</span></div><div class="swhy">'+x.why+'</div></div>';
+    });
+    html+='</div>';
+  });
+  box.innerHTML=html;
+  var sm=document.getElementById('secSummary');
+  if(sm){ var nb=S.filter(function(x){return x.sig==='buy';}).length, ns=S.filter(function(x){return x.sig==='sell';}).length;
+    sm.innerHTML='当前共 <b style="color:var(--green)">'+nb+'</b> 个板块偏买、<b style="color:var(--red)">'+ns+'</b> 个板块偏卖，其余持有。信号由市场温度与顶底概率推导，仅供参考。'; }
+}
 function renderEight(){
   const ef=eightFinal(), au=autoEight();
   document.getElementById('resEight').innerHTML=EIGHT.map(e=>{
@@ -1755,7 +1800,7 @@ function recalc(){
     EIGHT.forEach(e=>{ if(d.eight[e.k]!=null) eightState[e.k]=d.eight[e.k]; });
     r.realDims=4; r.K=4;   // 服务端已用真实宏观计算，四维视为真实覆盖
   }
-  renderDims(r); renderQuad(r); renderFG(); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r);
+  renderDims(r); renderQuad(r); renderFG(); renderSrcTable(); renderEight(); renderQual(); renderMoney(r); renderOvCr(r); renderFanHero(r); renderSectors(r);
   const tag=tempTagOf(r.tempAdj);
   // ③ 半盲守卫：实时覆盖<50% 时温度值加"≈"前缀并明示"基线估算"，不再伪装成精确两位小数
   const semiBlind=((r.realDims!=null)&&(r.K!=null)&&(r.realDims/r.K)<0.5);
@@ -1768,21 +1813,9 @@ function recalc(){
   document.getElementById('posValB').innerHTML=(r.tempPos!=null?r.tempPos.toFixed(1):'–')+'<span style="font-size:16px">成</span>';
   renderTianShi(r);
   const csTxt=r.cs.map(c=>c.n+' '+c.v.toFixed(1)+'成').join(' ｜ ');
-  const detOpen='<details style="text-align:left;margin-top:3px"><summary style="cursor:pointer;font-size:11px;color:var(--sub);user-select:none">▸ 打分明细（点开查看）</summary><div style="margin-top:4px">';
-  const detClose='</div></details>';
-  document.getElementById('posReason').innerHTML=detOpen+
-    '主温度 <b>'+r.tempAdj.toFixed(2)+'</b> → tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b><br>'+
-    '×顶底联动(底'+r.sb+'/顶'+r.st+'→×'+r.probMult.toFixed(2)+') = <b>'+r.cap.toFixed(1)+'成</b>'+(r.gateTxt?' ｜ '+r.gateTxt:'')+'<br>'+
-    '×风险叠加 ×'+r.overlayScale.toFixed(2)+'（海外'+r.ov.toFixed(1)+'+危机'+r.cr.toFixed(1)+'）'+(r.konserv<1?' ×保守0.85':'')+' → <b>最终 '+r.final.toFixed(1)+'成</b><br>'+
-    (r.eightGate? '<span style="color:var(--red);font-weight:700">🔒 '+r.eightGate+'</span><br>':'')+
-    '<span style="font-size:11.5px">'+csTxt+'</span>'+detClose;
+  document.getElementById('posReason').innerHTML='综合市场温度与顶底信号，当前建议 <b>'+r.final.toFixed(1)+'成</b> 仓位'+(r.gateTxt?'（'+r.gateTxt+'）':'')+(r.eightGate?'；🔒 '+r.eightGate:'')+'。'+(csTxt?'<br><span style="font-size:11.5px">'+csTxt+'</span>':'');
   // B 版：温度穿线（与八大信号无关）
-  document.getElementById('posReasonB').innerHTML=detOpen+
-    '主温度 <b>'+r.tempAdj.toFixed(2)+'</b>（上线'+r.LINE_U+'／下线'+r.LINE_L+'）<br>'+
-    '→ tanh温度仓位 <b>'+r.bp.toFixed(1)+'成</b> × 顶底联动×'+r.probMult.toFixed(2)+' × 风险叠加×'+r.overlayScale.toFixed(2)+
-    (r.konserv<1?' ×保守0.85':'')+' = <b>'+r.tempPos.toFixed(1)+'成</b><br>'+
-    '状态：<b style="color:'+(r.tempBand.indexOf('减仓')>=0?'var(--red)':(r.tempBand.indexOf('加仓')>=0?'var(--green)':'var(--yellow)'))+'">'+r.tempBand+'</b>'+
-    (r.eightGate?'<br><span style="font-size:11px;color:var(--sub)">（A版因信号未集齐已封顶，B版不受影响）</span>':'')+detClose;
+  document.getElementById('posReasonB').innerHTML='纯温度穿线口径（不受八大信号影响）：当前 <b>'+r.tempPos.toFixed(1)+'成</b>，状态「'+r.tempBand+'」'+(r.eightGate?'（A版因信号未集齐已封顶，B版不受影响）':'');
   // 顶底概率 + 1-10 信号强度分
   document.getElementById('pBottom').textContent=r.tb.pBottom+'%';
   document.getElementById('pTop').textContent=r.tb.pTop+'%';
