@@ -1,0 +1,53 @@
+name: 每日计算真实板块拥挤度
+
+# 真实 ETF 拥挤度自动管线（方案2）：
+#   crowding_system.py 用 akshare 抓实时行情 → 算各 ETF 拥挤度 C → 输出 crowding_output.json（单 ETF 列表）
+#   sector_rollup.py   把单 ETF 聚合成 22 板块 → 写 docs/sectors_crowd.json（source=real）
+#   网页 fetch 该文件即显示「真实C=」，无需你本机联网。
+# 跑在 GitHub 服务器（有正常外网，akshare 可通），与本仓库每日宏观任务(daily.yml)平行、互不影响。
+# 时间：UTC 6:00 = 北京 14:00（工作日）；周末轻量。亦可网页上点 Run workflow 手动跑。
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"      # 工作日 14:00 北京
+    - cron: "30 6 * * 0,6"     # 周末 14:30 北京（轻量）
+  workflow_dispatch:          # 允许手动触发（接好代码后点一次即可验证）
+
+permissions:
+  contents: write             # 需要写回仓库（提交 docs/sectors_crowd.json）
+
+jobs:
+  crowd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      - name: 装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 装依赖
+        run: pip install --quiet akshare requests
+
+      - name: 跑 crowding_system（产 crowding_output.json）
+        run: python3 crowding_system.py
+
+      - name: 聚合成 22 板块（产 docs/sectors_crowd.json · source=real）
+        run: python3 sector_rollup.py
+
+      - name: 校验真实数据有效性（防空/防误推，不过不推送）
+        run: |
+          python3 -c "import json; d=json.load(open('docs/sectors_crowd.json')); assert d.get('source')=='real', 'source 非 real'; assert len(d.get('sectors',{}))>=20, '板块数过少'; print('真实拥挤度板块数', len(d['sectors']))"
+
+      - name: 存回仓库并触发 Pages
+        run: |
+          git config user.name  "niuxiong-bot"
+          git config user.email "niuxiong-bot@users.noreply.github.com"
+          git add -f docs/sectors_crowd.json crowding_output.json
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "数据无变化，不提交"
+          else
+            git commit -m "crowd: $(date -u +%F) 真实板块拥挤度"
+            git push
+          fi
