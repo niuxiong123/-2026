@@ -75,6 +75,28 @@ def _sina_symbol(code):
     return ("SH" if code[:1] == "5" else "SZ") + code
 
 
+# 中英文列名统一（新浪部分接口返回英文列 date/close/...）
+_COL_RENAME = {
+    "date": "日期", "open": "开盘", "close": "收盘", "high": "最高", "low": "最低",
+    "volume": "成交量", "amount": "成交额", "turnover": "换手率",
+    "amplitude": "振幅", "pct_change": "涨跌幅", "change": "涨跌额", "timestamp": "日期",
+}
+
+
+def _norm_cols(df):
+    df = df.copy()
+    df = df.rename(columns={k: v for k, v in _COL_RENAME.items() if k in df.columns})
+    if "日期" in df.columns:
+        df["日期"] = pd.to_datetime(df["日期"])
+    return df
+
+
+def _sina_diag(code, df):
+    if not getattr(_sina_diag, "done", False):
+        _sina_diag.done = True
+        print("   ℹ sina ETF %s 列=%s 行=%d" % (code, list(df.columns)[:14], len(df)))
+
+
 # ---------------------------------------------------------------------------
 # 历史 K 线：东财主源 + 新浪兜底
 # ---------------------------------------------------------------------------
@@ -82,18 +104,16 @@ def _fetch_em(code):
     df = ak.fund_etf_hist_em(symbol=code, period="daily", adjust="")
     if df is None or len(df) < MIN_HISTORY:
         return None
-    df = df.copy()
-    df["日期"] = pd.to_datetime(df["日期"])
-    return df.sort_values("日期").reset_index(drop=True)
+    return _norm_cols(df).sort_values("日期").reset_index(drop=True)
 
 
 def _fetch_sina(code):
     df = ak.fund_etf_hist_sina(symbol=_sina_symbol(code))
     if df is None or len(df) < MIN_HISTORY:
         return None
-    df = df.copy()
-    df["日期"] = pd.to_datetime(df["日期"])
-    return df.sort_values("日期").reset_index(drop=True)
+    df = _norm_cols(df).sort_values("日期").reset_index(drop=True)
+    _sina_diag(code, df)
+    return df
 
 
 def fetch_hist(code):
@@ -108,18 +128,18 @@ def _bench_em():
     df = ak.index_zh_a_hist(symbol="000300", period="daily", adjust="")
     if df is None or len(df) < MIN_HISTORY:
         return None
-    df = df.copy()
-    df["日期"] = pd.to_datetime(df["日期"])
-    return df.sort_values("日期").set_index("日期")["收盘"].astype(float)
+    return _norm_cols(df).sort_values("日期").set_index("日期")["收盘"].astype(float)
 
 
 def _bench_sina():
     df = ak.stock_zh_index_daily(symbol="sh000300")
     if df is None or len(df) < MIN_HISTORY:
         return None
-    df = df.copy()
-    df["日期"] = pd.to_datetime(df["日期"])
-    return df.sort_values("日期").set_index("日期")["close"].astype(float)
+    df = _norm_cols(df)
+    if "日期" not in df.columns or "收盘" not in df.columns:
+        print("   ⚠ bench:sina 列异常：%s" % list(df.columns)[:14])
+        return None
+    return df.sort_values("日期").set_index("日期")["收盘"].astype(float)
 
 
 def fetch_benchmark():
