@@ -8,7 +8,7 @@ update_data.py —— 牛熊自检台 每日数据自动更新（GitHub Actions 
 ----
 1) quotes.json  —— 【真实源】腾讯行情接口 qt.gtimg.cn
    抓取 A股 5 大指数（沪深300 / 上证 / 深成指 / 创业板 / 科创50）的
-   点位、涨跌幅、成交额，写回 niuxiong-zijiantai/data/quotes.json。
+   点位、涨跌幅、成交额，写回 docs/niuxiong-zijiantai/data/quotes.json。
    字段布局（已对照接口实测，GBK 编码，~ 分隔）：
      [0] 市场类型  [1] 名称  [2] 代码
      [3] 当前点位(price)   [5] 涨跌幅%(pct)
@@ -16,7 +16,7 @@ update_data.py —— 牛熊自检台 每日数据自动更新（GitHub Actions 
    （经验证：49617913 / 10000 = 4961.7913，与现有 quotes.json 完全吻合）
 
 2) macro.json / backtest.json —— 【占位 / 待接入真实源】
-   当前仅生成「基线 / 占位」版本，结构同 niuxiong-zijiantai/data/*，但数值为 null 并标注
+   当前仅生成「基线 / 占位」版本，结构同 docs/niuxiong-zijiantai/data/*，但数值为 null 并标注
    【占位·真实数据源待接入】。真实数据源（统计局 / 央行 / FRED / CBOE / 港交所
    等）后续接入，详见 MACRO_TODO / BACKTEST_TODO。
    ★ 生产环境默认【不覆盖】这两个文件；加 --seed 才生成占位版（仅用于初始化仓库）。
@@ -41,7 +41,7 @@ from pathlib import Path
 
 # ── 路径（脚本位于 <repo>/scripts/，数据位于 <repo>/niuxiong-zijiantai/data/） ──
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = REPO_ROOT / "niuxiong-zijiantai" / "data"
+DATA_DIR = REPO_ROOT / "docs" / "niuxiong-zijiantai" / "data"
 QUOTES_PATH = DATA_DIR / "quotes.json"
 MACRO_PATH = DATA_DIR / "macro.json"
 BACKTEST_PATH = DATA_DIR / "backtest.json"
