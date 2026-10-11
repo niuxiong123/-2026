@@ -120,20 +120,20 @@
     "p": 45.8
   },
   {
-    "code": "510230",
-    "name": "金融ETF",
-    "C": 60.5,
-    "signal": "sell",
-    "regime": "high",
-    "p": 89.8
-  },
-  {
     "code": "512070",
     "name": "保险ETF",
     "C": 20.6,
     "signal": "watch",
     "regime": "neutral",
     "p": 20.3
+  },
+  {
+    "code": "510230",
+    "name": "金融ETF",
+    "C": 60.5,
+    "signal": "sell",
+    "regime": "high",
+    "p": 89.8
   },
   {
     "code": "512900",
@@ -184,6 +184,14 @@
     "p": 100.0
   },
   {
+    "code": "510880",
+    "name": "红利ETF",
+    "C": 59.9,
+    "signal": "sell",
+    "regime": "high",
+    "p": 88.1
+  },
+  {
     "code": "561580",
     "name": "央企红利ETF",
     "C": 53.5,
@@ -198,14 +206,6 @@
     "signal": "watch",
     "regime": "high",
     "p": 72.9
-  },
-  {
-    "code": "510880",
-    "name": "红利ETF",
-    "C": 59.9,
-    "signal": "sell",
-    "regime": "high",
-    "p": 88.1
   },
   {
     "code": "515180",
@@ -320,20 +320,20 @@
     "p": 98.3
   },
   {
-    "code": "511270",
-    "name": "城投债ETF",
-    "C": 37.0,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 64.4
-  },
-  {
     "code": "512660",
     "name": "军工ETF",
     "C": 20.3,
     "signal": "buy",
     "regime": "neutral",
     "p": 16.9
+  },
+  {
+    "code": "511270",
+    "name": "城投债ETF",
+    "C": 37.0,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 64.4
   },
   {
     "code": "512810",
