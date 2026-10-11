@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>牛熊自检台历史回测 | 模型有没有用</title>
+  <meta name="description" content="用 2015 年至今的月度温度对照其后 21 天、63 天的收益，看牛熊温度到底含不含信息量。口径、样本与局限都写清楚，不藏着。" />
+  <meta name="keywords" content="牛熊温度回测,温度模型有没有用,仓位建议历史表现,牛熊温度回测图,牛熊每日自查" />
+  <link rel="canonical" href="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/history.html" />
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="牛熊自检台" />
+  <meta property="og:title" content="牛熊自检台历史回测｜模型有没有用" />
+  <meta property="og:description" content="温度模型，历史上到底有没有用。口径、样本与局限都写清楚。" />
+  <meta property="og:url" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/history.html" />
+  <meta property="og:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="牛熊自检台历史回测｜模型有没有用" />
+  <meta name="twitter:description" content="温度模型，历史上到底有没有用。口径、样本与局限都写清楚。" />
+  <meta name="twitter:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- 结构化数据：全站 WebSite + Organization（founder 为【待替换】占位） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "inLanguage": "zh-CN"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "logo": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg",
+    "description": "个人投资研究公开分享面板，每日更新 A股/港股/美股牛熊温度与今日建议仓位。",
+    "founder": { "@type": "Person", "name": "【待替换：站长实名或手柄 niuxiong123（牛熊每日自查主理人）】" },
+    "sameAs": ["【待替换：公开账号主页 URL】"]
+  }
+  </script>
+  <!-- Article（datePublished/dateModified 固定首发日） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "牛熊自检台历史回测：牛熊温度模型到底有没有用",
+    "author": { "@type": "Organization", "name": "牛熊自检台" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "牛熊自检台",
+      "logo": { "@type": "ImageObject", "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg" }
+    },
+    "datePublished": "2026-10-11",
+    "dateModified": "2026-10-11",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/history.html" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <div class="app">
+    <nav class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <img class="brand__logo" src="assets/img/favicon.svg" alt="" width="28" height="28" />
+        <div>
+          <div class="brand__name" data-site-name>牛熊自检台</div>
+          <div class="brand__sub">每日牛熊温度与仓位建议</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="nav__group">面板</div>
+        <a class="nav__item" href="./">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h6v6H1V1Zm8 0h6v6H9V1ZM1 9h6v6H1V9Zm8 0h6v6H9V9Z"/></svg>
+          仪表盘
+        </a>
+        <a class="nav__item nav__item--active" href="./history.html" aria-current="page">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 13h2v-3H0v3Zm4 0h2V6H4v7Zm4 0h2V3H8v10Zm4 0h2V9h-2v4Z"/></svg>
+          历史回测
+        </a>
+        <a class="nav__item" href="./method.html">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h4v4H1V1Zm5 0h4v4H6V1Zm5 0h4v4h-4V1ZM1 6h4v4H1V6Zm5 0h4v4H6V6Zm5 0h4v4h-4V6ZM1 11h4v4H1v-4Zm5 0h4v4H6v-4Zm5 0h4v4h-4v-4Z"/></svg>
+          方法论
+        </a>
+      </div>
+    </nav>
+
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="icon-btn topbar__menu-btn" id="menu-btn" aria-label="打开导航菜单" aria-controls="nav-drawer" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3h14v2H1V3Zm0 4h14v2H1V7Zm0 4h14v2H1v-2Z"/></svg>
+          </button>
+          <h1 class="topbar__title">温度模型，历史上到底有没有用</h1>
+        </div>
+        <div class="topbar__right">
+          <div class="src-lights" aria-label="数据源状态">
+            <span class="src-light" id="light-backtest" data-state="loading"><span class="dot"></span>回测</span>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="content">
+        <!-- ① 散点图 -->
+        <section class="card chart-card" aria-labelledby="scatter-h">
+          <div class="section-head"><h2 id="scatter-h">温度 – 未来收益散点</h2></div>
+          <p class="section-note">每个点是一个月的温度（横轴）vs 之后收益（纵轴）。可 hover 读值。蓝=fwd21（21天后），橙=fwd63（63天后）。</p>
+          <canvas id="scatter" height="360" aria-label="温度与未来收益的散点图，横轴为温度0-10，纵轴为未来收益率百分比"></canvas>
+          <div id="scatter-empty" class="section-note" style="display:none">历史数据暂不可用。</div>
+        </section>
+
+        <!-- ② 分档统计表 -->
+        <section class="card" aria-labelledby="bucket-h">
+          <div class="section-head"><h2 id="bucket-h">分档统计</h2></div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>温度档</th><th class="num">平均 fwd21</th><th class="num">平均 fwd63</th><th class="num">样本数</th></tr></thead>
+              <tbody id="bucket-tbody"></tbody>
+            </table>
+          </div>
+          <p class="section-note">温度越低档、平均未来收益越高，说明模型含有信息量。</p>
+        </section>
+
+        <!-- ③ 全序列温度曲线 -->
+        <section class="card chart-card" aria-labelledby="line-h">
+          <div class="section-head"><h2 id="line-h">全序列温度曲线</h2></div>
+          <p class="section-note">2015 至今月度温度，可拖动缩放（滚轮 / 框选）。</p>
+          <canvas id="line" height="320" aria-label="2015年至今的月度温度曲线，横轴为时间，纵轴为温度0-10"></canvas>
+        </section>
+
+        <!-- ④ 说明段 -->
+        <section class="card" aria-labelledby="note-h">
+          <div class="section-head"><h2 id="note-h">说明</h2></div>
+          <div class="prose">
+            <p>回测用 2015 年至今的月度温度，对照其后 21 天、63 天的指数收益。注意：fwd21/fwd63 是事后统计口径，仅用于验证温度是否含有信息量；实时仓位只用当日可得数据计算，不存在未来函数。样本可能因指数成分调整存在 Survivorship 偏差，结论仅供参考。</p>
+          </div>
+          <div class="footer__cta">
+            <a class="btn btn--primary" href="./">回到面板</a>
+            <a class="btn btn--secondary" href="./method.html">看方法论</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <nav class="drawer" id="nav-drawer" aria-label="移动导航">
+    <div class="drawer__head">
+      <div class="brand__name" data-site-name>牛熊自检台</div>
+      <button class="icon-btn" id="drawer-close" aria-label="关闭导航菜单">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+    </div>
+    <div class="nav">
+      <div class="nav__group">面板</div>
+      <a class="nav__item" href="./">仪表盘</a>
+      <a class="nav__item nav__item--active" href="./history.html" aria-current="page">历史回测</a>
+      <a class="nav__item" href="./method.html">方法论</a>
+    </div>
+  </nav>
+
+  <!-- Chart.js vendored 本地（site-spec §7，不走 CDN 运行时） -->
+  <script src="assets/js/lib/chart.umd.min.js"></script>
+  <script type="module">
+    import { loadJSON } from './assets/js/fetcher.js';
+    import * as ui from './assets/js/ui.js';
+
+    // 移动抽屉（与首页一致）
+    (function () {
+      const menuBtn = document.getElementById('menu-btn');
+      const drawer = document.getElementById('nav-drawer');
+      const overlay = document.getElementById('overlay');
+      const closeBtn = document.getElementById('drawer-close');
+      const close = () => { drawer.classList.remove('open'); overlay.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); };
+      const open = () => { drawer.classList.add('open'); overlay.classList.add('open'); menuBtn.setAttribute('aria-expanded', 'true'); };
+      menuBtn && menuBtn.addEventListener('click', () => drawer.classList.contains('open') ? close() : open());
+      overlay && overlay.addEventListener('click', close);
+      closeBtn && closeBtn.addEventListener('click', close);
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
+    })();
+
+    ui.applySiteName();
+
+    const BUCKETS = [
+      { name: '0 – 3', min: 0, max: 3 },
+      { name: '3 – 5', min: 3, max: 5 },
+      { name: '5 – 7', min: 5, max: 7 },
+      { name: '7 – 10', min: 7, max: 10 },
+    ];
+    const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+    async function init() {
+      const res = await loadJSON('data/backtest.json');
+      const lightBack = document.getElementById('light-backtest');
+      if (!res.ok || !Array.isArray(res.data) || !res.data.length) {
+        if (lightBack) { lightBack.dataset.state = 'down'; lightBack.setAttribute('aria-label', '回测数据源：缺失'); }
+        document.getElementById('scatter').style.display = 'none';
+        document.getElementById('scatter-empty').style.display = 'block';
+        return;
+      }
+      if (lightBack) { lightBack.dataset.state = 'ok'; lightBack.setAttribute('aria-label', '回测数据源：实时，样本 ' + res.data.length + ' 条'); }
+      const rows = res.data;
+
+      // 分档统计表
+      const tb = document.getElementById('bucket-tbody');
+      tb.innerHTML = BUCKETS.map((b) => {
+        const g = rows.filter((r) => r.tempAdj >= b.min && r.tempAdj < (b.max === 10 ? Infinity : b.max));
+        return `<tr><td>${b.name}</td><td class="num">${avg(g.map((r) => r.fwd21)).toFixed(2)}%</td><td class="num">${avg(g.map((r) => r.fwd63)).toFixed(2)}%</td><td class="num">${g.length}</td></tr>`;
+      }).join('');
+
+      if (typeof Chart === 'undefined') {
+        document.getElementById('scatter-empty').textContent = '图表库加载失败（Chart.js 未就绪）。';
+        document.getElementById('scatter-empty').style.display = 'block';
+        return;
+      }
+
+      // 散点图（双系列）
+      new Chart(document.getElementById('scatter'), {
+        type: 'scatter',
+        data: {
+          datasets: [
+            { label: 'fwd21（21天后）', data: rows.map((r) => ({ x: r.tempAdj, y: r.fwd21, date: r.date })),
+              backgroundColor: '#0969da', pointRadius: 3 },
+            { label: 'fwd63（63天后）', data: rows.map((r) => ({ x: r.tempAdj, y: r.fwd63, date: r.date })),
+              backgroundColor: '#db6d28', pointRadius: 3 },
+          ],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: '温度' }, min: 0, max: 10 },
+            y: { title: { display: true, text: '未来收益 %' } },
+          },
+          plugins: {
+            tooltip: { callbacks: { label: (c) => `${c.raw.date} ${c.dataset.label}: 温度 ${c.raw.x}, 收益 ${c.raw.y}%` } },
+            zoom: false,
+          },
+        },
+      });
+
+      // 全序列温度曲线
+      new Chart(document.getElementById('line'), {
+        type: 'line',
+        data: {
+          labels: rows.map((r) => r.date),
+          datasets: [{
+            label: '温度', data: rows.map((r) => r.tempAdj),
+            borderColor: '#cf222e', backgroundColor: 'rgba(207,34,46,0.08)',
+            fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.2,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 10, title: { display: true, text: '温度' } },
+                    x: { ticks: { maxTicksLimit: 12 } } },
+          plugins: { tooltip: { callbacks: { label: (c) => `${c.label}: 温度 ${c.raw}` } } },
+        },
+      });
+    }
+    init();
+  </script>
+</body>
+</html>

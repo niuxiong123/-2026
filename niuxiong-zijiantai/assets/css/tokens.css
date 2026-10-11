@@ -1,0 +1,102 @@
+/* tokens.css —— 设计 token，全站唯一样式来源
+ * 规范依据：design-spec.md §2 / §3 / §4 ；site-spec.md §7
+ * 站点名常量（ui-designer 预留，前端不得硬编码，统一在此处定义）
+ */
+:root {
+  /* —— 站点名（content-plan 定名 A「牛熊自检台」）—— */
+  --site-name: "牛熊自检台";
+
+  /* —— 浅色壳 token（site-spec §7 冻结值） —— */
+  --color-canvas: #f6f8fa;
+  --color-card: #ffffff;
+  --color-border: #d0d7de;
+  --color-text: #1f2328;
+  --color-text-muted: #57606a;   /* 6.4:1 ✅ */
+  --color-text-subtle: #6e7781;  /* 4.6:1 ✅ */
+  --color-accent: #0969da;       /* 5.2:1 ✅ */
+  --color-success: #1a7f37;      /* A股跌(绿) 5.1:1 ✅ */
+  --color-danger: #cf222e;       /* A股涨(红) 5.4:1 ✅ */
+  --color-warning: #9a6700;      /* 降级文字 4.5:1 ✅ */
+  --color-warning-border: #d4a72c;
+
+  /* —— 中性色阶（Primer gray，取用） —— */
+  --gray-0: #f6f8fa;
+  --gray-1: #eaeef2;
+  --gray-2: #d0d7de;
+  --gray-3: #afb8c1;
+  --gray-4: #8c959f;
+  --gray-5: #6e7781;
+  --gray-6: #57606a;
+  --gray-7: #424a53;
+  --gray-8: #32383f;
+  --gray-9: #1f2328;
+
+  /* —— 语义色「底色 + 文字 + 边框」套装（徽标/提示/状态） —— */
+  --sem-success-bg: #dafbe1;   --sem-success-fg: #1a7f37;   --sem-success-bd: #aceebb;
+  --sem-warning-bg: #fff8c5;   --sem-warning-fg: #9a6700;   --sem-warning-bd: rgba(212, 167, 44, 0.4);
+  --sem-danger-bg: #ffebe9;    --sem-danger-fg: #cf222e;    --sem-danger-bd: #ffcecb;
+  --sem-info-bg: #ddf4ff;      --sem-info-fg: #0969da;      --sem-info-bd: #b6e3ff;
+  --sem-neutral-bg: #eaeef2;   --sem-neutral-fg: #57606a;   --sem-neutral-bd: #d0d7de;
+
+  /* —— 深色数据卡内部配色（仅温度/仓位大卡） —— */
+  --deep-canvas: #0d1117;
+  --deep-surface: #161b22;
+  --deep-border: #30363d;
+  --deep-text: #e6edf3;        /* 16.0:1 ✅ */
+  --deep-text-muted: #8b949e;  /* 6.1:1 ✅ */
+  --deep-text-subtle: #7d8590; /* 5.1:1 ✅ */
+
+  /* —— 温度渐变条（0 冷 → 10 热） —— */
+  --grad-temp: linear-gradient(90deg,
+    #3fb950 0%,
+    #56d364 22%,
+    #d29922 42%,
+    #db6d28 60%,
+    #f85149 82%,
+    #da3633 100%);
+
+  /* —— 四维打分条配色（低分绿冷 → 高分红热） —— */
+  --score-cold: #3fb950;   /* 0–2.5 */
+  --score-mid: #d29922;    /* 2.5–5 */
+  --score-warm: #db6d28;   /* 5–7.5 */
+  --score-hot: #f85149;    /* 7.5–10 */
+
+  /* —— 字族 —— */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* —— 字号阶梯（design-spec §3，正文基准 14px） —— */
+  --fs-hero: 48px;     --lh-hero: 1.1;
+  --fs-hero-md: 28px;  --lh-hero-md: 1.2;
+  --fs-h1: 26px;       --lh-h1: 1.3;
+  --fs-h2: 20px;       --lh-h2: 1.4;
+  --fs-h3: 16px;       --lh-h3: 1.5;
+  --fs-body-lg: 16px;  --lh-body-lg: 1.75;
+  --fs-body: 14px;     --lh-body: 1.6;
+  --fs-aux: 13px;      --lh-aux: 1.6;
+  --fs-mini: 12px;     --lh-mini: 1.5;
+
+  /* —— 间距刻度（4 基数） —— */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+
+  /* —— 圆角 / 阴影 —— */
+  --radius-card: 6px;
+  --radius-pill: 2em;
+  --shadow-card: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow-pop: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-deep: 0 1px 0 rgba(1, 4, 9, 0.4);
+
+  /* —— 布局 —— */
+  --nav-w: 240px;
+  --drawer-w: 280px;
+  --max-w: 1280px;
+  --topbar-h: 56px;
+}
+
+/* 暗色模式预留（P2）：当前不实现，仅保留变量位（design-spec §8.14） */
+@media (prefers-color-scheme: dark) {
+  :root { /* 预留，首发不切换 */ }
+}

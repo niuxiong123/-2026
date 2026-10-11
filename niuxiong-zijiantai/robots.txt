@@ -1,0 +1,6 @@
+# robots.txt —— 牛熊自检台
+# 全站允许抓取；Sitemap 指向占位基址，上线时替换为真实域名。
+User-agent: *
+Allow: /
+
+Sitemap: https://niuxiong123.github.io/-2026/niuxiong-zijiantai/sitemap.xml

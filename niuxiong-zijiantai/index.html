@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>牛熊自检台 | 每日牛熊温度与仓位建议</title>
+  <meta name="description" content="每天自动更新 A股、港股、美股的牛熊温度和今日建议仓位。用看得懂的大白话，帮散户开盘前确认今天该拿几成仓——仅供参考，不是投资建议。" />
+  <meta name="keywords" content="牛熊温度,今日牛熊温度,A股牛熊温度,每日仓位建议,牛熊温度怎么看,牛熊钟,四维打分,牛熊每日自查" />
+  <link rel="canonical" href="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/" />
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="牛熊自检台" />
+  <meta property="og:title" content="牛熊自检台｜每日牛熊温度与仓位建议" />
+  <meta property="og:description" content="开盘前看一眼，今天该拿几成仓。大白话把市场冷热揉成一个能看懂的数。" />
+  <meta property="og:url" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/" />
+  <!-- og:image 占位：1200×630 深色分享图，上线前需生成真实封面（assets/img/og-cover.png）替换 -->
+  <meta property="og:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="牛熊自检台｜每日牛熊温度与仓位建议" />
+  <meta name="twitter:description" content="开盘前看一眼，今天该拿几成仓。大白话把市场冷热揉成一个能看懂的数。" />
+  <meta name="twitter:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- 结构化数据：全站 WebSite + Organization（founder 为【待替换】占位，上线前补实名/手柄） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "inLanguage": "zh-CN",
+    "description": "每日更新 A股、港股、美股的牛熊温度与建议仓位，开盘前一眼看清今天该拿几成仓。"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "logo": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg",
+    "description": "个人投资研究公开分享面板，每日更新 A股/港股/美股牛熊温度与今日建议仓位。",
+    "founder": { "@type": "Person", "name": "【待替换：站长实名或手柄 niuxiong123（牛熊每日自查主理人）】" },
+    "sameAs": ["【待替换：公开账号主页 URL】"]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <!-- 全站降级黄条（默认隐藏） -->
+  <div class="alert-warn" id="alert-warn" style="display:none" role="alert">
+    ⚠ 数据不可用，以下为基线值
+  </div>
+
+  <div class="app">
+    <!-- 左导航（≥1280 固定） -->
+    <nav class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <img class="brand__logo" src="assets/img/favicon.svg" alt="" width="28" height="28" />
+        <div>
+          <div class="brand__name" data-site-name>牛熊自检台</div>
+          <div class="brand__sub">每日牛熊温度与仓位建议</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="nav__group">面板</div>
+        <a class="nav__item nav__item--active" href="./" aria-current="page">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h6v6H1V1Zm8 0h6v6H9V1ZM1 9h6v6H1V9Zm8 0h6v6H9V9Z"/></svg>
+          仪表盘
+        </a>
+        <a class="nav__item" href="./history.html">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 13h2v-3H0v3Zm4 0h2V6H4v7Zm4 0h2V3H8v10Zm4 0h2V9h-2v4Z"/></svg>
+          历史回测
+        </a>
+        <a class="nav__item" href="./method.html">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h4v4H1V1Zm5 0h4v4H6V1Zm5 0h4v4h-4V1ZM1 6h4v4H1V6Zm5 0h4v4H6V6Zm5 0h4v4h-4V6ZM1 11h4v4H1v-4Zm5 0h4v4H6v-4Zm5 0h4v4h-4v-4Z"/></svg>
+          方法论
+        </a>
+      </div>
+    </nav>
+
+    <div class="main">
+      <!-- 顶栏 -->
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="icon-btn topbar__menu-btn" id="menu-btn" aria-label="打开导航菜单" aria-controls="nav-drawer" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3h14v2H1V3Zm0 4h14v2H1V7Zm0 4h14v2H1v-2Z"/></svg>
+          </button>
+          <h1 class="topbar__title">今日牛熊温度与建议仓位</h1>
+        </div>
+        <div class="topbar__right">
+          <div class="src-lights" aria-label="数据源状态">
+            <span class="src-light" id="light-macro" data-state="loading"><span class="dot"></span>宏观</span>
+            <span class="src-light" id="light-quotes" data-state="loading"><span class="dot"></span>行情</span>
+            <span class="src-light" id="light-backtest" data-state="loading"><span class="dot"></span>回测</span>
+          </div>
+          <span class="topbar__updated" id="last-updated" aria-live="polite">最后更新：—</span>
+          <button class="btn btn--primary" id="refresh-btn" aria-busy="false">
+            <span class="btn__label">刷新数据</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main" class="content">
+        <!-- ② 指数行情条 -->
+        <section class="card" aria-labelledby="quotes-h">
+          <div class="section-head"><h2 id="quotes-h">指数行情</h2></div>
+          <div class="quotes" id="quotes-bar"></div>
+          <div><span class="quotes__amt" id="quotes-amt"></span></div>
+          <p class="section-note">行情来自 quotes.json，取不到时显示内置基线值并标灰。</p>
+        </section>
+
+        <!-- ③ + ④ 两张深卡 hero -->
+        <div class="hero-grid">
+          <section class="card--deep" aria-labelledby="temp-h">
+            <h3 class="card__title" id="temp-h">牛熊温度</h3>
+            <div class="hero-num tabular"><span id="temp-value">--</span><span class="unit">/10</span></div>
+            <div class="temp-track" id="temp-meter" role="meter" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+              <div class="temp-fill" id="temp-fill"></div>
+              <div class="temp-slider" id="temp-slider"></div>
+            </div>
+            <div id="temp-label" class="pill pill--neutral" style="margin-top:8px">—</div>
+            <p class="deep-note">温度把几十个宏观和行情指标揉成一个 0–10 的数。越高越热、越危险；越低越冷、越可能是机会。它不预测明天涨跌，只帮你判断现在大概在哪个季节。</p>
+          </section>
+
+          <section class="card--deep" aria-labelledby="pos-h">
+            <h3 class="card__title" id="pos-h">今日建议仓位</h3>
+            <div class="hero-num tabular"><span id="position-value">--</span><span class="unit">成</span></div>
+            <div class="deep-panel" id="position-path">温度仓位 -- 成 → 硬约束取 min --（卡在：--）→ 保守系数 ×--</div>
+            <p class="deep-note">这是给你的参考仓位上限，不是指令。实际拿几成，结合你自己的钱和风险承受力定。</p>
+          </section>
+        </div>
+
+        <!-- ⑤ 牛熊钟 -->
+        <section class="card" aria-labelledby="clock-h">
+          <div class="section-head"><h2 id="clock-h">牛熊钟</h2></div>
+          <div class="clock" id="clock"></div>
+          <p class="section-note">牛熊钟用「趋势」和「估值」两轴给市场定位，和上面的温度是两套互补的视角。</p>
+        </section>
+
+        <!-- ⑥ 四维打分 -->
+        <section class="card" aria-labelledby="scores-h">
+          <div class="section-head"><h2 id="scores-h">四维打分</h2></div>
+          <div class="scores" id="scores"></div>
+          <p class="section-note">趋势看纳指和恐慌指数，估值看 PE/PB 分位，流动性看 M1/社融/利率，情绪看两融/成交/AH 溢价。四维也合成上面的温度。分数越高越热、越危险。</p>
+        </section>
+
+        <!-- ⑦ 数据明细 -->
+        <section class="card" aria-labelledby="detail-h">
+          <div class="section-head"><h2 id="detail-h">数据明细</h2></div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>指标</th><th class="num">数值</th><th class="num">截至</th><th>来源</th></tr></thead>
+              <tbody id="macro-tbody"></tbody>
+            </table>
+          </div>
+          <p class="section-note">每个数都标了截至日期和来源，你能随时核对。标灰的是用了内置基线值、没拿到实时数据的项。</p>
+        </section>
+
+        <!-- ⑧ 页脚免责 -->
+        <footer class="footer">
+          <div class="footer__inner">
+            <p class="footer__disclaimer">本面板为个人投资研究的公开分享，所有内容仅供参考与学习，不构成任何投资建议或要约。市场有风险，投资须独立决策，盈亏自负。过往表现不代表未来，模型在极端行情下亦可能失效。</p>
+            <div class="footer__cta">
+              <a class="btn btn--primary" href="./method.html">看温度怎么算出来的</a>
+              <a class="btn btn--secondary" href="./history.html">看历史回测</a>
+            </div>
+            <p class="footer__meta">牛熊自检台 · 每日牛熊温度与仓位建议 · 仅供参考，不是投资建议</p>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- 移动抽屉导航 -->
+  <div class="overlay" id="overlay"></div>
+  <nav class="drawer" id="nav-drawer" aria-label="移动导航">
+    <div class="drawer__head">
+      <div class="brand__name" data-site-name>牛熊自检台</div>
+      <button class="icon-btn" id="drawer-close" aria-label="关闭导航菜单">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+    </div>
+    <div class="nav">
+      <div class="nav__group">面板</div>
+      <a class="nav__item nav__item--active" href="./" aria-current="page">仪表盘</a>
+      <a class="nav__item" href="./history.html">历史回测</a>
+      <a class="nav__item" href="./method.html">方法论</a>
+    </div>
+  </nav>
+
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+name: 每日更新行情数据
+
+# 牛熊自检台 —— 定时抓取腾讯行情接口，写回 docs/data/quotes.json 并提交
+# 说明：
+#   - cron 使用 UTC。UTC+8 的 08:00 / 12:00 / 18:00 对应 UTC 00:00 / 04:00 / 10:00。
+#   - 仅当 docs/data/*.json 有变更才提交（git diff --cached 检测）。
+#   - 行情抓取失败时脚本优雅跳过（保留现有文件），不会让定时任务变红。
+#   - macro.json / backtest.json 当前为占位，真实源未接入，故默认不更新（如需初始化占位版可 --seed）。
+
+on:
+  schedule:
+    - cron: '0 0 * * *'    # UTC 00:00 = 北京时间 08:00
+    - cron: '0 4 * * *'    # UTC 04:00 = 北京时间 12:00
+    - cron: '0 10 * * *'   # UTC 10:00 = 北京时间 18:00
+  workflow_dispatch: {}    # 允许在 Actions 页面手动触发
+
+permissions:
+  contents: write          # 允许 commit & push data/*.json
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 抓取行情并写回 quotes.json
+        run: python scripts/update_data.py
+
+      - name: 提交变更（仅当 data/*.json 有改动）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add niuxiong-zijiantai/data/*.json
+          if git diff --cached --quiet; then
+            echo "无变更，跳过提交"
+          else
+            git commit -m "chore(data): 自动更新行情数据 $(date +'%Y-%m-%d %H:%M %Z')"
+            git push
+          fi

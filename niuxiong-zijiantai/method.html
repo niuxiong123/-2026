@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>牛熊自检台方法论 | 温度与仓位怎么算出来的</title>
+  <meta name="description" content="牛熊温度、四维打分、三重硬约束是怎么算的？全部公式、权重、降级规则公开可查。一篇能看懂的大白话，帮你判断这份仓位参考值不值得信。" />
+  <meta name="keywords" content="仓位建议怎么算,牛熊温度怎么算出来的,四维打分是什么意思,牛熊钟怎么看,仓位建议靠谱吗,牛熊温度" />
+  <link rel="canonical" href="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" />
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="牛熊自检台" />
+  <meta property="og:title" content="牛熊自检台方法论｜温度与仓位怎么算出来的" />
+  <meta property="og:description" content="全部公式、权重、降级规则公开可查。" />
+  <meta property="og:url" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" />
+  <meta property="og:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="牛熊自检台方法论｜温度与仓位怎么算出来的" />
+  <meta name="twitter:description" content="全部公式、权重、降级规则公开可查。" />
+  <meta name="twitter:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- 结构化数据：全站 WebSite + Organization（founder 为【待替换】占位） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "inLanguage": "zh-CN"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "牛熊自检台",
+    "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
+    "logo": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg",
+    "description": "个人投资研究公开分享面板，每日更新 A股/港股/美股牛熊温度与今日建议仓位。",
+    "founder": { "@type": "Person", "name": "【待替换：站长实名或手柄 niuxiong123（牛熊每日自查主理人）】" },
+    "sameAs": ["【待替换：公开账号主页 URL】"]
+  }
+  </script>
+  <!-- Article（datePublished/dateModified 固定首发日；后续如有内容修订可在构建期更新 dateModified） -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "牛熊自检台方法论：牛熊温度与今日建议仓位怎么算出来的",
+    "author": { "@type": "Organization", "name": "牛熊自检台" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "牛熊自检台",
+      "logo": { "@type": "ImageObject", "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg" }
+    },
+    "datePublished": "2026-10-11",
+    "dateModified": "2026-10-11",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主内容</a>
+
+  <div class="app">
+    <nav class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <img class="brand__logo" src="assets/img/favicon.svg" alt="" width="28" height="28" />
+        <div>
+          <div class="brand__name" data-site-name>牛熊自检台</div>
+          <div class="brand__sub">每日牛熊温度与仓位建议</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="nav__group">面板</div>
+        <a class="nav__item" href="./">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h6v6H1V1Zm8 0h6v6H9V1ZM1 9h6v6H1V9Zm8 0h6v6H9V9Z"/></svg>
+          仪表盘
+        </a>
+        <a class="nav__item" href="./history.html">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M0 13h2v-3H0v3Zm4 0h2V6H4v7Zm4 0h2V3H8v10Zm4 0h2V9h-2v4Z"/></svg>
+          历史回测
+        </a>
+        <a class="nav__item nav__item--active" href="./method.html" aria-current="page">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 1h4v4H1V1Zm5 0h4v4H6V1Zm5 0h4v4h-4V1ZM1 6h4v4H1V6Zm5 0h4v4H6V6Zm5 0h4v4h-4V6ZM1 11h4v4H1v-4Zm5 0h4v4H6v-4Zm5 0h4v4h-4v-4Z"/></svg>
+          方法论
+        </a>
+      </div>
+    </nav>
+
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="icon-btn topbar__menu-btn" id="menu-btn" aria-label="打开导航菜单" aria-controls="nav-drawer" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3h14v2H1V3Zm0 4h14v2H1V7Zm0 4h14v2H1v-2Z"/></svg>
+          </button>
+          <h1 class="topbar__title">温度和仓位，是怎么算出来的</h1>
+        </div>
+      </header>
+
+      <main id="main" class="content">
+        <p class="prose" style="max-width:720px">不藏着。下面把四维打分、温度合成、仓位映射、三重硬约束、降级规则、数据字典全部摊开。所有锚点、权重与 <code>compute.js</code> 里的常量一一对应，可审计。</p>
+
+        <!-- ① 四维打分公式表 -->
+        <section class="card" aria-labelledby="m1">
+          <div class="section-head"><h2 id="m1">① 四维打分公式</h2></div>
+          <p class="section-note">四个维度各由若干指标锚点插值成 0–10 分（区间外 clamp 到端点），再按子权重合成。语义：分数越高越热、越危险。</p>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>维度</th><th>权重</th><th>组成字段</th><th>锚点 [输入→分数]</th><th>子权重</th></tr></thead>
+              <tbody>
+                <tr><td rowspan="3">趋势 trend</td><td rowspan="3">0.30</td><td>nasdaq_pct（纳指20日%）</td><td>[-5→1, 0→3, 5→5, 10→7, 15→9]</td><td>0.4</td></tr>
+                <tr><td>breadth_up（上涨家数占比%）</td><td>[30→2, 50→5, 80→9]</td><td>0.3</td></tr>
+                <tr><td>vix（反向：越低越亢奋）</td><td>[12→8, 20→5, 30→1]</td><td>0.3</td></tr>
+                <tr><td rowspan="4">估值 valuation</td><td rowspan="4">0.30</td><td>hs300_pe_pct（PE 10年分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.4</td></tr>
+                <tr><td>hs300_pb_pct（PB 10年分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.3</td></tr>
+                <tr><td>erp（股债性价比%，越高越便宜→反向）</td><td>[7→1, 5→5, 2→9]</td><td>0.2</td></tr>
+                <tr><td>hsi_pe_pct（恒生分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.1</td></tr>
+                <tr><td rowspan="3">流动性 liquidity</td><td rowspan="3">0.20</td><td>m1_yoy（%）</td><td>[0→1, 5→5, 15→9]</td><td>0.4</td></tr>
+                <tr><td>credit_yoy（社融存量同比%）</td><td>[8→3, 10→5, 13→9]</td><td>0.3</td></tr>
+                <tr><td>lpr1y（%，越低越宽松→反向）</td><td>[4.6→2, 3.85→5, 3.0→8]</td><td>0.3</td></tr>
+                <tr><td rowspan="4">情绪 sentiment</td><td rowspan="4">0.20</td><td>margin_yi（两融余额，亿）</td><td>[15000→3, 20000→6, 25000→8, 30000→10]</td><td>0.3</td></tr>
+                <tr><td>amt_yi（两市成交额，亿）</td><td>[6000→2, 10000→5, 17000→7, 25000→10]</td><td>0.25</td></tr>
+                <tr><td>vix（反向）</td><td>[12→9, 20→5, 30→1]</td><td>0.25</td></tr>
+                <tr><td>ah_premium（AH溢价，越高 A 越贵）</td><td>[130→5, 155→8]</td><td>0.2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ② 温度合成公式 -->
+        <section class="card" aria-labelledby="m2">
+          <div class="section-head"><h2 id="m2">② 温度合成</h2></div>
+          <div class="formula">temp = 0.30 × trend + 0.30 × valuation + 0.20 × liquidity + 0.20 × sentiment&nbsp;&nbsp;（保留 2 位小数）</div>
+          <p class="section-note">标签：≤3 偏冷·结构性机会；3&lt;temp&lt;5 中性；5≤temp&lt;7 偏热；≥7 过热·减仓。</p>
+        </section>
+
+        <!-- ③ 仓位映射表 -->
+        <section class="card" aria-labelledby="m3">
+          <div class="section-head"><h2 id="m3">③ 仓位映射（温度 → 成数）</h2></div>
+          <p class="section-note">线性插值。温度越高，温度仓位越低。</p>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>温度</th><th class="num">0</th><th class="num">2</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">9</th><th class="num">10</th></tr></thead>
+              <tbody><tr><td>仓位（成）</td><td class="num">9.5</td><td class="num">9</td><td class="num">7</td><td class="num">6</td><td class="num">5</td><td class="num">3.5</td><td class="num">2</td><td class="num">1</td><td class="num">0.5</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ④ 三重硬约束 -->
+        <section class="card" aria-labelledby="m4">
+          <div class="section-head"><h2 id="m4">④ 三重硬约束与保守系数</h2></div>
+          <p class="section-note">最终仓位 = round1( min(温度仓位, 信用上限, 共振上限) × 保守系数 )。</p>
+          <h3>① 信用约束 creditCap</h3>
+          <div class="formula">creditCap = mapScore(credit_yoy, [[6→3], [7→4.5], [8→6], [8.5→10]])&nbsp;&nbsp;（社融收缩强压仓位）</div>
+          <h3>② 共振约束 resonanceCap</h3>
+          <div class="formula">trend≥7 且 valuation≥7 → 3 成（双热共振·牛顶减仓）
+trend≤3 且 valuation≤3 → 10 成（双冷共振·黄金坑，不约束）
+valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
+其他 → 10 成（不约束）</div>
+          <h3>③ 保守系数 conservativeFactor</h3>
+          <div class="formula">基线 1.0，每命中一条 −0.05，下限 0.80：
+&nbsp;china_fragile≥8 / vix≥25 / hormuz_risk≥7 / win_proximity≥6 / 核心字段 asOf 超 45 天</div>
+        </section>
+
+        <!-- ⑤ 降级规则 -->
+        <section class="card" aria-labelledby="m5">
+          <div class="section-head"><h2 id="m5">⑤ 降级（标灰）规则</h2></div>
+          <ol class="prose" style="font-size:14px">
+            <li><b>字段级</b>：macro 某字段缺失 / asOf 超 90 天 → 使用内置基线值，明细表该行灰底 + 「基线」徽标，其维度子权重不变（用基线值照常计分），但触发保守系数的陈旧惩罚。</li>
+            <li><b>文件级</b>：quotes.json 失败 → 行情条用 macro 内 vix / amt_yi / oil_brent 等基线值渲染并整块标灰（P1 可启用腾讯 JSONP 兜底补齐 A 股段）。</li>
+            <li><b>全站级</b>：三文件全失败 → 渲染基线快照 + 顶部黄条「数据不可用，以下为基线值」，计算引擎照常跑，永远给得出一个仓位数字。</li>
+          </ol>
+        </section>
+
+        <!-- ⑥ 数据字典 -->
+        <section class="card" aria-labelledby="m6">
+          <div class="section-head"><h2 id="m6">⑥ 数据字典</h2></div>
+          <p class="section-note">macro.json（31 项）· quotes.json · backtest.json。字段名与仓库内 JSON 完全一致。</p>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>字段</th><th>中文</th><th>类型</th><th>单位</th><th>频率</th><th>来源</th></tr></thead>
+              <tbody>
+                <tr><td>pmi</td><td>PMI</td><td>number</td><td>点</td><td>月</td><td>统计局</td></tr>
+                <tr><td>m1_yoy / m2_yoy</td><td>M1 / M2 同比</td><td>number</td><td>%</td><td>月</td><td>央行</td></tr>
+                <tr><td>credit_yoy</td><td>社融存量同比</td><td>number</td><td>%</td><td>月</td><td>央行</td></tr>
+                <tr><td>lpr1y</td><td>LPR(1年)</td><td>number</td><td>%</td><td>月</td><td>LPR</td></tr>
+                <tr><td>cn10y / us10y</td><td>中债 / 美债10年</td><td>number</td><td>%</td><td>日</td><td>中债 / FRED</td></tr>
+                <tr><td>hs300_pe</td><td>沪深300 PE</td><td>number</td><td>倍</td><td>日</td><td>中证</td></tr>
+                <tr><td>hs300_pe_pct / hs300_pb_pct</td><td>PE / PB 10年分位</td><td>number</td><td>%</td><td>日</td><td>中证 / 乐咕</td></tr>
+                <tr><td>hsi_pe_pct</td><td>恒生 PE 分位</td><td>number</td><td>%</td><td>日</td><td>恒生</td></tr>
+                <tr><td>erp</td><td>股债性价比</td><td>number</td><td>%</td><td>日</td><td>计算</td></tr>
+                <tr><td>margin_yi</td><td>两融余额</td><td>number</td><td>亿</td><td>日</td><td>交易所</td></tr>
+                <tr><td>northbound</td><td>北向资金</td><td>number</td><td>亿</td><td>日</td><td>港交所</td></tr>
+                <tr><td>breadth_up</td><td>上涨家数占比</td><td>number</td><td>%</td><td>日</td><td>乐咕乐股</td></tr>
+                <tr><td>ah_premium</td><td>AH 溢价</td><td>number</td><td>点</td><td>日</td><td>AH 溢价</td></tr>
+                <tr><td>amt_yi</td><td>两市成交额</td><td>number</td><td>亿</td><td>日</td><td>两市</td></tr>
+                <tr><td>oil_brent</td><td>布伦特油价</td><td>number</td><td>美元/桶</td><td>日</td><td>布伦特</td></tr>
+                <tr><td>dxy</td><td>美元指数</td><td>number</td><td>点</td><td>日</td><td>美元指数</td></tr>
+                <tr><td>us_unemploy</td><td>美国失业率</td><td>number</td><td>%</td><td>月</td><td>BLS / FRED</td></tr>
+                <tr><td>nasdaq_pct</td><td>纳指20日%</td><td>number</td><td>%</td><td>日</td><td>纳指</td></tr>
+                <tr><td>re_yoy</td><td>70城二手房同比</td><td>number</td><td>%</td><td>月</td><td>统计局</td></tr>
+                <tr><td>vix</td><td>VIX 波动率</td><td>number</td><td>点</td><td>日</td><td>CBOE</td></tr>
+                <tr><td>trade_balance</td><td>贸易帐</td><td>number</td><td>亿美元</td><td>月</td><td>海关</td></tr>
+                <tr><td>ai_bubble / hormuz_risk / paths_lit / win_proximity / china_fragile</td><td>AI泡沫 / 霍尔木兹 / 地缘 / 真实压力 / 地产脆弱</td><td>number</td><td>点</td><td>日</td><td>推导</td></tr>
+                <tr><td>quotes.*（hs300/sh/sz/cyb/kc/hsi/hstech/ndx/vix）</td><td>9 个指数</td><td>{price,pct,amtYi}</td><td>点 / %</td><td>日</td><td>行情接口</td></tr>
+                <tr><td>quotes.amtTotalYi / ok / asOf</td><td>成交额 / 状态 / 日期</td><td>number / bool / date</td><td>亿</td><td>日</td><td>行情接口</td></tr>
+                <tr><td>backtest[].tempAdj / fwd21 / fwd63</td><td>历史月度温度 / 21天 / 63天收益</td><td>number</td><td>0-10 / %</td><td>月</td><td>历史回测</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ⑦ 局限性与免责 -->
+        <section class="card" aria-labelledby="m7">
+          <div class="section-head"><h2 id="m7">⑦ 局限性与免责</h2></div>
+          <div class="prose">
+            <p>温度是「现在大概在哪个季节」的归纳，不预测明天涨跌；历史回测用的是事后统计口径，实时仓位只用当日可得数据，不存在未来函数。模型在极端行情、政策突变、数据停更时可能失效。</p>
+            <p>本面板为个人投资研究的公开分享，所有内容仅供参考与学习，不构成任何投资建议或要约。市场有风险，投资须独立决策，盈亏自负。过往表现不代表未来，模型在极端行情下亦可能失效。</p>
+          </div>
+          <div class="footer__cta">
+            <a class="btn btn--primary" href="./">回到面板</a>
+            <a class="btn btn--secondary" href="./history.html">看历史回测</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <nav class="drawer" id="nav-drawer" aria-label="移动导航">
+    <div class="drawer__head">
+      <div class="brand__name" data-site-name>牛熊自检台</div>
+      <button class="icon-btn" id="drawer-close" aria-label="关闭导航菜单">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+    </div>
+    <div class="nav">
+      <div class="nav__group">面板</div>
+      <a class="nav__item" href="./">仪表盘</a>
+      <a class="nav__item" href="./history.html">历史回测</a>
+      <a class="nav__item nav__item--active" href="./method.html" aria-current="page">方法论</a>
+    </div>
+  </nav>
+
+  <script type="module">
+    import * as ui from './assets/js/ui.js';
+    ui.applySiteName();
+    const menuBtn = document.getElementById('menu-btn');
+    const drawer = document.getElementById('nav-drawer');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('drawer-close');
+    const close = () => { drawer.classList.remove('open'); overlay.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); };
+    const open = () => { drawer.classList.add('open'); overlay.classList.add('open'); menuBtn.setAttribute('aria-expanded', 'true'); };
+    menuBtn && menuBtn.addEventListener('click', () => drawer.classList.contains('open') ? close() : open());
+    overlay && overlay.addEventListener('click', close);
+    closeBtn && closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
+  </script>
+</body>
+</html>
