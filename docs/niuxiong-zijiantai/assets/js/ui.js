@@ -160,6 +160,108 @@ export function renderPosition(result) {
   }
 }
 
+// ── 实时温度走势折线图（首页新增） ──
+export function renderTempTrendChart(backtest, currentTemp, currentDateStr) {
+  const canvas = $('tempTrendChart');
+  if (!canvas || typeof window.Chart === 'undefined') return;
+  if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
+  const ctx = canvas.getContext('2d');
+
+  const points = [];
+  if (Array.isArray(backtest)) {
+    backtest.forEach((r) => {
+      if (r && typeof r.tempAdj === 'number') {
+        points.push({ x: r.date, y: r.tempAdj });
+      }
+    });
+  }
+  const today = currentDateStr || new Date().toISOString().slice(0, 10);
+  if (typeof currentTemp === 'number') {
+    points.push({ x: today, y: currentTemp });
+  }
+
+  const cold = '#3fb950';
+  const mid = '#d29922';
+  const warm = '#db6d28';
+  const hot = '#da3633';
+  const pointColor = (context) => {
+    const v = context.raw && typeof context.raw.y === 'number' ? context.raw.y : context.raw;
+    if (v == null) return '#8b949e';
+    if (v < 2.5) return cold;
+    if (v < 5) return mid;
+    if (v < 7.5) return warm;
+    return hot;
+  };
+
+  const chart = new window.Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [{
+        label: '温度',
+        data: points,
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        pointBackgroundColor: pointColor,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 1,
+        borderColor: hot,
+        backgroundColor: (context) => {
+          const c = context.chart;
+          const { ctx: c2, chartArea } = c;
+          if (!chartArea) return null;
+          const g = c2.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          g.addColorStop(0, 'rgba(63,185,80,0.12)');
+          g.addColorStop(0.35, 'rgba(210,153,34,0.15)');
+          g.addColorStop(0.65, 'rgba(219,109,40,0.18)');
+          g.addColorStop(1, 'rgba(218,54,51,0.22)');
+          return g;
+        },
+        segment: {
+          borderColor: (seg) => {
+            const v = (seg.p0.parsed.y + seg.p1.parsed.y) / 2;
+            if (v < 2.5) return cold;
+            if (v < 5) return mid;
+            if (v < 7.5) return warm;
+            return hot;
+          }
+        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].raw.x,
+            label: (item) => `温度 ${item.parsed.y.toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'category',
+          ticks: { maxTicksLimit: 12, color: '#656d76' },
+          grid: { display: false }
+        },
+        y: {
+          min: 0,
+          max: 10,
+          title: { display: true, text: '温度 (0-10)', color: '#656d76' },
+          ticks: { stepSize: 1, color: '#656d76' },
+          grid: { color: 'rgba(208,215,222,0.5)' }
+        }
+      }
+    }
+  });
+  canvas._chart = chart;
+}
+
 // ── 牛熊钟（§6.7 / content-plan ⑤） ──
 export function renderClock(result) {
   const wrap = $('clock');
@@ -238,6 +340,7 @@ export function renderDashboard(result, ctx) {
   renderQuotes(ctx.quotes, ctx.macroData);
   renderTemp(result);
   renderPosition(result);
+  renderTempTrendChart(ctx.backtest, result.temp, ctx.quotesAsOf || ctx.macroAsOf);
   renderClock(result);
   renderScores(result);
   renderDetail(ctx.macroData, result.degraded);

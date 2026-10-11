@@ -26,6 +26,8 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
   <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- Chart.js 用于首页实时温度折线图（vendored 本地） -->
+  <script src="assets/js/lib/chart.umd.min.js" defer></script>
   <!-- 结构化数据：全站 WebSite + Organization（founder 为【待替换】占位，上线前补实名/手柄） -->
   <script type="application/ld+json">
   {
@@ -136,6 +138,18 @@
             <p class="deep-note">这是给你的参考仓位上限，不是指令。实际拿几成，结合你自己的钱和风险承受力定。</p>
           </section>
         </div>
+
+        <!-- ④+½ 实时温度走势 -->
+        <section class="card" aria-labelledby="trend-h">
+          <div class="section-head">
+            <h2 id="trend-h">实时温度走势</h2>
+            <span class="section-badge">2015 至今 · 月度历史 + 今日实时</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="tempTrendChart" aria-label="牛熊温度历史折线图，纵轴 0–10，横轴时间"></canvas>
+          </div>
+          <p class="section-note">曲线为历史月度温度，最右端的红点是今日实时计算值。越靠上越热、越危险；越靠下越冷、越可能是机会。</p>
+        </section>
 
         <!-- ⑤ 牛熊钟 -->
         <section class="card" aria-labelledby="clock-h">
