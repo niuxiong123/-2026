@@ -40,11 +40,11 @@ check(noHard, '无 final=5.5 硬封顶残留');
 
 console.log('=== 3) 数值回归：港股跌13月情景必须显“真冷+想买” ===');
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-const basePosition = t => 5.5 - 4.2 * Math.tanh(0.38 * (t - 5));
+const basePosition = t => 5.5 - 4.2 * Math.tanh(0.30 * (t - 5)); // v2-A: K 0.38→0.30
 // 情景输入：市场冷(趋势/流动/情绪低)，环境紧(美债高/汇率弱/货币紧/盈利差)
 const tr = 2.5, lq = 2.8, em = 3.0;
 const money = 5.5, earn = 6.0, fx = 6.5, ust = 7.5;
-const wM = { tr: 0.40, lq: 0.30, em: 0.30 };
+const wM = { tr: 0.15, lq: 0.55, em: 0.30 }; // v2-A: 趋势让位流动性
 const wE_H = { money: 0.14, earn: 0.19, fx: 0.25, ust: 0.42 };
 const marketTemp = clamp(tr * wM.tr + lq * wM.lq + em * wM.em, 0, 10);
 const envScore = clamp(money * wE_H.money + earn * wE_H.earn + fx * wE_H.fx + ust * wE_H.ust, 0, 10);
