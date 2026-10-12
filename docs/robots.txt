@@ -1,0 +1,6 @@
+# robots.txt —— 牛熊自检台（https://niuxiong123.github.io/-2026/niuxiong-zijiantai/）
+# GitHub Pages 以 docs/ 为站点根，故本文件放在 docs/ 根。
+User-agent: *
+Allow: /
+
+Sitemap: https://niuxiong123.github.io/-2026/sitemap.xml

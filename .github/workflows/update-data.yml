@@ -1,6 +1,6 @@
 name: 每日更新行情数据
 
-# 牛熊自检台 —— 定时抓取腾讯行情接口，写回 docs/data/quotes.json 并提交
+# 牛熊自检台 —— 定时抓取腾讯行情接口，写回 docs/niuxiong-zijiantai/data/quotes.json 并提交
 # 说明：
 #   - cron 使用 UTC。UTC+8 的 08:00 / 12:00 / 18:00 对应 UTC 00:00 / 04:00 / 10:00。
 #   - 仅当 docs/data/*.json 有变更才提交（git diff --cached 检测）。
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write          # 允许 commit & push data/*.json
+  issues: write            # 失败时开 issue 告警（防静默停更）
 
 concurrency:
   group: update-data
@@ -45,5 +46,18 @@ jobs:
             echo "无变更，跳过提交"
           else
             git commit -m "chore(data): 自动更新行情数据 $(date +'%Y-%m-%d %H:%M %Z')"
+            # 先 rebase 再推：防与其他数据工作流撞车被拒
+            git pull --rebase origin main || { git rebase --abort; exit 1; }
             git push
+          fi
+      - name: 失败时开 issue 告警（防静默停更）
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN=$(gh issue list --state open --search "数据管线失败 in:title" --json number --jq length 2>/dev/null || echo 0)
+          if [ "$OPEN" = "0" ]; then
+            gh issue create --title "🚨 数据管线失败：update-data.yml run #${{ github.run_number }}" \
+              --body "时间：$(date -u '+%F %H:%M') UTC。请到 [Actions](https://github.com/niuxiong123/-2026/actions) 查看日志。行情脚本失败时会优雅跳过（保留旧数据），此告警代表基础设施级故障。" \
+              --repo niuxiong123/-2026 || true
           fi

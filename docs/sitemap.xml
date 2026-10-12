@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   sitemap.xml —— 牛熊自检台
-  注意：本文件 loc 使用占位基址 https://niuxiong123.github.io/-2026/niuxiong-zijiantai/
-  ★ 上线时请整体替换为真实域名（绑定自定义域名后改为真实域名，例如 https://niuxiong123.com/）。
-  GitHub Pages 以 docs/ 为站点根，故本文件放在 docs/ 根即可被 https://<域名>/sitemap.xml 访问。
-  仅收录承接 SEO 的三个页；/404.html 设 noindex，不收录。
+  GitHub Pages 以 docs/ 为站点根，故本文件放在 docs/ 根（https://niuxiong123.github.io/-2026/sitemap.xml）。
+  仅收录承接 SEO 的三个页；404.html 设 noindex，不收录。
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://niuxiong123.github.io/-2026/niuxiong-zijiantai/</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://niuxiong123.github.io/-2026/niuxiong-zijiantai/history.html</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>

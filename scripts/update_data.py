@@ -49,15 +49,22 @@ BACKTEST_PATH = DATA_DIR / "backtest.json"
 # ── 腾讯行情接口 ────────────────────────────────────────────────────────────
 TENCENT_URL = "https://qt.gtimg.cn/q=" + ",".join([
     "s_sh000300", "s_sh000001", "s_sz399001", "s_sz399006", "s_sh000688",
+    "r_hkHSI", "r_hkHSTECH", "usNDX", "usVIX",
 ])
-# 请求代码 → quotes.json 顶层 key
+# 请求代码 → quotes.json 顶层 key（A股5 + 港股2 + 美股2，共 9 个指数）
 KEY_BY_CODE = {
     "s_sh000300": "hs300",
     "s_sh000001": "sh",
     "s_sz399001": "sz",
     "s_sz399006": "cyb",
     "s_sh000688": "kc",
+    "r_hkHSI": "hsi",
+    "r_hkHSTECH": "hstech",
+    "usNDX": "ndx",
+    "usVIX": "vix",
 }
+# A股 s_ 简格式代码：price=parts[3], pct=parts[5], 成交额(万元)=parts[7]
+A_SHARE_CODES = {"s_sh000300", "s_sh000001", "s_sz399001", "s_sz399006", "s_sh000688"}
 
 # ── macro / backtest 真实数据源接入 TODO ──────────────────────────────────────
 MACRO_TODO = (
@@ -92,7 +99,7 @@ def fetch_tencent(url=TENCENT_URL, timeout=10):
 
 
 def parse_tencent(text):
-    """解析腾讯接口文本 → {key: {price, pct, amtYi}}。只解析请求到的 5 个指数。"""
+    """解析腾讯接口文本 → {key: {price, pct, amtYi[, time]}}。A股5个 + 港股2 + 美股2。"""
     out = {}
     # 形如  v_s_sh000300="1~沪深300~...~";
     for line in text.split(";"):
@@ -106,15 +113,23 @@ def parse_tencent(text):
             continue
         parts = val.strip('"').split("~")
         try:
-            price = float(parts[3])
-            pct = float(parts[5])
-            # [7] 成交额(万元) → 亿元
-            amt_yi = round(float(parts[7]) / 10000.0, 4)
+            if code in A_SHARE_CODES:
+                price = float(parts[3])
+                pct = float(parts[5])
+                # [7] 成交额(万元) → 亿元
+                amt_yi = round(float(parts[7]) / 10000.0, 4)
+                out[key] = {"price": price, "pct": pct, "amtYi": amt_yi}
+            else:
+                # 港股(r_)/美股(us_)全格式：[3]=现价 [4]=昨收 [30]=时间；成交额口径不一，不展示
+                price = float(parts[3])
+                prev = float(parts[4])
+                pct = round((price / prev - 1.0) * 100.0, 2) if prev else None
+                t = parts[30] if len(parts) > 30 and parts[30] else None
+                out[key] = {"price": price, "pct": pct, "amtYi": None, "time": t}
         except (IndexError, ValueError):
             # 单条解析失败不致命，跳过该指数
             sys.stderr.write(f"[warn] 解析失败，跳过 {code}\n")
             continue
-        out[key] = {"price": price, "pct": pct, "amtYi": amt_yi}
     return out
 
 
@@ -123,14 +138,21 @@ def build_quotes(parsed, as_of, ok=True):
     quotes = {}
     for key in KEY_BY_CODE.values():
         quotes[key] = parsed.get(key, {"price": None, "pct": None, "amtYi": None})
-    quotes["amtTotalYi"] = round(
-        sum((q["amtYi"] or 0) for q in quotes.values()
-            if isinstance(q, dict)), 4
+    # 两市成交额真实口径：沪市(上证指数) + 深市(深证成指)。
+    # hs300/cyb/kc 是二者子集，重复相加会虚高约 57%（2026-10-12 实测 29807 亿 vs 真实约 19005 亿）。
+    sh_amt = quotes["sh"].get("amtYi")
+    sz_amt = quotes["sz"].get("amtYi")
+    quotes["amtTotalYi"] = (
+        round(sh_amt + sz_amt, 4)
+        if isinstance(sh_amt, (int, float)) and isinstance(sz_amt, (int, float))
+        else None
     )
-    quotes["ok"] = ok and all(
-        isinstance(q, dict) and q.get("price") is not None for q in quotes.values()
-        if isinstance(q, dict)
+    required = ("hs300", "sh", "sz", "cyb", "kc", "hsi", "hstech", "ndx", "vix")
+    complete = all(
+        isinstance(quotes[k], dict) and quotes[k].get("price") is not None
+        for k in required
     )
+    quotes["ok"] = bool(ok and complete)
     quotes["asOf"] = as_of
     return quotes
 
@@ -145,7 +167,11 @@ def build_demo_quotes(as_of):
         "kc": {"price": 1457.27, "pct": 0.07, "amtYi": 919.7294},
     }
     quotes = dict(demo)
-    quotes["amtTotalYi"] = round(sum(v["amtYi"] for v in demo.values()), 4)
+    quotes["hsi"] = {"price": 24211.35, "pct": 1.79, "amtYi": None, "time": "2026/10/09 18:31:07"}
+    quotes["hstech"] = {"price": 4197.84, "pct": 3.06, "amtYi": None, "time": "2026/10/09 16:08:32"}
+    quotes["ndx"] = {"price": 27366.17, "pct": 0.64, "amtYi": None, "time": "2026-10-09 17:15:59"}
+    quotes["vix"] = {"price": 21.67, "pct": 0.0, "amtYi": None, "time": "2026-09-15 09:30:00"}
+    quotes["amtTotalYi"] = round(demo["sh"]["amtYi"] + demo["sz"]["amtYi"], 4)
     quotes["ok"] = False            # 演示数据，标记不可用
     quotes["demo"] = True
     quotes["asOf"] = as_of
@@ -185,7 +211,13 @@ def update_quotes(demo=False, dry_run=False):
             if not parsed:
                 raise ValueError("接口返回为空或字段布局变化")
             quotes = build_quotes(parsed, as_of, ok=True)
-            sys.stderr.write(f"[info] 已抓取 {len(parsed)} 个指数行情\n")
+            if not quotes.get("ok"):
+                missing = [k for k in ("hs300", "sh", "sz", "cyb", "kc", "hsi", "hstech", "ndx", "vix")
+                           if not (isinstance(quotes.get(k), dict) and quotes[k].get("price") is not None)]
+                # 防线：缺任一指数就不写入，保留上一版完整文件，绝不让残缺数据上线
+                sys.stderr.write(f"[warn] 行情不完整（缺 {missing}），保留现有 quotes.json，本次不写入\n")
+                return False
+            sys.stderr.write(f"[info] 已抓取 {len(parsed)} 个指数行情（A股5+港股2+美股2）\n")
         except Exception as e:  # 网络/解析失败：优雅跳过，不覆盖现有文件
             sys.stderr.write(f"[warn] 行情抓取失败：{type(e).__name__}: {e}\n")
             sys.stderr.write("[warn] 保留现有 quotes.json，本次不更新（exit 0）\n")
@@ -217,9 +249,12 @@ def self_test():
     """内置断言：校验占位生成器结构与 JSON 合法性。"""
     as_of = date.today().isoformat()
     q = build_demo_quotes(as_of)
-    assert set(q.keys()) >= {"hs300", "sh", "sz", "cyb", "kc", "amtTotalYi", "ok", "asOf"}
+    assert set(q.keys()) >= {"hs300", "sh", "sz", "cyb", "kc", "hsi", "hstech", "ndx", "vix",
+                             "amtTotalYi", "ok", "asOf"}
     for k in ("hs300", "sh", "sz", "cyb", "kc"):
         assert set(q[k].keys()) == {"price", "pct", "amtYi"}
+    for k in ("hsi", "hstech", "ndx", "vix"):
+        assert q[k]["price"] is not None and q[k]["amtYi"] is None
     assert isinstance(q["amtTotalYi"], (int, float))
     m = build_macro_placeholder(as_of)
     assert len(m["data"]) == len(MACRO_FIELDS)

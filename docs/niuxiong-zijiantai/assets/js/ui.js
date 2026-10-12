@@ -67,19 +67,36 @@ export function applySiteName() {
 // ── 状态灯（§2.7） ──
 export function renderStatusLights(status, info) {
   setLight('light-macro', status.macro, info.macroAsOf, info.macroDegraded, '宏观');
-  setLight('light-quotes', status.quotes, info.quotesAsOf, status.quotes === 'missing', '行情');
+  setLight('light-quotes', status.quotes, info.quotesAsOf, false, '行情');
   setLight('light-backtest', status.backtest, info.backtestAsOf, status.backtest === 'missing', '回测');
 }
 function setLight(id, state, asOf, degraded, label) {
   const el = $(id);
   if (!el) return;
-  let st = state === 'missing' ? 'down' : (degraded ? 'warn' : 'ok');
+  let st;
+  if (state === 'missing') st = 'down';
+  else if (state === 'invalid' || degraded) st = 'warn';
+  else st = 'ok';
   el.dataset.state = st;
-  const dateTxt = asOf ? `，截至 ${asOf}` : '';
-  const stateTxt = st === 'ok' ? '实时' : (st === 'warn' ? '降级基线' : '缺失');
-  el.setAttribute('aria-label', `${label}数据源：${stateTxt}${dateTxt}`);
+  const today = new Date().toISOString().slice(0, 10);
+  let stateTxt;
+  if (st === 'ok') {
+    stateTxt = asOf === today ? '今日已更新' : `已更新（截至 ${asOf || '—'}）`;
+  } else if (st === 'warn') {
+    stateTxt = '基线值' + (asOf ? `（截至 ${asOf}）` : '');
+  } else {
+    stateTxt = '缺失';
+  }
+  // 无障碍修复：generic 角色的 span 禁止命名，读屏会忽略 aria-label；
+  // 改为外层 role="img" + 可聚焦 + 完整播报文本，圆点纯装饰（aria-hidden）。
+  el.setAttribute('role', 'img');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `${label}数据源：${stateTxt}`);
   const dot = el.querySelector('.dot');
-  if (dot) dot.setAttribute('role', 'img');
+  if (dot) {
+    dot.setAttribute('aria-hidden', 'true');
+    dot.setAttribute('title', `${label}：${stateTxt}`);
+  }
 }
 
 // ── 全站降级黄条（§5.11） ──
@@ -132,7 +149,8 @@ export function renderTemp(result) {
   const meter = $('temp-meter');
   if (val) val.textContent = result.temp.toFixed(2);
   const pct = Math.max(0, Math.min(100, (result.temp / 10) * 100));
-  if (fill) fill.style.width = pct + '%';
+  // 遮罩式渲染：渐变铺在轨道全宽，fill 从右侧盖住未达到部分（原实现把整条渐变压进左侧，读数失真）
+  if (fill) fill.style.width = (100 - pct) + '%';
   if (slider) slider.style.left = pct + '%';
   const p = tempPill(result.temp);
   if (label) {
@@ -152,16 +170,22 @@ export function renderPosition(result) {
   if (val) val.textContent = result.positionFinal.toFixed(1);
   if (path) {
     const capped = Math.min(result.positionTemp, result.constraints.creditCap, result.constraints.resonanceCap);
-    const reason = result.constraints.resonanceReason || '不约束';
+    // 归因修复：原实现只看共振约束的 reason，信用约束真正生效时会误显示「卡在：不约束」
+    const caps = [
+      { v: result.positionTemp, why: '温度仓位（未触硬约束）' },
+      { v: result.constraints.creditCap, why: '信用约束·社融同比' },
+      { v: result.constraints.resonanceCap, why: result.constraints.resonanceReason || '共振约束' },
+    ];
+    const binder = caps.reduce((m, x) => (x.v < m.v ? x : m), caps[0]);
     path.textContent =
       `温度仓位 ${result.positionTemp.toFixed(1)} 成 → ` +
-      `硬约束取 min ${capped.toFixed(1)}（卡在：${reason}）→ ` +
+      `硬约束取 min ${capped.toFixed(1)}（卡在：${binder.why}）→ ` +
       `保守系数 ×${result.constraints.conservativeFactor.toFixed(2)}`;
   }
 }
 
-// ── 实时温度走势折线图（首页新增） ──
-export function renderTempTrendChart(backtest, currentTemp, currentDateStr) {
+// ── 实时温度走势折线图（首页新增；第⑤步 item⑤：叠加真实日度序列） ──
+export function renderTempTrendChart(backtest, currentTemp, currentDateStr, daily) {
   const canvas = $('tempTrendChart');
   if (!canvas || typeof window.Chart === 'undefined') return;
   if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
@@ -180,6 +204,23 @@ export function renderTempTrendChart(backtest, currentTemp, currentDateStr) {
     points.push({ x: today, y: currentTemp });
   }
 
+  // 真实日度温度（akshare 管线启用后每日追加；≥2 点才画，否则只画月度历史）
+  let dailyDataset = null;
+  if (Array.isArray(daily) && daily.length >= 2) {
+    dailyDataset = {
+      label: '真实日度温度（akshare 管线）',
+      data: daily.map((r) => ({ x: r.date, y: r.temp })),
+      borderColor: '#da3633',
+      backgroundColor: '#da3633',
+      borderWidth: 2,
+      pointRadius: 2.5,
+      pointHoverRadius: 5,
+      tension: 0.2,
+      fill: false,
+      order: 0,
+    };
+  }
+
   const cold = '#3fb950';
   const mid = '#d29922';
   const warm = '#db6d28';
@@ -196,7 +237,7 @@ export function renderTempTrendChart(backtest, currentTemp, currentDateStr) {
   const chart = new window.Chart(ctx, {
     type: 'line',
     data: {
-      datasets: [{
+      datasets: (dailyDataset ? [dailyDataset] : []).concat([{
         label: '温度',
         data: points,
         borderWidth: 2,
@@ -228,7 +269,7 @@ export function renderTempTrendChart(backtest, currentTemp, currentDateStr) {
             return hot;
           }
         }
-      }]
+      }])
     },
     options: {
       responsive: true,
@@ -308,20 +349,33 @@ export function renderScores(result) {
 }
 
 // ── 数据明细表（content-plan ⑦，降级整行标灰 + 基线徽标） ──
-export function renderDetail(macroData, degraded) {
+export function renderDetail(macroData, degraded, refDate) {
   const tbody = $('macro-tbody');
   if (!tbody) return;
   const degradedSet = new Set(degraded.map((d) => d.field));
+  // 渲染层兜底：对全部字段做 90 天陈旧判定（引擎只对打分用到的字段判定，
+  // 原实现有 13/29 个字段游离在判定外，如 trade_balance 425 天无任何徽标）
+  const ref = refDate ? new Date(refDate + 'T00:00:00') : new Date();
+  const daysOld = (s) => {
+    if (!s || typeof s !== 'string') return null;
+    const iso = s.length === 4 ? s + '-01-01' : s.length === 7 ? s + '-01' : s;
+    const d = new Date(iso + (iso.length === 10 ? 'T00:00:00' : ''));
+    return isNaN(d.getTime()) ? null : Math.round((ref.getTime() - d.getTime()) / 86400000);
+  };
   const rows = Object.keys(macroData).map((key) => {
     const f = macroData[key];
-    const isDeg = degradedSet.has(key) || f.degraded === true;
+    const age = daysOld(f.asOf);
+    const isDeg = degradedSet.has(key) || f.degraded === true || (age !== null && age > 90);
     const label = FIELD_LABELS[key] || key;
-    const badge = isDeg ? `<span class="badge badge--baseline">基线</span>` : '';
+    const badge = isDeg ? `<span class="badge badge--baseline">基线${age !== null && age > 90 ? '·' + age + '天' : ''}</span>` : '';
+    // 北向资金：港交所 2024 年起停止实时披露，显示 0 会被误读为「今日净流入 0」
+    const valueTxt = key === 'northbound' ? '已停止披露' : fmtNum(f.value);
+    const srcTxt = key === 'northbound' ? (f.src || '—') + '（港交所2024年起停止实时披露北向数据）' : (f.src || '—');
     return `<tr class="${isDeg ? 'row--degraded' : ''}">
       <td>${label}${badge ? ' ' + badge : ''}</td>
-      <td class="num">${fmtNum(f.value)}</td>
+      <td class="num">${valueTxt}</td>
       <td class="num">${f.asOf || '—'}</td>
-      <td>${f.src || '—'}</td>
+      <td>${srcTxt}</td>
     </tr>`;
   }).join('');
   tbody.innerHTML = rows;
@@ -330,20 +384,25 @@ export function renderDetail(macroData, degraded) {
 // 汇总调用（首页）
 export function renderDashboard(result, ctx) {
   applySiteName();
+  // 宏观全字段都是基线值时，即使没触发引擎的陈旧降级，灯也要亮黄（不假装实时）
+  const macroVals = Object.values(ctx.macroData || {});
+  const allBaseline = macroVals.length > 0 && macroVals.every(
+    (f) => f && typeof f.src === 'string' && f.src.startsWith('基线')
+  );
   renderStatusLights(ctx.sourceStatus, {
     macroAsOf: ctx.macroAsOf,
     quotesAsOf: ctx.quotesAsOf,
     backtestAsOf: ctx.backtestAsOf,
-    macroDegraded: result.degraded.length > 0,
+    macroDegraded: result.degraded.length > 0 || allBaseline,
   });
   showAllDown(ctx.allDown);
   renderQuotes(ctx.quotes, ctx.macroData);
   renderTemp(result);
   renderPosition(result);
-  renderTempTrendChart(ctx.backtest, result.temp, ctx.quotesAsOf || ctx.macroAsOf);
+  renderTempTrendChart(ctx.backtest, result.temp, ctx.quotesAsOf || ctx.macroAsOf, ctx.daily);
   renderClock(result);
   renderScores(result);
-  renderDetail(ctx.macroData, result.degraded);
+  renderDetail(ctx.macroData, result.degraded, result.refDate);
   const up = $('last-updated');
-  if (up) up.textContent = '最后更新：' + (ctx.quotesAsOf || ctx.macroAsOf || '—');
+  if (up) up.textContent = `最后更新：行情 ${ctx.quotesAsOf || '—'} ｜ 宏观 ${ctx.macroAsOf || '—'}`;
 }

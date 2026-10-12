@@ -105,13 +105,80 @@ export function baselineMacroData() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// 腾讯 JSONP 兜底（P1，第⑤步 item②）：
+// quotes.json 文件级拉取失败时，用 <script> 标签直连 qt.gtimg.cn（跨域无需服务器）。
+// 解析口径与 scripts/update_data.py 完全一致（A股 s_ 简格式 / 港美 r_·us_ 全格式）。
+// ─────────────────────────────────────────────────────────────
+const JSONP_CODES = [
+  's_sh000300', 's_sh000001', 's_sz399001', 's_sz399006', 's_sh000688',
+  'r_hkHSI', 'r_hkHSTECH', 'usNDX', 'usVIX',
+];
+const JSONP_KEYS = {
+  s_sh000300: 'hs300', s_sh000001: 'sh', s_sz399001: 'sz', s_sz399006: 'cyb',
+  s_sh000688: 'kc', r_hkHSI: 'hsi', r_hkHSTECH: 'hstech', usNDX: 'ndx', usVIX: 'vix',
+};
+const JSONP_A_SHARE = new Set(['s_sh000300', 's_sh000001', 's_sz399001', 's_sz399006', 's_sh000688']);
+
+function jsonpQuotes(timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined' || !document.createElement) return resolve(null);
+    const s = document.createElement('script');
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      s.remove ? s.remove() : null;
+      resolve(parseJsonp());
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    s.onerror = finish;
+    s.onload = finish;
+    s.src = 'https://qt.gtimg.cn/q=' + JSONP_CODES.join(',');
+    document.head ? document.head.appendChild(s) : document.body && document.body.appendChild(s);
+  });
+}
+
+function parseJsonp() {
+  const g = typeof window !== 'undefined' ? window : globalThis;
+  const out = { ok: true };
+  let amtTotal = 0, hasAmt = false;
+  for (const code of JSONP_CODES) {
+    const raw = g['v_' + code];
+    if (typeof raw !== 'string' || !raw) continue;
+    const parts = raw.split('~');
+    try {
+      if (JSONP_A_SHARE.has(code)) {
+        const price = parseFloat(parts[3]);
+        const pct = parseFloat(parts[5]);
+        const amtYi = parts[7] != null && parts[7] !== '' ? Math.round(parseFloat(parts[7]) / 10000 * 1e4) / 1e4 : null;
+        if (!isFinite(price) || !isFinite(pct)) continue;
+        out[JSONP_KEYS[code]] = { price, pct, amtYi };
+        if (amtYi != null && (code === 's_sh000001' || code === 's_sz399001')) { amtTotal += amtYi; hasAmt = true; }
+      } else {
+        const price = parseFloat(parts[3]);
+        const prev = parseFloat(parts[4]);
+        if (!isFinite(price)) continue;
+        const pct = prev > 0 ? Math.round((price / prev - 1) * 100 * 100) / 100 : null;
+        out[JSONP_KEYS[code]] = { price, pct, amtYi: null, time: parts[30] || null };
+      }
+    } catch (e) { /* 单条失败跳过 */ }
+  }
+  if (Object.keys(out).length <= 1) return null; // 只有 ok 键 = 全军覆没
+  out.amtTotalYi = hasAmt ? Math.round(amtTotal * 1e4) / 1e4 : null;
+  out.asOf = new Date().toISOString().slice(0, 10);
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────
 // 入口：并行拉取三 JSON，返回已解析（含文件级降级）的结果
 // ─────────────────────────────────────────────────────────────
 export async function fetchAll() {
-  const [m, q, b] = await Promise.all([
+  const [m, q, b, d] = await Promise.all([
     loadJSON('data/macro.json'),
     loadJSON('data/quotes.json'),
     loadJSON('data/backtest.json'),
+    loadJSON('data/temp_daily.json'),
   ]);
 
   const sourceStatus = {
@@ -129,11 +196,30 @@ export async function fetchAll() {
     sourceStatus.macro = 'missing';
   }
 
-  // quotes：文件级失败 → null（compute/ui 走基线降级，P1 可接腾讯 JSONP 兜底）
-  const quotes = q.ok && q.data ? q.data : null;
+  // quotes：文件级失败 → JSONP 兜底直连腾讯；仍失败 → null（走基线）。内容级失败（内部 ok:false）→ null
+  // （P0 修复：原实现只判文件加载 ok，从不检查 quotes.json 内部的 ok 字段，采集端部分失败时状态灯仍绿）
+  let quotes = q.ok && q.data ? q.data : null;
+  if (quotes && quotes.ok === false) {
+    quotes = null;
+    sourceStatus.quotes = 'invalid';
+  }
+  if (!quotes) {
+    // P1 兜底（第⑤步 item②）：文件级失败时浏览器直连腾讯行情，成功则按实时渲染
+    const jq = await jsonpQuotes();
+    if (jq) {
+      quotes = jq;
+      sourceStatus.quotes = 'jsonp';
+    }
+  }
 
   // backtest：失败 → null（首页不依赖；history 页显示空态）
   const backtest = b.ok && Array.isArray(b.data) ? b.data : null;
+
+  // temp_daily：真实日度温度序列（第⑤步 item⑤，GitHub Actions 每日追加）。
+  // best-effort：文件不存在/拉取失败 → null，走势图只画月度历史（不报错、不亮灯）
+  const daily = d.ok && Array.isArray(d.data) && d.data.length >= 2
+    ? d.data.filter((r) => r && typeof r.temp === 'number' && r.date)
+    : null;
 
   const allDown = !m.ok && !q.ok && !b.ok;
 
@@ -141,6 +227,7 @@ export async function fetchAll() {
     macroData,
     quotes,
     backtest,
+    daily,
     sourceStatus,
     allDown,
     raw: { m, q, b },

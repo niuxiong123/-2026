@@ -1,150 +1,164 @@
 {
- "data": {
-  "pmi": {
-   "value": 50.1,
-   "asOf": "2026-09-01",
-   "src": "基线(统计局)"
+  "data": {
+    "pmi": {
+      "value": 50.1,
+      "asOf": "2026-09-01",
+      "src": "akshare·macro_china_pmi"
+    },
+    "m1_yoy": {
+      "value": 4.1,
+      "asOf": "2026-08-01",
+      "src": "akshare·macro_china_money_supply"
+    },
+    "m2_yoy": {
+      "value": 7.5,
+      "asOf": "2026-08-01",
+      "src": "akshare·macro_china_money_supply"
+    },
+    "credit_yoy": {
+      "value": 8.18,
+      "asOf": "2026-04-01",
+      "src": "基线(央行·社融存量同比)"
+    },
+    "lpr1y": {
+      "value": 3.0,
+      "asOf": "2026-09-20",
+      "src": "akshare·macro_china_lpr"
+    },
+    "cn10y": {
+      "value": 1.6822,
+      "asOf": "2026-09-30",
+      "src": "基线(中债)"
+    },
+    "us10y": {
+      "value": 5.31,
+      "asOf": "2026-10-05",
+      "src": "基线(FRED)"
+    },
+    "hs300_pe": {
+      "value": 12.46,
+      "asOf": "2026-10-09",
+      "src": "akshare·stock_index_pe_lg"
+    },
+    "hs300_pe_pct": {
+      "value": 57.9,
+      "asOf": "2026-10-09",
+      "src": "akshare·stock_index_pe_lg·10年分位"
+    },
+    "hs300_pb_pct": {
+      "value": 36.4,
+      "asOf": "2026-10-09",
+      "src": "akshare·stock_index_pb_lg·10年分位"
+    },
+    "hsi_pe_pct": {
+      "value": 50.6,
+      "asOf": "2026-10-05",
+      "src": "基线(恒生 10年分位代理)"
+    },
+    "erp": {
+      "value": 5.291,
+      "asOf": "2026-09-30",
+      "src": "基线(计算)"
+    },
+    "margin_yi": {
+      "value": 25514.9,
+      "asOf": "2026-10-09",
+      "src": "akshare·沪深交易所两融余额合计"
+    },
+    "northbound": {
+      "value": 0,
+      "asOf": "2026-10-06",
+      "src": "基线(港交所)"
+    },
+    "breadth_up": {
+      "value": 46.4,
+      "asOf": "2026-09-30",
+      "src": "基线(乐咕乐股)"
+    },
+    "ah_premium": {
+      "value": 140,
+      "asOf": "2026-10-06",
+      "src": "基线(AH溢价)"
+    },
+    "amt_yi": {
+      "value": 17028,
+      "asOf": "2026-09-30",
+      "src": "基线(两市)"
+    },
+    "oil_brent": {
+      "value": 97.82,
+      "asOf": "2026-10-06",
+      "src": "基线(布伦特油价)"
+    },
+    "dxy": {
+      "value": 101.87,
+      "asOf": "2026-10-06",
+      "src": "基线(美元指数)"
+    },
+    "us_unemploy": {
+      "value": 4.2,
+      "asOf": "2025-09-01",
+      "src": "akshare·macro_usa_unemployment_rate"
+    },
+    "nasdaq_pct": {
+      "value": 3.66,
+      "asOf": "2026-10-05",
+      "src": "基线(纳指20日)"
+    },
+    "re_yoy": {
+      "value": -2.15,
+      "asOf": "2026-08-01",
+      "src": "akshare·70城二手住宅同比(akshare·macro_china_new_house_price)"
+    },
+    "vix": {
+      "value": 21.67,
+      "asOf": "2026-10-03",
+      "src": "基线(CBOE VIX)"
+    },
+    "trade_balance": {
+      "value": 982.4,
+      "asOf": "2025-09-01",
+      "src": "akshare·macro_china_trade_balance"
+    },
+    "ai_bubble": {
+      "value": 7.1,
+      "asOf": "2026-10-05",
+      "src": "推导(纳指+美债)"
+    },
+    "hormuz_risk": {
+      "value": 6.5,
+      "asOf": "2026-10-06",
+      "src": "推导(油价)"
+    },
+    "paths_lit": {
+      "value": 6.2,
+      "asOf": "2026-10-06",
+      "src": "推导(综合)"
+    },
+    "win_proximity": {
+      "value": 4.1,
+      "asOf": "2026-10-06",
+      "src": "推导(真实压力:油价+VIX+纳指+美债)"
+    },
+    "china_fragile": {
+      "value": 8.2,
+      "asOf": "2026-08-01",
+      "src": "推导(70城二手房同比)"
+    }
   },
-  "m1_yoy": {
-   "value": 4.1,
-   "asOf": "2026-08-01",
-   "src": "基线(央行)"
-  },
-  "m2_yoy": {
-   "value": 8,
-   "asOf": "2026-08-01",
-   "src": "基线(央行·M2同比)"
-  },
-  "credit_yoy": {
-   "value": 8.18,
-   "asOf": "2026-04-01",
-   "src": "基线(央行·社融存量同比)"
-  },
-  "lpr1y": {
-   "value": 3,
-   "asOf": "2026-09-20",
-   "src": "基线(LPR)"
-  },
-  "cn10y": {
-   "value": 1.6822,
-   "asOf": "2026-09-30",
-   "src": "基线(中债)"
-  },
-  "us10y": {
-   "value": 5.31,
-   "asOf": "2026-10-05",
-   "src": "基线(FRED)"
-  },
-  "hs300_pe": {
-   "value": 14.34,
-   "asOf": "2026-09-30",
-   "src": "基线(中证)"
-  },
-  "hs300_pe_pct": {
-   "value": 82.5,
-   "asOf": "2026-09-03",
-   "src": "基线(中证·PE 10年分位)"
-  },
-  "hs300_pb_pct": {
-   "value": 37.8,
-   "asOf": "2026-09-30",
-   "src": "基线(乐咕·PB 10年分位)"
-  },
-  "hsi_pe_pct": {
-   "value": 50.6,
-   "asOf": "2026-10-05",
-   "src": "基线(恒生 10年分位代理)"
-  },
-  "erp": {
-   "value": 5.291,
-   "asOf": "2026-09-30",
-   "src": "基线(计算)"
-  },
-  "margin_yi": {
-   "value": 25485,
-   "asOf": "2026-09-30",
-   "src": "基线(交易所)"
-  },
-  "northbound": {
-   "value": 0,
-   "asOf": "2026-10-06",
-   "src": "基线(港交所)"
-  },
-  "breadth_up": {
-   "value": 46.4,
-   "asOf": "2026-09-30",
-   "src": "基线(乐咕乐股)"
-  },
-  "ah_premium": {
-   "value": 140,
-   "asOf": "2026-10-06",
-   "src": "基线(AH溢价)"
-  },
-  "amt_yi": {
-   "value": 17028,
-   "asOf": "2026-09-30",
-   "src": "基线(两市)"
-  },
-  "oil_brent": {
-   "value": 97.82,
-   "asOf": "2026-10-06",
-   "src": "基线(布伦特油价)"
-  },
-  "dxy": {
-   "value": 101.87,
-   "asOf": "2026-10-06",
-   "src": "基线(美元指数)"
-  },
-  "us_unemploy": {
-   "value": 4.2,
-   "asOf": "2026-09-01",
-   "src": "基线(BLS/FRED·最新官方)"
-  },
-  "nasdaq_pct": {
-   "value": 3.66,
-   "asOf": "2026-10-05",
-   "src": "基线(纳指20日)"
-  },
-  "re_yoy": {
-   "value": -2.15,
-   "asOf": "2026-08-01",
-   "src": "基线(统计局·70城二手房同比)"
-  },
-  "vix": {
-   "value": 21.67,
-   "asOf": "2026-10-03",
-   "src": "基线(CBOE VIX)"
-  },
-  "trade_balance": {
-   "value": 982.4,
-   "asOf": "2025-08-07",
-   "src": "基线(贸易帐·源滞后仅展示)"
-  },
-  "ai_bubble": {
-   "value": 7.1,
-   "asOf": "2026-10-05",
-   "src": "推导(纳指+美债)"
-  },
-  "hormuz_risk": {
-   "value": 6.5,
-   "asOf": "2026-10-06",
-   "src": "推导(油价)"
-  },
-  "paths_lit": {
-   "value": 6.2,
-   "asOf": "2026-10-06",
-   "src": "推导(综合)"
-  },
-  "win_proximity": {
-   "value": 4.1,
-   "asOf": "2026-10-06",
-   "src": "推导(真实压力:油价+VIX+纳指+美债)"
-  },
-  "china_fragile": {
-   "value": 8.2,
-   "asOf": "2026-08-01",
-   "src": "推导(70城二手房同比)"
-  }
- },
- "generated_at": "2026-10-11T00:00:00+08:00"
+  "generated_at": "2026-10-12 12:34:24",
+  "real_fields": [
+    "hs300_pb_pct",
+    "hs300_pe",
+    "hs300_pe_pct",
+    "lpr1y",
+    "m1_yoy",
+    "m2_yoy",
+    "margin_yi",
+    "pmi",
+    "re_yoy",
+    "trade_balance",
+    "us_unemploy"
+  ],
+  "source": "akshare（GitHub Actions 每日采集）+ 内置基线兜底"
 }

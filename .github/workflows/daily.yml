@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write           # 需要写回仓库（提交 macro.json）
+  issues: write             # 失败时开 issue 告警（防静默停更）
 
 jobs:
   fetch:
@@ -49,5 +50,18 @@ jobs:
             echo "数据无变化，不提交"
           else
             git commit -m "data: $(date -u +%F)"
+            # 先 rebase 再推：定时任务与 crowd 同窗口运行，防「后推者被拒」（2026-10-11 run#24 实证）
+            git pull --rebase origin main || { git rebase --abort; exit 1; }
             git push
+          fi
+      - name: 失败时开 issue 告警（防静默停更）
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN=$(gh issue list --state open --search "数据管线失败 in:title" --json number --jq length 2>/dev/null || echo 0)
+          if [ "$OPEN" = "0" ]; then
+            gh issue create --title "🚨 数据管线失败：daily.yml run #${{ github.run_number }}" \
+              --body "时间：$(date -u '+%F %H:%M') UTC。请到 [Actions](https://github.com/niuxiong123/-2026/actions) 查看日志并手动补跑（Run workflow 按钮），避免数据静默停更。" \
+              --repo niuxiong123/-2026 || true
           fi

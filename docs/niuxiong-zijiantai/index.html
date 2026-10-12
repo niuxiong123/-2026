@@ -15,8 +15,9 @@
   <meta property="og:description" content="开盘前看一眼，今天该拿几成仓。大白话把市场冷热揉成一个能看懂的数。" />
   <meta property="og:url" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/" />
   <meta property="og:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
-  <meta property="og:image:width" content="1920" />
-  <meta property="og:image:height" content="1920" />
+  <meta property="og:image:alt" content="牛熊自检台：每日牛熊温度与今日建议仓位" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="牛熊自检台｜每日牛熊温度与仓位建议" />
@@ -46,8 +47,7 @@
     "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/",
     "logo": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg",
     "description": "个人投资研究公开分享面板，每日更新 A股/港股/美股牛熊温度与今日建议仓位。",
-    "founder": { "@type": "Person", "name": "萧沐川", "alternateName": "xiaomuchuan" },
-    "sameAs": ["https://niuxiong123.github.io/-2026/niuxiong-zijiantai/"]
+    "founder": { "@type": "Person", "name": "萧沐川", "alternateName": "xiaomuchuan" }
   }
   </script>
 </head>
@@ -114,7 +114,7 @@
           <div class="section-head"><h2 id="quotes-h">指数行情</h2></div>
           <div class="quotes" id="quotes-bar"></div>
           <div><span class="quotes__amt" id="quotes-amt"></span></div>
-          <p class="section-note">行情来自 quotes.json，取不到时显示内置基线值并标灰。</p>
+          <p class="section-note">行情来自腾讯财经公开接口（每日 8/12/18 点自动更新），取不到时显示内置基线值并标灰。</p>
         </section>
 
         <!-- ③ + ④ 两张深卡 hero -->
@@ -156,12 +156,12 @@
         <section class="card" aria-labelledby="trend-h">
           <div class="section-head">
             <h2 id="trend-h">实时温度走势</h2>
-            <span class="section-badge">2015 至今 · 月度历史 + 今日实时</span>
+            <span class="section-badge">2015–2026-06 · 月度历史 + 今日实时</span>
           </div>
           <div class="chart-wrap">
             <canvas id="tempTrendChart" aria-label="牛熊温度历史折线图，纵轴 0–10，横轴时间"></canvas>
           </div>
-          <p class="section-note">曲线为历史月度温度，最右端的红点是今日实时计算值。越靠上越热、越危险；越靠下越冷、越可能是机会。</p>
+          <p class="section-note">曲线为历史月度温度，最右端的红点是今日实时计算值。自 2026-10-12 每日温度管线启用起，真实日度温度以红线描出（数据攒够两天才显示）。越靠上越热、越危险；越靠下越冷、越可能是机会。</p>
         </section>
 
         <!-- ⑦ 数据明细 -->
@@ -184,7 +184,7 @@
               <a class="btn btn--primary" href="./method.html">看温度怎么算出来的</a>
               <a class="btn btn--secondary" href="./history.html">看历史回测</a>
             </div>
-            <p class="footer__meta">牛熊自检台 · 每日牛熊温度与仓位建议 · 仅供参考，不是投资建议</p>
+            <p class="footer__meta">牛熊自检台 · 主理人 萧沐川（临沂润泽配货站）· 个人投资研究公开分享 · 仅供参考，不是投资建议</p>
           </div>
         </footer>
       </main>

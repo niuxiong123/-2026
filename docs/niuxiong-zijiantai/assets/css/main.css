@@ -145,11 +145,6 @@ img, svg { max-width: 100%; }
   border: 1px solid var(--color-border); box-shadow: var(--shadow-card);
 }
 .btn--secondary:hover { background: var(--gray-1); border-color: rgba(31, 35, 40, 0.3); }
-.btn--text {
-  background: none; border: none; color: var(--color-accent);
-  padding: 0; min-height: 0; font-weight: 600;
-}
-.btn--text:hover { text-decoration: underline; }
 .btn .spinner {
   width: 12px; height: 12px; border: 2px solid rgba(255, 255, 255, 0.45);
   border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
@@ -194,22 +189,22 @@ img, svg { max-width: 100%; }
   line-height: var(--lh-hero); color: var(--deep-text);
 }
 .hero-num .unit { font-size: var(--fs-hero-md); font-weight: 600; margin-left: 4px; color: var(--deep-text-muted); }
-.hero-foot { font-size: var(--fs-mini); color: var(--deep-text-subtle); margin-top: var(--sp-2); }
 
-/* 温度渐变条（§2.5） */
-.temp-bar {
-  position: relative; height: 10px; border-radius: 5px; margin: var(--sp-4) 0 var(--sp-2);
+/* 温度渐变条（§2.5）：渐变铺满轨道全宽，右侧由深色遮罩盖住未达到部分。
+   原实现把整条 0→10 渐变压进左侧 fill 宽度里，温度 5.38 时右 46% 是死黑，读数失真。 */
+.temp-track {
+  position: relative; height: 10px; border-radius: 5px;
   background: var(--grad-temp);
 }
-.temp-track {
-  position: relative; height: 10px; border-radius: 5px; background: var(--deep-surface);
+.temp-fill {
+  position: absolute; top: 0; bottom: 0; right: 0;
+  height: 100%; border-radius: 5px;
+  background: var(--deep-surface); /* 遮罩：颜色与轨道所在深卡一致 */
 }
-.temp-fill { height: 100%; border-radius: 5px; background: var(--grad-temp); }
 .temp-slider {
   position: absolute; top: -4px; width: 2px; height: 18px; background: #fff;
   border-radius: 1px; box-shadow: 0 0 0 1px rgba(1, 4, 9, 0.6); transform: translateX(-1px);
 }
-.temp-scale { display: flex; justify-content: space-between; font-size: var(--fs-mini); color: var(--deep-text-subtle); }
 
 /* 四档 pill（§2.5） */
 .pill {
@@ -329,7 +324,6 @@ table.data tr.row--degraded td { background: var(--color-canvas); color: var(--g
 
 /* 图表容器 */
 .chart-card canvas { max-height: 360px; }
-.chart-note { font-size: var(--fs-aux); color: var(--color-text-muted); margin-top: var(--sp-2); }
 
 /* 公式块（method 页） */
 .formula {
@@ -362,14 +356,12 @@ table.data tr.row--degraded td { background: var(--color-canvas); color: var(--g
   .topbar { padding: var(--sp-3) var(--sp-4); }
   .content { padding: var(--sp-4); gap: var(--sp-4); }
   .hero-grid { grid-template-columns: 1fr; }
-  .macro-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 @media (max-width: 767px) {
   .topbar__title { font-size: var(--fs-h2); }
   .content { padding: var(--sp-4); gap: var(--sp-4); }
   .hero-num { font-size: 40px; }
-  .macro-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .score-row { grid-template-columns: 72px 1fr 40px; }
   .src-lights { gap: var(--sp-2); }
 }
@@ -377,7 +369,6 @@ table.data tr.row--degraded td { background: var(--color-canvas); color: var(--g
 @media (max-width: 479px) {
   .topbar__updated { display: none; }
   .src-lights { overflow-x: auto; }
-  .macro-grid { grid-template-columns: 1fr !important; }
   .btn { min-height: 44px; }
 }
 
