@@ -131,6 +131,19 @@
           <p class="section-note">温度越低档、平均未来收益越高，说明模型含有信息量。</p>
         </section>
 
+        <!-- ②.5 模型有没有用：统计检验（块9 增强） -->
+        <section class="card" aria-labelledby="verdict-h">
+          <div class="section-head"><h2 id="verdict-h">模型有没有用？统计检验</h2></div>
+          <p class="section-note">用全样本（2015 至今）做三件事：①温度与未来收益的相关系数；②按温度择时的策略 Sharpe（低温满仓、高温空仓）；③低温档 vs 高温档未来收益的 t 检验。样本可能因指数成分调整存在 Survivorship 偏差，结论仅供参考。</p>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>检验</th><th class="num">数值</th><th>解读</th></tr></thead>
+              <tbody id="verdict-tbody"></tbody>
+            </table>
+          </div>
+          <p id="verdict-conclusion" class="section-note" style="margin-top:10px;font-weight:600"></p>
+        </section>
+
         <!-- ③ 全序列温度曲线 -->
         <section class="card chart-card" aria-labelledby="line-h">
           <div class="section-head"><h2 id="line-h">全序列温度曲线</h2></div>
@@ -199,6 +212,72 @@
     ];
     const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
+    // ── 块9 增强：模型有没有用 统计检验 ──
+    const mean = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : NaN;
+    const std = (a) => { const m = mean(a); return a.length < 2 ? NaN : Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / (a.length - 1)); };
+    function pearson(xs, ys) {
+      const n = xs.length; if (n < 2) return NaN;
+      const mx = mean(xs), my = mean(ys); let cov = 0, vx = 0, vy = 0;
+      for (let i = 0; i < n; i++) { const dx = xs[i] - mx, dy = ys[i] - my; cov += dx * dy; vx += dx * dx; vy += dy * dy; }
+      return (vx === 0 || vy === 0) ? NaN : cov / Math.sqrt(vx * vy);
+    }
+    function tWelch(a, b) {
+      const ma = mean(a), mb = mean(b), sa = std(a), sb = std(b), na = a.length, nb = b.length;
+      if (na < 2 || nb < 2 || isNaN(sa) || isNaN(sb)) return NaN;
+      const se = Math.sqrt(sa * sa / na + sb * sb / nb);
+      return se === 0 ? NaN : (ma - mb) / se;
+    }
+    function oneSampleT(a) { const m = mean(a), s = std(a), n = a.length; return (n < 2 || isNaN(s) || s === 0) ? NaN : m / (s / Math.sqrt(n)); }
+    function computeVerdict(rows) {
+      const temp = rows.map((r) => r.tempAdj);
+      const f21 = rows.map((r) => r.fwd21);
+      const f63 = rows.map((r) => r.fwd63);
+      const corr21 = pearson(temp, f21);
+      const corr63 = pearson(temp, f63);
+      // 择时策略：低温满仓(<=5)、高温空仓(>=7)、中间线性映射权重 w
+      const w = temp.map((t) => Math.max(0, Math.min(1, (7 - t) / 2)));
+      const strat = rows.map((r, i) => w[i] * (r.fwd21 / 100)); // 空仓视为 0 收益（无风险≈0）
+      const hold = f21.map((v) => v / 100);                      // 买入持有：每月满仓
+      const sharpStrat = (isNaN(mean(strat)) || isNaN(std(strat))) ? NaN : mean(strat) / (std(strat) || 1e-9) * Math.sqrt(12);
+      const sharpHold = (isNaN(mean(hold)) || isNaN(std(hold))) ? NaN : mean(hold) / (std(hold) || 1e-9) * Math.sqrt(12);
+      const cold = f21.filter((_, i) => temp[i] <= 3);
+      const hot = f21.filter((_, i) => temp[i] >= 7);
+      const tColdHot = tWelch(cold, hot);
+      const tCold0 = oneSampleT(cold);
+      // 牛/熊/震荡 三段 one-sample t（并入 A 版独有的分段检验，口径：牛>7 / 熊<4 / 震荡4–7）
+      const bull = f21.filter((_, i) => temp[i] > 7);
+      const bear = f21.filter((_, i) => temp[i] < 4);
+      const osc = f21.filter((_, i) => temp[i] >= 4 && temp[i] <= 7);
+      const tBull = oneSampleT(bull), tBear = oneSampleT(bear), tOsc = oneSampleT(osc);
+      const coldIdx = rows.map((_, i) => temp[i] <= 3);
+      const hotIdx = rows.map((_, i) => temp[i] >= 7);
+      const hitColdPos = coldIdx.filter((c, i) => c && f21[i] > 0).length / Math.max(cold.length, 1);
+      const hitHotNeg = hotIdx.filter((h, i) => h && f21[i] < 0).length / Math.max(hot.length, 1);
+      function maxDrawdown(rets) {
+        let peak = 1, nav = 1, dd = 0;
+        for (const r of rets) { nav *= (1 + r); if (nav > peak) peak = nav; const cur = (peak - nav) / peak; if (cur > dd) dd = cur; }
+        return dd;
+      }
+      const maxDDStrat = maxDrawdown(strat), maxDDHold = maxDrawdown(hold);
+      // 线性回归 + 分档均值（用于散点图叠加）
+      const mx = mean(temp), my = mean(f21), sx = std(temp), sy = std(f21);
+      const regSlope = (sx && sy && !isNaN(corr21)) ? corr21 * sy / sx : 0;
+      const regInt = my - regSlope * mx;
+      const regLine = [{ x: 0.5, y: regInt + regSlope * 0.5 }, { x: 9.5, y: regInt + regSlope * 9.5 }];
+      const BUCKET_MIDS = [1.5, 4, 6, 8.5];
+      const bucketMeans = BUCKETS.map((b, i) => {
+        const g = f21.filter((_, idx) => temp[idx] >= b.min && temp[idx] < (b.max === 10 ? Infinity : b.max));
+        return { x: BUCKET_MIDS[i], y: g.length ? g.reduce((a, v) => a + v, 0) / g.length : 0, n: g.length };
+      });
+      return {
+        corr21, corr63, sharpStrat, sharpHold, tColdHot, tCold0,
+        annStrat: mean(strat) * 12 * 100, annHold: mean(hold) * 12 * 100,
+        meanCold: mean(cold), meanHot: mean(hot), nCold: cold.length, nHot: hot.length, n: rows.length,
+        hitColdPos, hitHotNeg, maxDDStrat, maxDDHold, regLine, bucketMeans,
+        tBull, tBear, tOsc, nBull: bull.length, nBear: bear.length, nOsc: osc.length,
+      };
+    }
+
     async function init() {
       const res = await loadJSON('data/backtest.json');
       const lightBack = document.getElementById('light-backtest');
@@ -218,6 +297,29 @@
         return `<tr><td>${b.name}</td><td class="num">${avg(g.map((r) => r.fwd21)).toFixed(2)}%</td><td class="num">${avg(g.map((r) => r.fwd63)).toFixed(2)}%</td><td class="num">${g.length}</td></tr>`;
       }).join('');
 
+      // ── 模型有没有用：统计检验（块9 增强）──
+      const v = computeVerdict(rows);
+      const fmt = (x, d = 2) => (x == null || isNaN(x)) ? '—' : x.toFixed(d);
+      const corrTxt = (c) => (c < -0.1 ? '弱负相关（温度越低、未来收益略高）' : (c > 0.1 ? '弱正相关' : '无显著线性关系'));
+      document.getElementById('verdict-tbody').innerHTML = [
+        ['温度 ↔ fwd21 相关系数', fmt(v.corr21), corrTxt(v.corr21)],
+        ['温度 ↔ fwd63 相关系数', fmt(v.corr63), corrTxt(v.corr63)],
+        ['择时策略年化(估)', fmt(v.annStrat, 1) + '%', '买入持有 ' + fmt(v.annHold, 1) + '%'],
+        ['择时策略 Sharpe', fmt(v.sharpStrat), '买入持有 Sharpe ' + fmt(v.sharpHold) + ' → 择时' + (v.sharpStrat > v.sharpHold ? '更稳' : '未加分')],
+        ['择时策略最大回撤', fmt(v.maxDDStrat * 100, 1) + '%', '买入持有 ' + fmt(v.maxDDHold * 100, 1) + '%'],
+        ['低温档(≤3)均值 fwd21', fmt(v.meanCold, 2) + '% (n=' + v.nCold + ')', 't=' + fmt(v.tCold0, 2) + '，' + (v.tCold0 > 2 ? '显著>0，低温抄底有统计支撑' : '不显著（样本小）')],
+        ['低温档(≤3)正向命中率', fmt(v.hitColdPos * 100, 0) + '% (' + v.nCold + '月)', '低温月里 fwd21>0 的比例'],
+        ['高温档(≥7)负向命中率', fmt(v.hitHotNeg * 100, 0) + '% (' + v.nHot + '月)', '高温月里 fwd21<0 的比例'],
+        ['低温 vs 高温档 t', fmt(v.tColdHot, 2) + ' (冷n=' + v.nCold + ', 热n=' + v.nHot + ')', (v.tColdHot > 2 ? '低温显著优于高温 → 减仓有依据' : '差异不显著')],
+        ['牛段(>7) fwd21 t', fmt(v.tBull, 2) + ' (n=' + v.nBull + ')', (v.tBull > 2 ? '显著≠0' : '不显著（样本内）')],
+        ['熊段(<4) fwd21 t', fmt(v.tBear, 2) + ' (n=' + v.nBear + ')', (v.tBear > 2 ? '显著≠0' : '不显著（样本内）')],
+        ['震荡段(4–7) fwd21 t', fmt(v.tOsc, 2) + ' (n=' + v.nOsc + ')', (v.tOsc > 2 ? '显著≠0' : '不显著（样本内）')],
+      ].map((r) => '<tr><td>' + r[0] + '</td><td class="num">' + r[1] + '</td><td>' + r[2] + '</td></tr>').join('');
+      const monotonic = (v.corr21 < -0.1) && (v.tCold0 > 2) && (v.tColdHot > 1.5);
+      document.getElementById('verdict-conclusion').textContent = monotonic
+        ? '结论：模型含信息量。低温档(≤3)未来21天平均收益 ' + fmt(v.meanCold, 2) + '%（t=' + fmt(v.tCold0, 2) + '，n=' + v.nCold + '），显著为正；低温→高温收益单调递减。样本 ' + v.n + ' 月（2015 至今），存在 Survivorship 偏差，仅供参考。'
+        : '结论（诚实）：本样本内温度与未来收益无显著线性关系（r=' + fmt(v.corr21) + '），且非单调——仅 0–3 档 fwd21 转正（+' + fmt(v.meanCold, 2) + '%，t=' + fmt(v.tCold0, 2) + ' 不显著），但 7–10 档（+' + fmt(v.meanHot, 2) + '%）反优于中段，减仓依据弱。模型作为「风险提示 / 温度计」可用，但作为「择时指令」证据不足。样本 ' + v.n + ' 月，存在 Survivorship 偏差，仅供参考。';
+
       if (typeof Chart === 'undefined') {
         document.getElementById('scatter-empty').textContent = '图表库加载失败（Chart.js 未就绪）。';
         document.getElementById('scatter-empty').style.display = 'block';
@@ -233,6 +335,8 @@
               backgroundColor: '#0969da', pointRadius: 3 },
             { label: 'fwd63（63天后）', data: rows.map((r) => ({ x: r.tempAdj, y: r.fwd63, date: r.date })),
               backgroundColor: '#db6d28', pointRadius: 3 },
+            { label: 'fwd21 线性趋势', type: 'line', data: v.regLine, borderColor: '#56584e', borderWidth: 2, borderDash: [6, 6], pointRadius: 0, fill: false, tension: 0, order: 3 },
+            { label: '分档均值(fwd21)', type: 'scatter', data: v.bucketMeans, backgroundColor: '#cf222e', pointRadius: 9, pointStyle: 'triangle', order: 2 },
           ],
         },
         options: {
@@ -242,7 +346,7 @@
             y: { title: { display: true, text: '未来收益 %' } },
           },
           plugins: {
-            tooltip: { callbacks: { label: (c) => `${c.raw.date} ${c.dataset.label}: 温度 ${c.raw.x}, 收益 ${c.raw.y}%` } },
+            tooltip: { callbacks: { label: (c) => { const raw = c.raw; return (raw.date ? raw.date + ' ' : '') + c.dataset.label + ': 温度 ' + raw.x + ', 收益 ' + raw.y + '%' + (raw.n ? ' (n=' + raw.n + ')' : ''); } } },
             zoom: false,
           },
         },
