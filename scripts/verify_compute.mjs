@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { computeAll } from '../docs/assets/js/compute.js';
+import { computeAll } from '../docs/niuxiong-zijiantai/assets/js/compute.js';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dir, '..');
@@ -12,8 +12,8 @@ function loadJson(p) {
   return JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 }
 
-const macro = loadJson('docs/data/macro.json');
-const quotes = loadJson('docs/data/quotes.json');
+const macro = loadJson('docs/niuxiong-zijiantai/data/macro.json');
+const quotes = loadJson('docs/niuxiong-zijiantai/data/quotes.json');
 
 const run = () => computeAll(macro, quotes);
 
