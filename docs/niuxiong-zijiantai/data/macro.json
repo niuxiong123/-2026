@@ -36,18 +36,18 @@
       "src": "基线(FRED)"
     },
     "hs300_pe": {
-      "value": 12.46,
-      "asOf": "2026-10-09",
+      "value": 12.49,
+      "asOf": "2026-10-12",
       "src": "akshare·stock_index_pe_lg"
     },
     "hs300_pe_pct": {
-      "value": 57.9,
-      "asOf": "2026-10-09",
+      "value": 58.7,
+      "asOf": "2026-10-12",
       "src": "akshare·stock_index_pe_lg·10年分位"
     },
     "hs300_pb_pct": {
-      "value": 36.4,
-      "asOf": "2026-10-09",
+      "value": 38.8,
+      "asOf": "2026-10-12",
       "src": "akshare·stock_index_pb_lg·10年分位"
     },
     "hsi_pe_pct": {
@@ -146,7 +146,7 @@
       "src": "推导(70城二手房同比)"
     }
   },
-  "generated_at": "2026-10-12 12:34:24",
+  "generated_at": "2026-10-12 23:18:25",
   "real_fields": [
     "hs300_pb_pct",
     "hs300_pe",
