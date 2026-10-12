@@ -1,6 +1,6 @@
 name: 每日更新行情数据
 
-# 牛熊自检台 —— 定时抓取腾讯行情接口，写回 docs/niuxiong-zijiantai/data/quotes.json 并提交
+# 恒福丨水木清华 —— 定时抓取腾讯行情接口，写回 docs/niuxiong-zijiantai/data/quotes.json 并提交
 # 说明：
 #   - cron 使用 UTC。UTC+8 的 08:00 / 12:00 / 18:00 对应 UTC 00:00 / 04:00 / 10:00。
 #   - 仅当 docs/data/*.json 有变更才提交（git diff --cached 检测）。

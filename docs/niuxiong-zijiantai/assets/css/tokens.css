@@ -3,8 +3,8 @@
  * 站点名常量（ui-designer 预留，前端不得硬编码，统一在此处定义）
  */
 :root {
-  /* —— 站点名（content-plan 定名 A「牛熊自检台」）—— */
-  --site-name: "牛熊自检台";
+  /* —— 站点名（content-plan 定名 A「恒福丨水木清华」）—— */
+  --site-name: "恒福丨水木清华";
 
   /* —— 浅色壳 token（site-spec §7 冻结值） —— */
   --color-canvas: #f6f8fa;

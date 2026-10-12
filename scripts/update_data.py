@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-update_data.py —— 牛熊自检台 每日数据自动更新（GitHub Actions 触发）
+update_data.py —— 恒福丨水木清华 每日数据自动更新（GitHub Actions 触发）
 =========================================================================
 
 职责
@@ -272,7 +272,7 @@ def self_test():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="牛熊自检台 数据更新")
+    ap = argparse.ArgumentParser(description="恒福丨水木清华 数据更新")
     ap.add_argument("--demo", action="store_true", help="离线演示占位 quotes.json")
     ap.add_argument("--seed", action="store_true", help="额外生成 macro/backtest 占位版（会覆盖）")
     ap.add_argument("--dry-run", action="store_true", help="只打印，不落盘")

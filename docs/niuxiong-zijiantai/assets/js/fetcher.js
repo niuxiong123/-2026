@@ -1,5 +1,5 @@
 // fetcher.js —— 三 JSON 拉取 + 降级 + 内置基线快照常量
-// 站点：牛熊自检台（docs/ 根，GitHub Pages）
+// 站点：恒福丨水木清华（docs/ 根，GitHub Pages）
 // 规范依据：site-spec.md §5.1 / §5.4 / §6.8 ；design-spec.md §2.7
 //
 // 职责边界（与 compute.js 分工，避免重复逻辑）：

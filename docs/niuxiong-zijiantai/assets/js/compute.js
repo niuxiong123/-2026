@@ -1,5 +1,5 @@
 // compute.js —— 计算引擎（site-spec §5.3 契约唯一实现处 / §6 算法逐字实现）
-// 站点：牛熊自检台
+// 站点：恒福丨水木清华
 //
 // 纯前端、无网络请求。输入 macro.data（含降级填充）+ quotes.json，输出 PositionResult。
 // 设计说明：

@@ -1,5 +1,5 @@
 // main.js —— 入口：fetch → compute → render；刷新按钮；移动抽屉导航
-// 站点：牛熊自检台（首页仪表盘）
+// 站点：恒福丨水木清华（首页仪表盘）
 import { fetchAll } from './fetcher.js';
 import { computeAll } from './compute.js';
 import * as ui from './ui.js';

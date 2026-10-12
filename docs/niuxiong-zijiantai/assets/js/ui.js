@@ -1,8 +1,8 @@
 // ui.js —— 渲染层（温度卡/仓位卡/牛熊钟/四维/行情条/明细表/状态灯/标灰）
-// 站点：牛熊自检台。规范依据：design-spec.md + content-plan.md 首页区块顺序。
+// 站点：恒福丨水木清华。规范依据：design-spec.md + content-plan.md 首页区块顺序。
 import { QUOTE_FIELDS, BASELINE_SNAPSHOT } from './fetcher.js';
 
-export const SITE_NAME = '牛熊自检台';
+export const SITE_NAME = '恒福丨水木清华';
 
 // macro 字段中文名（明细表 / 可读标签）
 const FIELD_LABELS = {

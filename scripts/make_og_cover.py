@@ -16,7 +16,7 @@ def font(sz, bold=True):
     return ImageFont.truetype(p, sz)
 
 # 顶部主标题区（背景留白区）
-d.text((72, 74), "牛熊自检台", font=font(96), fill="#ffffff")
+d.text((72, 74), "恒福丨水木清华", font=font(96), fill="#ffffff")
 d.text((76, 196), "每日牛熊温度与今日建议仓位", font=font(40, bold=False), fill="#c9d1d9")
 d.text((76, 252), "A股 / 港股 / 美股 · 四维打分 · 公式全部公开", font=font(30, bold=False), fill="#8b949e")
 

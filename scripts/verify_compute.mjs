@@ -20,7 +20,7 @@ const run = () => computeAll(macro, quotes);
 const a = run();
 const b = run(); // 复现性：同一输入两次应逐位一致
 
-console.log('=== 牛熊自检台 · compute.js 真数据验证 ===');
+console.log('=== 恒福丨水木清华 · compute.js 真数据验证 ===');
 console.log('参考日 refDate      :', a.refDate);
 console.log('四维分:');
 console.log('  trend     :', a.scores.trend, '(子分:', JSON.stringify(a.scoresRaw.trend), ')');
