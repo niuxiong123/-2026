@@ -60,7 +60,7 @@ function tempPill(temp) {
 // ── 站点名注入（前端不硬编码，统一常量） ──
 export function applySiteName() {
   const els = document.querySelectorAll('[data-site-name]');
-  els.forEach((el) => { el.textContent = SITE_NAME; });
+  els.forEach((el) => { el.textContent = el.getAttribute('data-site-name') || SITE_NAME; });
   document.title = document.title.replace('__SITE__', SITE_NAME);
 }
 
