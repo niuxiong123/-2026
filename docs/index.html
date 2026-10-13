@@ -97,6 +97,7 @@
   .actSel{display:inline-block;max-width:48vw;vertical-align:middle;font:inherit;font-weight:700;font-size:13px;background:transparent;border:1px solid var(--line);border-radius:6px;padding:1px 5px;margin:0 2px;cursor:pointer}
   .actSel.up{color:var(--green)}
   .actSel.down{color:var(--red)}
+  .actSel.hold{color:var(--acc)}
   .role-tag{display:block;position:sticky;top:0;z-index:31;background:var(--acc);color:#fff;font-size:12px;font-weight:700;text-align:center;padding:4px 0;margin:-8px -10px 10px;border-radius:8px}
   .act-short{color:var(--yellow);font-weight:800}
   .contig{background:var(--card2);border-radius:10px;padding:10px;font-size:12.5px;margin-top:8px}
@@ -495,7 +496,7 @@ function renderActionList(r){
   var keep=S.filter(function(x){return"hold"===x.sig}).map(function(x){return x.n});
   function etfOf(a){return ETF_HOT.filter(function(e){return sigByKey[e.sec]===a})}
   function etfGroup(a){var arr=etfOf(a);if(!arr.length)return"";
-    return '<optgroup label="全行业和宽基热门ETF指数">'+arr.map(etfOptHtml).join("")+"</optgroup>"}
+    return arr.map(etfOptHtml).join("")}
   function actSel(cls,arr,a){var eg=etfGroup(a);if(!arr.length&&!eg)return"暂无（等待信号）";
     var opts=arr.map(function(n){return"<option>"+n+"</option>"}).join("")+eg;
     return(arr.length>1?' <span style="font-size:11.5px;color:var(--sub)">共'+arr.length+"个板块</span>":"")+' <select class="actSel '+cls+'">'+opts+"</select>"}
