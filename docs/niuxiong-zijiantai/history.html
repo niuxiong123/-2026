@@ -25,6 +25,117 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
   <link rel="stylesheet" href="assets/css/main.css" />
+  <!-- 海外风险模块（内联，作用域 ovr-，零外部依赖） -->
+  <style>
+/* ============ 作用域前缀 ovr- ，避免污染宿主站点其他样式 ============ */
+  .ovr-module{
+    --ovr-red:#E23B3B;        /* A股红：多/涨/底部看多 */
+    --ovr-green:#1FA463;      /* A股绿：空/跌/顶部看空 */
+    --ovr-gray:#9AA3AF;       /* 中性 */
+    --ovr-ink:#1F2933;
+    --ovr-sub:#6B7280;
+    --ovr-line:#E6E9EF;
+    --ovr-bg:#F6F8FB;
+    --ovr-accent:#2F6BFF;
+    --ovr-amber:#E8A33D;
+    --ovr-band:#FFF8EC;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ovr-ink);
+    max-width:1120px;margin:0 auto;line-height:1.55;font-size:14px;
+  }
+  .ovr-module *{box-sizing:border-box;}
+  .ovr-module h2.ovr-h{font-size:20px;font-weight:700;margin:0 0 2px;display:flex;align-items:center;gap:10px;}
+  .ovr-module .ovr-sub{color:var(--ovr-sub);font-size:13px;margin:0 0 14px;}
+  .ovr-module .ovr-card{background:#fff;border:1px solid var(--ovr-line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(16,24,40,.04);}
+  .ovr-module .ovr-card > h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--ovr-ink);display:flex;align-items:center;gap:8px;}
+  .ovr-module .ovr-tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:#EEF2FF;color:var(--ovr-accent);}
+  .ovr-module .ovr-tag.warn{background:#FFF1E6;color:#C2550B;}
+
+  /* KPI */
+  .ovr-kpis{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:14px;}
+  .ovr-kpi{background:var(--ovr-bg);border:1px solid var(--ovr-line);border-radius:10px;padding:14px 16px;}
+  .ovr-kpi .ovr-label{font-size:12px;color:var(--ovr-sub);margin-bottom:6px;}
+  .ovr-kpi .ovr-val{font-size:34px;font-weight:800;letter-spacing:.5px;line-height:1;}
+  .ovr-kpi .ovr-unit{font-size:15px;font-weight:600;color:var(--ovr-sub);margin-left:3px;}
+  .ovr-kpi .ovr-note{font-size:11px;color:var(--ovr-sub);margin-top:6px;}
+
+  /* 减仓提示横幅 */
+  .ovr-alert{border-radius:10px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+  .ovr-alert .ovr-ico{font-size:18px;line-height:1.2;}
+  .ovr-alert b{font-weight:700;}
+
+  /* 表格 / 信源列表 */
+  .ovr-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .ovr-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .ovr-table th,.ovr-table td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--ovr-line);}
+  .ovr-table th{color:var(--ovr-sub);font-weight:600;font-size:12px;}
+  .ovr-table tr:last-child td{border-bottom:none;}
+
+  /* 拐点分布条形图（纯 CSS 条形，无外部库） */
+  .ovr-bars{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+  .ovr-bar-row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;}
+  .ovr-bar-row .ovr-bar-name{font-size:13px;color:var(--ovr-ink);}
+  .ovr-bar-track{background:#F1F3F7;border-radius:6px;height:16px;overflow:hidden;position:relative;}
+  .ovr-bar-fill{height:100%;border-radius:6px;transition:width .4s ease;}
+  .ovr-bar-val{font-size:13px;font-weight:700;text-align:right;}
+  .ovr-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ovr-sub);margin-top:8px;}
+  .ovr-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+
+  /* 信号徽章 */
+  .ovr-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;}
+  .ovr-badge.bull{background:#FDECEC;color:var(--ovr-red);}
+  .ovr-badge.bear{background:#E9F6EF;color:var(--ovr-green);}
+  .ovr-badge.neu{background:#EEF1F4;color:var(--ovr-sub);}
+
+  /* Top 条目 */
+  .ovr-items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .ovr-item{border:1px solid var(--ovr-line);border-radius:8px;padding:9px 12px;background:#fff;}
+  .ovr-item .ovr-t{font-size:13px;font-weight:600;color:var(--ovr-ink);}
+  .ovr-item .ovr-m{font-size:11.5px;color:var(--ovr-sub);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* 8 维度小条 */
+  .ovr-dim8{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;}
+  .ovr-dim-row{display:grid;grid-template-columns:1fr 42px;align-items:center;gap:8px;font-size:12.5px;}
+  .ovr-dim-track{background:#F1F3F7;border-radius:5px;height:9px;overflow:hidden;}
+  .ovr-dim-fill{height:100%;background:var(--ovr-accent);border-radius:5px;transition:width .4s;}
+
+  /* 参数面板（可折叠） */
+  .ovr-panel summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ovr-accent);padding:4px 0;}
+  .ovr-panel .ovr-pbody{margin-top:12px;}
+  .ovr-pgroup{margin-bottom:14px;}
+  .ovr-pgroup > .ovr-gtitle{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--ovr-ink);border-left:3px solid var(--ovr-accent);padding-left:8px;}
+  .ovr-prow{display:grid;grid-template-columns:160px 90px 1fr;gap:10px;align-items:center;margin-bottom:6px;font-size:12.5px;}
+  .ovr-prow label{color:var(--ovr-ink);}
+  .ovr-prow input{width:80px;padding:4px 6px;border:1px solid var(--ovr-line);border-radius:6px;font-size:13px;font-family:inherit;}
+  .ovr-prow .ovr-pnote{font-size:11px;color:var(--ovr-sub);}
+  .ovr-prow .ovr-pend{font-size:11px;color:#C2550B;}
+
+  .ovr-formula{background:var(--ovr-band);border:1px solid #F3E2C2;border-radius:8px;padding:12px 14px;font-size:12.5px;color:#5b4a2a;margin-top:6px;}
+  .ovr-formula code{background:#fff;border:1px solid #EAD9B6;border-radius:4px;padding:1px 5px;font-family:"SFMono-Regular",Consolas,monospace;font-size:12px;color:#7a4a00;}
+  .ovr-disclaim{font-size:12px;color:var(--ovr-sub);background:#FBFCFE;border:1px dashed var(--ovr-line);border-radius:8px;padding:10px 14px;margin-top:4px;}
+
+  /* 构成堆叠条 & 信源可信度条 */
+  .ovr-comp{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--ovr-line);}
+  .ovr-comp span{height:100%;transition:width .4s;}
+  .ovr-credbar{background:#F1F3F7;border-radius:4px;height:6px;width:72px;overflow:hidden;margin-top:4px;}
+  .ovr-credbar div{height:100%;border-radius:4px;}
+
+  @media (max-width:760px){
+    .ovr-kpis{grid-template-columns:1fr 1fr;}
+    .ovr-grid2{grid-template-columns:1fr;}
+    .ovr-dim8{grid-template-columns:1fr;}
+    .ovr-prow{grid-template-columns:1fr;gap:4px;}
+  }
+  /* 嵌入主站：窄屏防溢出（切断 grid/flex 子项 min-content 传播，表格内部滚动） */
+  @media (max-width:760px){
+    .ovr-module,.ovr-module .ovr-card{width:100%;max-width:100%;}
+    .ovr-module *{min-width:0;}
+    .ovr-module .ovr-h{flex-wrap:wrap;}
+    .ovr-module .ovr-table{display:block;overflow-x:auto;}
+  }
+
+  </style>
+
   <!-- 结构化数据：全站 WebSite + Organization -->
   <script type="application/ld+json">
   {
@@ -161,6 +272,174 @@
             <a class="btn btn--secondary" href="./method.html">看方法论</a>
           </div>
         </section>
+
+        <!-- ⑤ 海外风险维度（实验模块，示例数据） -->
+<section class="ovr-module" id="ovrModule">
+
+  <!-- ===================== 1) 章节标题 ===================== -->
+  <div class="ovr-card">
+    <h2 class="ovr-h">海外风险维度（含外媒监测）<span class="ovr-tag warn">实验模块·示例数据</span></h2>
+    <p class="ovr-sub">综合 5 个硬维度（油价 / AI美股估值 / 霍尔木兹海峡 / 美元指数 / 美国就业）+ 外媒监测子系统，输出「海外风险分」并叠加到建议仓位。</p>
+    <div class="ovr-alert" style="background:#FFF8EC;color:#8a6116;border:1px solid #F3E2C2;"><span class="ovr-ico">&#129514;</span><span><b>实验模块（DEMO）：</b>当前所有数值（5 维风险分、10 年价格分位、外媒拐点计数与新闻条目）均为内置<b>示例数据</b>，尚未接入主站真实采集管线，仅用于演示计算口径，不构成任何仓位建议。</span></div>
+
+    <!-- KPI 行 -->
+    <div class="ovr-kpis">
+      <div class="ovr-kpi">
+        <div class="ovr-label">海外风险分（0–100，越高越危险）</div>
+        <div class="ovr-val" id="ovrRiskVal" style="color:var(--ovr-amber)">—</div>
+        <div class="ovr-note" id="ovrRiskLevel">等级：—</div>
+      </div>
+      <div class="ovr-kpi">
+        <div class="ovr-label">建议仓位_主 P_main</div>
+        <div class="ovr-val" id="ovrBase">—<span class="ovr-unit">%</span></div>
+        <div class="ovr-note">= clamp(1−10年价格分位, 10%, 90%)</div>
+      </div>
+      <div class="ovr-kpi">
+        <div class="ovr-label">减仓折算 haircut</div>
+        <div class="ovr-val" id="ovrHair" style="color:var(--ovr-red)">—<span class="ovr-unit">%</span></div>
+        <div class="ovr-note">= min(MAX_HAIRCUT, 风险分/100×MAX_HAIRCUT)；线性封顶 15%@100</div>
+      </div>
+      <div class="ovr-kpi">
+        <div class="ovr-label">建议仓位_最终 P_final</div>
+        <div class="ovr-val" id="ovrFinal" style="color:var(--ovr-green)">—<span class="ovr-unit">%</span></div>
+        <div class="ovr-note" id="ovrFinalNote">= P_main × (1 − haircut)</div>
+      </div>
+    </div>
+
+    <!-- 减仓提示横幅 -->
+    <div class="ovr-alert" id="ovrAlert" style="background:#FFF1E6;color:#9a4a06;">
+      <span class="ovr-ico">⚠️</span>
+      <span id="ovrAlertText">海外风险分计算中…</span>
+    </div>
+  </div>
+
+  <!-- ===================== 1.5) 构成 & 减仓曲线 ===================== -->
+  <div class="ovr-card">
+    <h3>海外风险分构成 & 减仓映射曲线 <span class="ovr-tag">60/40 权重 · 线性 15% 封顶</span></h3>
+    <div class="ovr-grid2">
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">① 构成：硬/地缘维度 60% + 外媒监测复合 40%</div>
+        <div class="ovr-comp" id="ovrComp"></div>
+        <div class="ovr-legend" id="ovrCompLegend" style="margin-top:10px;"></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 海外风险分 → haircut 分段阈值曲线</div>
+        <div id="ovrHairCurve"></div>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:6px;">海外风险分越高减仓越多，线性封顶 15%@100；主仓位由国内价格分位轴决定，海外仅作减仓 overlay。蓝点=当前位置。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 2) 外媒监测子系统 ===================== -->
+  <div class="ovr-card">
+    <h3>外媒监测子系统 <span class="ovr-tag">6 信源 · 拐点分布 · Top 重点</span></h3>
+
+    <div class="ovr-grid2">
+      <!-- 左：6 信源列表 -->
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">① 信源与可信度</div>
+        <table class="ovr-table">
+          <thead><tr><th>信源</th><th>拉取方式</th><th>可信度</th></tr></thead>
+          <tbody id="ovrSources"></tbody>
+        </table>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">🟢 官方/多边（IMF·美财政部·G7）＝硬约束 ｜ 🟡 彭博/路透＝交叉核对 ｜ 🔴 高盛等投行＝情绪温度计（勿同向加杠杆）</div>
+      </div>
+
+      <!-- 右：拐点信号分布条形图 -->
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 拐点信号分布（多空对称）</div>
+        <div class="ovr-bars" id="ovrBars"></div>
+        <div class="ovr-legend">
+          <span><i style="background:var(--ovr-red)"></i>底部/看多（红）</span>
+          <span><i style="background:var(--ovr-green)"></i>顶部/看空（绿）</span>
+          <span><i style="background:var(--ovr-gray)"></i>中性（灰）</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">方向 = 标题+摘要中多空关键词命中数判定；暴涨后的顶部信号与暴跌后的底部信号同等可见。<b>所有外媒信号标注"未验证"，仅供参考。</b></div>
+      </div>
+    </div>
+
+    <!-- 8 维度子权重 -->
+    <div style="margin-top:16px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">③ 8 个关键维度（紧张度 × 子权重 → 外媒监测复合）</div>
+      <div class="ovr-dim8" id="ovrDim8"></div>
+    </div>
+
+    <!-- Top 重点条目 -->
+    <div style="margin-top:16px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">④ Top 重点摘要（标题 + 方向 + 信源 + 日期 + 相关度）</div>
+      <ul class="ovr-items" id="ovrItems"></ul>
+    </div>
+  </div>
+
+  <!-- ===================== 3) 参数面板（可折叠，可编辑） ===================== -->
+  <details class="ovr-card ovr-panel">
+    <summary>⚙️ 参数面板（权重 / 数值 可编辑 · 真实数值接入方式：填入 API / 手动）</summary>
+    <div class="ovr-pbody">
+      <div class="ovr-formula" style="margin-bottom:14px;">
+        <b>核心公式（页面实时计算）</b><br>
+        海外风险分 = Σ( 权重ᵢ × 风险分ᵢ )，i ∈ {美元指数15%, AI/美股13%, 布伦特12%, 美国就业11%, 霍尔木兹9%, 外媒复合40%}（已归一）<br>
+        外媒监测复合 = <code>mediaBlend × 拐点方向风险</code> + <code>(1−mediaBlend) × 8维度加权紧张度</code><br>
+        拐点方向风险 = 50 + (Σ 信源可信度ᵢ × 方向ᵢ / Σ 可信度ᵢ) × 50，方向ᵢ = (顶部看空 − 底部看多) / 总条目<br>
+        主仓位 <code>P_main = clamp(1 − 10年价格分位, 10%, 90%)</code>；<code>haircut = min(MAX_HAIRCUT, 风险分/100×MAX_HAIRCUT)</code>；<code>P_final = P_main × (1 − haircut)</code>
+      </div>
+
+      <!-- 硬维度风险分 -->
+      <div class="ovr-pgroup">
+        <div class="ovr-gtitle">5 个硬维度 · 风险分(0-100) 与 权重</div>
+        <div id="ovrHardInputs"></div>
+      </div>
+
+      <!-- 外媒监测与仓位参数 -->
+      <div class="ovr-pgroup">
+        <div class="ovr-gtitle">外媒监测复合权重 & 仓位映射参数（已确认，可微调）</div>
+        <div class="ovr-prow">
+          <label>外媒监测复合权重</label>
+          <input type="number" step="0.01" id="w_foreignMedia" value="0.40">
+          <span class="ovr-pnote">占海外风险分 40%（硬维度合计 60%）</span>
+        </div>
+        <div class="ovr-prow">
+          <label>拐点 / 维度 混合比 mediaBlend</label>
+          <input type="number" step="0.05" id="w_mediaBlend" value="0.6">
+          <span class="ovr-pnote">0.60 = 拐点方向60% + 8维张力40%（已确认）</span>
+        </div>
+        <div class="ovr-prow">
+          <label>10年价格分位 (%)</label>
+          <input type="number" step="1" id="tenYr" value="40">
+          <span class="ovr-pnote">P_main = clamp(1−分位,10%,90%)，示例 40%→60%</span>
+        </div>
+        <div class="ovr-prow">
+          <label>MAX_HAIRCUT（海外 overlay 上限）</label>
+          <input type="number" step="0.01" id="maxHair" value="0.15">
+          <span class="ovr-pnote">最多减仓 15%</span>
+        </div>
+      </div>
+
+      <!-- 信源可信度 -->
+      <div class="ovr-pgroup">
+        <div class="ovr-gtitle">6 信源可信度（影响拐点方向加权）</div>
+        <div id="ovrCredInputs"></div>
+      </div>
+
+      <!-- 8 维度子权重 + 紧张度 -->
+      <div class="ovr-pgroup">
+        <div class="ovr-gtitle">8 维度子权重 & 紧张度(0-100，示例值)</div>
+        <div id="ovrDimInputs"></div>
+      </div>
+
+      <div class="ovr-disclaim">
+        ✅ 权重（5 硬维度 / 6 信源可信度 / 8 维度子权重 / 外媒复合 40% / 减仓分段阈值）已由<b>知识检索专家确认回填</b>。
+        ⚠️ 仅<b>真实风险分数值、10年价格分位、拐点计数、8维紧张度</b>待 API / 手动回填（当前为示例值）。真实接入方式：将 <code>DEMO</code> 数据替换为 API 返回，或在「参数面板」直接改；流水线可在 <code>&lt;script&gt;</code> 顶部 WEIGHTS / DEMO 改默认值。
+      </div>
+    </div>
+  </details>
+
+  <!-- ===================== 4) 免责声明 ===================== -->
+  <div class="ovr-card ovr-disclaim">
+    本模块仅为宏观经济与市场的<b>机制性、结构性分析</b>，不构成任何投资建议；不推荐任何股票或 ETF，不预测点位，不提供买卖/加仓/减仓指令。
+    外媒信息可能存在偏差或未兑现，一切结论须以国内官方落地为准，并请独立判断、自行承担风险。
+  </div>
+
+</section>
       </main>
     </div>
   </div>
@@ -371,6 +650,370 @@
       });
     }
     init();
+  </script>
+
+  <!-- 海外风险模块脚本（IIFE 隔离，避免与主站全局冲突） -->
+  <script>
+  (function (){
+  "use strict";
+/* =========================================================================
+ *  WEIGHTS 配置对象 —— 已回填：海外风险分=5硬(0.60)+外媒复合(0.40)；叠加上限 MAX_HAIRCUT=0.15（线性减仓，15% 封顶）。
+ *  媒体混合 mediaBlend=0.60（拐点方向60%+8维张力40%）；仅 DEMO 示例数值待 API/手动回填；修改此处即可全局生效（也可在「参数面板」实时改）。
+ * ========================================================================= */
+const WEIGHTS = {
+  // —— 5 个硬/地缘维度（合计占海外风险分 60%，数值为占总额比例）——
+  hard: {
+    dxy:       { label: "美元指数",          weight: 0.15 }, // 占总额 15%
+    ai_us_val: { label: "AI/美股估值",        weight: 0.13 }, // 占总额 13%
+    brent_oil: { label: "布伦特油价",         weight: 0.12 }, // 占总额 12%
+    us_jobs:   { label: "美国就业",           weight: 0.11 }, // 占总额 11%
+    hormuz:    { label: "霍尔木兹/曼德海峡",   weight: 0.09 }, // 占总额 9%
+  },
+  // —— 外媒监测复合权重（占海外风险分 40%）——
+  foreignMediaWeight: 0.40,
+  // 拐点方向风险 vs 8维度加权紧张度 的混合比（已确认 0.60）
+  mediaBlend: 0.60,
+  // —— 建议仓位 overlay（已由知识检索专家确认）——
+  // 主仓位（国内轴）：P_main = clamp(1 − 10年价格分位, 10%, 90%)；示例分位 40% → P_main 60%
+  tenYearPercentile: 40,                 // 示例值，真实值待 API/手动回填
+  HAIRCUT: { deadzone: 0, max: 0.15 },   // 线性：海外风险分每升 1 点→haircut 线性增，封顶 15%@100；deadzone=0 即关闭死区（硬维度映射未校准，避免叠加任意阈值掩盖真实风险）
+  // —— 外媒 6 信源可信度权重（信号聚合轴，合计 100%）——
+  sourceCred: {
+    imf:       0.20, // 硬约束🟢
+    treasury:  0.18, // 硬约束🟢
+    g7:        0.15, // 硬约束🟢
+    bloomberg: 0.17, // 事实核对🟡
+    reuters:   0.17, // 事实核对🟡
+    goldman:   0.13, // 情绪温度计🔴
+  },
+  // —— 外媒监测复合内部 8 维度子权重（第 9.2 节，合计=1.00，用于 8维度加权紧张度）——
+  dim8: {
+    valuation:   0.20, // ② 估值极端
+    crossmarket: 0.15, // ⑤ 跨市场确认
+    leverage:    0.15, // ① 杠杆/头寸
+    consistency: 0.125,// ④ 信号一致性/政策落地差
+    divergence:  0.10, // ③ 内外背离
+    sentiment:   0.10, // ⑥ 情绪/报道量极端
+    calendar:    0.10, // ⑦ 事件日历催化
+    falseSig:    0.075,// ⑧ 假信号分类
+  },
+};
+// 构成堆叠条配色（与上面 hard 键对应）
+const COMP_META = {
+  dxy:       { label:"美元指数",     color:"#2F6BFF" },
+  ai_us_val: { label:"AI/美股估值",  color:"#7B61FF" },
+  brent_oil: { label:"布伦特油价",   color:"#E8A33D" },
+  us_jobs:   { label:"美国就业",     color:"#16A34A" },
+  hormuz:    { label:"霍尔木兹海峡", color:"#E8632E" },
+  foreignMedia: { label:"外媒监测复合", color:"#0EA5A4" },
+};
+
+/* =========================================================================
+ *  DEMO 数据 —— 真实数值当前为空，以下为「示例值」用于演示公式。
+ *  接入真实数据：把本对象的数值替换为 API 返回 / 手动填入即可。
+ * ========================================================================= */
+const SOURCES = [
+  { id:"bloomberg", name:"彭博社 Bloomberg",      tier:"fact",      pull:"Google News site:bloomberg.com",         demo:{b:1,r:1,n:1} },
+  { id:"reuters",   name:"路透社 Reuters",        tier:"fact",      pull:"Google News site:reuters.com",          demo:{b:1,r:1,n:1} },
+  { id:"imf",       name:"国际货币基金组织 IMF",  tier:"hard",      pull:"官方 RSS / imf.org",                    demo:{b:0,r:0,n:1} },
+  { id:"goldman",   name:"高盛 Goldman Sachs",    tier:"sentiment", pull:"Google News site:goldmansachs.com",    demo:{b:1,r:0,n:1} },
+  { id:"treasury",  name:"美国财政部 U.S. Treasury", tier:"hard",    pull:"官方 RSS / home.treasury.gov",         demo:{b:0,r:0,n:1} },
+  { id:"g7",        name:"G7 / G20 相关机构",     tier:"hard",      pull:"Google News site:g7/g20.org",           demo:{b:0,r:0,n:0} },
+];
+
+const DIM8 = [
+  { id:"leverage",    label:"① 杠杆/头寸",            demo:40 },
+  { id:"valuation",   label:"② 估值极端",             demo:55 },
+  { id:"divergence",  label:"③ 内外背离",             demo:50 },
+  { id:"consistency", label:"④ 信号一致性/政策落地差", demo:45 },
+  { id:"crossmarket", label:"⑤ 跨市场确认",           demo:35 },
+  { id:"sentiment",   label:"⑥ 情绪/报道量极端",       demo:60 },
+  { id:"calendar",    label:"⑦ 事件日历催化",         demo:50 },
+  { id:"falseSig",    label:"⑧ 假信号分类",           demo:30 },
+];
+
+const HARD_DEMO = { brent_oil:35, ai_us_val:60, hormuz:25, dxy:55, us_jobs:40 };
+
+// Top 重点摘要（演示数据，可替换为脚本输出）
+const TOP_ITEMS = [
+  { t:"美联储加息至 3.75%–4.00%，紧缩定价延续", dir:"bear", src:"路透", date:"2026-10-15", rel:9 },
+  { t:"美元兑人民币升破 6.69，年内升值约 3.5%", dir:"bear", src:"彭博", date:"2026-10-17", rel:8 },
+  { t:"IMF 下调中国 2026 增速至 4.5%", dir:"bear", src:"IMF", date:"2026-10-12", rel:7 },
+  { t:"美财政部未将中国列为汇率操纵国", dir:"bull", src:"美国财政部", date:"2026-10-10", rel:6 },
+  { t:"南向逆势流入，部分对冲外资流出", dir:"bull", src:"路透", date:"2026-10-15", rel:6 },
+  { t:"高盛上调 MSCI 中国目标价但提示下行风险", dir:"neu", src:"高盛", date:"2026-10-14", rel:5 },
+];
+
+/* ============================ 工具函数 ============================ */
+const $ = (id)=>document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const readNum = (id,def)=>{ const el=$(id); if(!el) return def; const v=parseFloat(el.value); return isNaN(v)?def:v; };
+
+function riskColor(v){
+  if(v<=30) return "#1FA463";   // 低（绿=安全）
+  if(v<=50) return "#7FBF4D";   // 偏低
+  if(v<=70) return "#E8A33D";   // 中（琥珀）
+  if(v<=85) return "#E8632E";   // 高（橙红）
+  return "#E23B3B";             // 极高（红=危险）
+}
+function riskLevelText(v){
+  if(v<=30) return "低";
+  if(v<=50) return "偏低";
+  if(v<=70) return "中";
+  if(v<=85) return "高";
+  return "极高";
+}
+function dirText(d){ return d==="bull"?"底部/看多": d==="bear"?"顶部/看空":"中性"; }
+function dirClass(d){ return d==="bull"?"bull": d==="bear"?"bear":"neu"; }
+
+/* ============================ 渲染静态骨架 ============================ */
+function renderSources(){
+  const tb=$("ovrSources"); tb.innerHTML="";
+  const tierColor={hard:"#1FA463",fact:"#E8A33D",sentiment:"#E23B3B"};
+  const tierText={hard:"硬约束🟢",fact:"事实核对🟡",sentiment:"情绪温度计🔴"};
+  SOURCES.forEach(s=>{
+    const c=WEIGHTS.sourceCred[s.id];
+    const tc=tierColor[s.tier];
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${s.name}<br><span style="font-size:11px;color:${tc}">● ${tierText[s.tier]}</span></td>
+      <td style="color:var(--ovr-sub);font-size:12px">${s.pull}</td>
+      <td><b>${(c*100).toFixed(0)}%</b><div class="ovr-credbar"><div style="width:${(c*100).toFixed(0)}%;background:${tc}"></div></div></td>`;
+    tb.appendChild(tr);
+  });
+}
+function renderItems(){
+  const ul=$("ovrItems"); ul.innerHTML="";
+  TOP_ITEMS.forEach(it=>{
+    const li=document.createElement("li");
+    li.className="ovr-item";
+    li.innerHTML=`<div class="ovr-t">${it.t}</div>
+      <div class="ovr-m">
+        <span class="ovr-badge ${dirClass(it.dir)}">${dirText(it.dir)}</span>
+        <span>信源：${it.src}</span><span>日期：${it.date}</span><span>相关度：${it.rel}</span>
+        <span class="ovr-badge neu">未验证</span>
+      </div>`;
+    ul.appendChild(li);
+  });
+}
+function renderParamInputs(){
+  // 硬维度
+  const hd=$("ovrHardInputs"); hd.innerHTML="";
+  Object.keys(WEIGHTS.hard).forEach(k=>{
+    const w=WEIGHTS.hard[k];
+    const row=document.createElement("div"); row.className="ovr-prow";
+    row.innerHTML=`<label>${w.label}</label>
+      <input type="number" step="1" id="hard_${k}" value="${HARD_DEMO[k]}">
+      <span class="ovr-pnote">权重 <input type="number" step="0.01" id="wh_${k}" value="${w.weight}" style="width:54px"> <span class="ovr-pend">已确认</span></span>`;
+    hd.appendChild(row);
+  });
+  // 信源可信度
+  const cd=$("ovrCredInputs"); cd.innerHTML="";
+  SOURCES.forEach(s=>{
+    const row=document.createElement("div"); row.className="ovr-prow";
+    row.innerHTML=`<label>${s.name}</label>
+      <input type="number" step="0.05" id="cred_${s.id}" value="${WEIGHTS.sourceCred[s.id]}">
+      <span class="ovr-pnote">拐点计数 看多<input type="number" id="cnt_${s.id}_b" value="${s.demo.b}" style="width:42px"> 看空<input type="number" id="cnt_${s.id}_r" value="${s.demo.r}" style="width:42px"> 中性<input type="number" id="cnt_${s.id}_n" value="${s.demo.n}" style="width:42px"></span>`;
+    cd.appendChild(row);
+  });
+  // 8 维度
+  const dd=$("ovrDimInputs"); dd.innerHTML="";
+  DIM8.forEach(d=>{
+    const row=document.createElement("div"); row.className="ovr-prow";
+    row.innerHTML=`<label>${d.label}</label>
+      <input type="number" step="1" id="dim_${d.id}" value="${d.demo}">
+      <span class="ovr-pnote">子权重 <input type="number" step="0.01" id="wd_${d.id}" value="${WEIGHTS.dim8[d.id]}" style="width:50px"> <span class="ovr-pend">已确认</span></span>`;
+    dd.appendChild(row);
+  });
+}
+
+/* ============================ 核心计算 ============================ */
+function computeForeignMedia(blend){
+  blend = (blend===undefined) ? readNum("w_mediaBlend", WEIGHTS.mediaBlend) : blend;
+  // 1) 拐点方向风险（×信源可信度）
+  let wd=0, ws=0;
+  SOURCES.forEach(s=>{
+    const b=readNum(`cnt_${s.id}_b`, s.demo.b);
+    const r=readNum(`cnt_${s.id}_r`, s.demo.r);
+    const n=readNum(`cnt_${s.id}_n`, s.demo.n);
+    const c=readNum(`cred_${s.id}`, WEIGHTS.sourceCred[s.id]);
+    const dir=(r-b)/Math.max(b+r+n,1);   // -1..1
+    wd+=c*dir; ws+=c;
+  });
+  const mediaDir = ws>0? wd/ws : 0;
+  const mediaDirRisk = clamp(50 + mediaDir*50, 0, 100);
+
+  // 2) 8 维度加权紧张度（子权重之和=0.40，已归一）
+  let dScore=0, dW=0;
+  DIM8.forEach(d=>{
+    const v=readNum(`dim_${d.id}`, d.demo);
+    const w=readNum(`wd_${d.id}`, WEIGHTS.dim8[d.id]);
+    dScore+=w*v; dW+=w;
+  });
+  const dim8Risk = dW>0? dScore/dW : 50;
+
+  // 3) 混合
+  const fm = clamp(blend*mediaDirRisk + (1-blend)*dim8Risk, 0, 100);
+  return { mediaDirRisk, dim8Risk, fm };
+}
+
+function recompute(){
+  // —— 读取参数 ——
+  const tenYr = readNum("tenYr", WEIGHTS.tenYearPercentile);          // 10年价格分位(%)
+  const maxHair = readNum("maxHair", WEIGHTS.HAIRCUT.max);             // 海外 overlay 上限
+  const wFM = readNum("w_foreignMedia", WEIGHTS.foreignMediaWeight);
+  const blend = readNum("w_mediaBlend", WEIGHTS.mediaBlend);
+
+  // —— 主仓位（国内轴）——
+  const pMain = clamp(1 - tenYr/100, 0.10, 0.90);
+
+  // —— 外媒监测复合 ——
+  const fm = computeForeignMedia(blend).fm;
+
+  // —— 6 个分量（5 硬 + 外媒），权重为占海外风险分比例 ——
+  const comps = {
+    brent_oil: readNum("hard_brent_oil", HARD_DEMO.brent_oil),
+    ai_us_val: readNum("hard_ai_us_val", HARD_DEMO.ai_us_val),
+    hormuz:    readNum("hard_hormuz", HARD_DEMO.hormuz),
+    dxy:       readNum("hard_dxy", HARD_DEMO.dxy),
+    us_jobs:   readNum("hard_us_jobs", HARD_DEMO.us_jobs),
+    foreignMedia: fm,
+  };
+  const wMap = {
+    brent_oil: readNum("wh_brent_oil", WEIGHTS.hard.brent_oil.weight),
+    ai_us_val: readNum("wh_ai_us_val", WEIGHTS.hard.ai_us_val.weight),
+    hormuz:    readNum("wh_hormuz", WEIGHTS.hard.hormuz.weight),
+    dxy:       readNum("wh_dxy", WEIGHTS.hard.dxy.weight),
+    us_jobs:   readNum("wh_us_jobs", WEIGHTS.hard.us_jobs.weight),
+    foreignMedia: wFM,
+  };
+  let num=0, den=0;
+  Object.keys(comps).forEach(k=>{ const w=wMap[k]||0; num+=w*comps[k]; den+=w; });
+  const risk = den>0? num/den : 0;
+
+  // —— 减仓映射（线性，15% 封顶；死区默认关闭）——
+  let haircut = Math.min(maxHair, risk/100*maxHair);
+  const pFinal = pMain*(1-haircut);
+
+  // —— 更新 KPI ——
+  const rEl=$("ovrRiskVal");
+  rEl.textContent = risk.toFixed(1);
+  rEl.style.color = riskColor(risk);
+  $("ovrRiskLevel").textContent = "等级：" + riskLevelText(risk);
+  $("ovrBase").innerHTML = (pMain*100).toFixed(0) + '<span class="ovr-unit">%</span>';
+  $("ovrHair").innerHTML = (haircut*100).toFixed(1) + '<span class="ovr-unit">%</span>';
+  $("ovrFinal").innerHTML = (pFinal*100).toFixed(1) + '<span class="ovr-unit">%</span>';
+
+  // —— 减仓提示 ——
+  const alert=$("ovrAlert"); const at=$("ovrAlertText");
+  const cut=(pMain-pFinal)*100;
+  const cutTxt=`减仓 <b>${cut.toFixed(1)} 个百分点</b>，最终建议仓位 <b>${(pFinal*100).toFixed(1)}%</b>`;
+  if(haircut<=0){
+    alert.style.background="#E9F6EF"; alert.style.color="#136a3e";
+    at.innerHTML=`🟢 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：海外风险极低，维持主仓位 <b>${(pMain*100).toFixed(0)}%</b>，海外 overlay 不生效。`;
+  }else if(risk>=70){
+    alert.style.background="#FDECEC"; alert.style.color="#9a1f1f";
+    at.innerHTML=`🔴 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：触发海外减仓 overlay，在基础仓位 <b>${(pMain*100).toFixed(0)}%</b> 上明显${cutTxt}。`;
+  }else{
+    alert.style.background="#FFF1E6"; alert.style.color="#9a4a06";
+    at.innerHTML=`🟠 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：轻度触发海外 overlay，${cutTxt}，保持中性仓位。`;
+  }
+
+  // —— 图表刷新 ——
+  renderBars();
+  renderDim8Bars();
+  renderComposition(wMap);
+  renderHaircutCurve(maxHair, risk, haircut);
+}
+
+/* 拐点分布条形图（红=底部看多, 绿=顶部看空, 灰=中性） */
+function renderBars(){
+  const wrap=$("ovrBars"); wrap.innerHTML="";
+  const rows=[
+    { name:"底部/看多", cls:"bull", color:"var(--ovr-red)",   get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_b`,s.demo.b),0) },
+    { name:"顶部/看空", cls:"bear", color:"var(--ovr-green)", get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_r`,s.demo.r),0) },
+    { name:"中性",      cls:"neu",  color:"var(--ovr-gray)",  get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_n`,s.demo.n),0) },
+  ];
+  const total=rows.reduce((a,r)=>a+r.get(),0)||1;
+  rows.forEach(r=>{
+    const v=r.get();
+    const pct=(v/total*100).toFixed(1);
+    const row=document.createElement("div"); row.className="ovr-bar-row";
+    row.innerHTML=`<div class="ovr-bar-name">${r.name}</div>
+      <div class="ovr-bar-track"><div class="ovr-bar-fill" style="width:${pct}%;background:${r.color}"></div></div>
+      <div class="ovr-bar-val">${v}</div>`;
+    wrap.appendChild(row);
+  });
+}
+
+/* 8 维度条 */
+function renderDim8Bars(){
+  const wrap=$("ovrDim8"); wrap.innerHTML="";
+  DIM8.forEach(d=>{
+    const v=readNum(`dim_${d.id}`, d.demo);
+    const w=readNum(`wd_${d.id}`, WEIGHTS.dim8[d.id]);
+    const row=document.createElement("div"); row.className="ovr-dim-row";
+    row.innerHTML=`<div>${d.label} <span style="color:var(--ovr-sub);font-size:11px">w=${w.toFixed(2)}</span></div>
+      <div class="ovr-dim-track"><div class="ovr-dim-fill" style="width:${v}%"></div></div>
+      <div style="text-align:right;font-weight:700">${v}</div>`;
+    wrap.appendChild(row);
+  });
+}
+
+/* ============================ 构成堆叠条 ============================ */
+function renderComposition(wMap){
+  const wrap=$("ovrComp"); if(!wrap) return;
+  const order=["dxy","ai_us_val","brent_oil","us_jobs","hormuz","foreignMedia"];
+  wrap.innerHTML="";
+  order.forEach(k=>{
+    const w=(wMap[k]||0)*100;
+    const seg=document.createElement("span");
+    seg.style.width=w+"%";
+    seg.style.background=COMP_META[k].color;
+    seg.title=`${COMP_META[k].label} ${w.toFixed(0)}%`;
+    wrap.appendChild(seg);
+  });
+  const lg=$("ovrCompLegend"); if(!lg) return; lg.innerHTML="";
+  order.forEach(k=>{
+    const w=(wMap[k]||0)*100;
+    const s=document.createElement("span");
+    s.style.marginRight="14px";
+    s.innerHTML=`<i style="background:${COMP_META[k].color}"></i>${COMP_META[k].label} ${w.toFixed(0)}%`;
+    lg.appendChild(s);
+  });
+}
+
+/* ============================ haircut 阈值曲线（内联 SVG，线性） ============================ */
+function renderHaircutCurve(maxHair, risk, haircut){
+  const wrap=$("ovrHairCurve"); if(!wrap) return;
+  const X0=40, X1=290, Y0=100, Y1=10;
+  const sx = s => X0 + (s/100)*(X1-X0);
+  const hy = h => Y0 - (h/Math.max(maxHair,1e-9))*(Y0-Y1);
+  const y0=hy(0), yMax=hy(maxHair);
+  const xRisk=sx(risk), yRisk=hy(haircut);
+  wrap.innerHTML=`<svg viewBox="0 0 300 120" width="100%" style="display:block">
+    <line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#E6E9EF"/>
+    <line x1="${X0}" y1="${Y1}" x2="${X1}" y2="${Y1}" stroke="#E6E9EF"/>
+    <text x="6" y="${Y0+4}" font-size="9" fill="#9AA3AF">0</text>
+    <text x="2" y="${Y1+4}" font-size="9" fill="#9AA3AF">${(maxHair*100).toFixed(0)}%</text>
+    <text x="${X0-2}" y="${Y0+14}" font-size="9" fill="#9AA3AF">0</text>
+    <text x="${X1-12}" y="${Y0+14}" font-size="9" fill="#9AA3AF">100</text>
+    <polyline points="${sx(0)},${y0} ${sx(100)},${yMax}" fill="none" stroke="#E23B3B" stroke-width="2.5"/>
+    <circle cx="${xRisk}" cy="${yRisk}" r="4" fill="#2F6BFF" stroke="#fff" stroke-width="1.5"/>
+    <text x="${Math.min(xRisk+6,250)}" y="${Math.max(yRisk-4,Y1+8)}" font-size="9" fill="#2F6BFF">当前 ${risk.toFixed(0)}→${(haircut*100).toFixed(1)}%</text>
+  </svg>`;
+}
+
+/* ============================ 初始化 ============================ */
+function init(){
+  renderSources();
+  renderItems();
+  renderParamInputs();
+  // 监听所有输入
+  $("ovrModule").addEventListener("input", recompute);
+  recompute();
+}
+document.addEventListener("DOMContentLoaded", init);
+  })();
   </script>
 </body>
 </html>
