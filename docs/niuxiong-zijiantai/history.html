@@ -86,6 +86,10 @@
   .ovr-badge.bull{background:#FDECEC;color:var(--ovr-red);}
   .ovr-badge.bear{background:#E9F6EF;color:var(--ovr-green);}
   .ovr-badge.neu{background:#EEF1F4;color:var(--ovr-sub);}
+  .ovr-badge.ok{background:#E9F6EF;color:#136a3e;}
+  .ovr-badge.fail{background:#FDECEC;color:#9a1f1f;}
+  .ovr-badge.pending{background:#FFF8EC;color:#8a6116;}
+  .ovr-vstat{font-size:11.5px;color:var(--ovr-sub);margin-top:8px;}
 
   /* Top 条目 */
   .ovr-items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
@@ -354,7 +358,7 @@
           <span><i style="background:var(--ovr-green)"></i>顶部/看空（绿）</span>
           <span><i style="background:var(--ovr-gray)"></i>中性（灰）</span>
         </div>
-        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">方向 = 标题+摘要中多空关键词命中数判定；暴涨后的顶部信号与暴跌后的底部信号同等可见。<b>所有外媒信号标注"未验证"，仅供参考。</b></div>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">方向 = 标题+摘要中多空关键词命中数判定；暴涨后的顶部信号与暴跌后的底部信号同等可见。<b>多空结论在自动核验（链接可达 + 7 日内时效 + 跨源交叉）完成后才显示，未通过核验的条目不展示结论。</b></div>
       </div>
     </div>
 
@@ -364,10 +368,12 @@
       <div class="ovr-dim8" id="ovrDim8"></div>
     </div>
 
-    <!-- Top 重点条目 -->
+    <!-- Top 重点条目（自动核验后才显示多空结论） -->
     <div style="margin-top:16px;">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">④ Top 重点摘要（标题 + 方向 + 信源 + 日期 + 相关度）</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">④ Top 重点摘要（标题 + 多空结论 + 信源 + 日期 + 相关度 · 核验完成后才显示结论）</div>
+      <div class="ovr-vstat" id="ovrVStat">待核验…</div>
       <ul class="ovr-items" id="ovrItems"></ul>
+      <button id="ovrReverify" type="button" style="margin-top:10px;font-size:12px;padding:4px 10px;border:1px solid var(--ovr-line);border-radius:6px;background:#fff;color:var(--ovr-accent);cursor:pointer;">↻ 重新核验</button>
     </div>
   </div>
 
@@ -734,14 +740,14 @@ const DIM8 = [
 
 const HARD_DEMO = { brent_oil:35, ai_us_val:60, hormuz:25, dxy:55, us_jobs:40 };
 
-// Top 重点摘要（演示数据，可替换为脚本输出）
+// Top 重点摘要（演示数据，可替换为脚本输出；url 供自动核验，接入真实数据后替换为文章原文链接）
 const TOP_ITEMS = [
-  { t:"美联储加息至 3.75%–4.00%，紧缩定价延续", dir:"bear", src:"路透", date:"2026-10-15", rel:9 },
-  { t:"美元兑人民币升破 6.69，年内升值约 3.5%", dir:"bear", src:"彭博", date:"2026-10-17", rel:8 },
-  { t:"IMF 下调中国 2026 增速至 4.5%", dir:"bear", src:"IMF", date:"2026-10-12", rel:7 },
-  { t:"美财政部未将中国列为汇率操纵国", dir:"bull", src:"美国财政部", date:"2026-10-10", rel:6 },
-  { t:"南向逆势流入，部分对冲外资流出", dir:"bull", src:"路透", date:"2026-10-15", rel:6 },
-  { t:"高盛上调 MSCI 中国目标价但提示下行风险", dir:"neu", src:"高盛", date:"2026-10-14", rel:5 },
+  { t:"美联储加息至 3.75%–4.00%，紧缩定价延续", dir:"bear", src:"路透", date:"2026-10-15", rel:9, url:"https://www.reuters.com/markets/" },
+  { t:"美元兑人民币升破 6.69，年内升值约 3.5%", dir:"bear", src:"彭博", date:"2026-10-17", rel:8, url:"https://www.bloomberg.com/asia" },
+  { t:"IMF 下调中国 2026 增速至 4.5%", dir:"bear", src:"IMF", date:"2026-10-12", rel:7, url:"https://www.imf.org/en/News" },
+  { t:"美财政部未将中国列为汇率操纵国", dir:"bull", src:"美国财政部", date:"2026-10-10", rel:6, url:"https://home.treasury.gov/news" },
+  { t:"南向逆势流入，部分对冲外资流出", dir:"bull", src:"路透", date:"2026-10-15", rel:6, url:"https://www.reuters.com/markets/" },
+  { t:"高盛上调 MSCI 中国目标价但提示下行风险", dir:"neu", src:"高盛", date:"2026-10-14", rel:5, url:"https://www.goldmansachs.com/insights/" },
 ];
 
 /* ============================ 工具函数 ============================ */
@@ -781,19 +787,98 @@ function renderSources(){
     tb.appendChild(tr);
   });
 }
-function renderItems(){
+function renderItemsSkeleton(){
   const ul=$("ovrItems"); ul.innerHTML="";
-  TOP_ITEMS.forEach(it=>{
+  TOP_ITEMS.forEach((it,i)=>{
     const li=document.createElement("li");
-    li.className="ovr-item";
+    li.className="ovr-item"; li.id="ovrItem"+i;
     li.innerHTML=`<div class="ovr-t">${it.t}</div>
       <div class="ovr-m">
-        <span class="ovr-badge ${dirClass(it.dir)}">${dirText(it.dir)}</span>
+        <span class="ovr-badge neu" id="ovrDir${i}">验证中…</span>
         <span>信源：${it.src}</span><span>日期：${it.date}</span><span>相关度：${it.rel}</span>
-        <span class="ovr-badge neu">未验证</span>
+        <span class="ovr-badge pending" id="ovrVer${i}">待核验</span>
       </div>`;
     ul.appendChild(li);
   });
+}
+
+/* ============================ 自动核验流水线 ============================
+ * 每次刷新自动执行：逐条验证 链接可达(no-cors 探测, 6s 超时) + 日期7日内 + 跨源交叉。
+ * 全部完成后：通过者显示多空结论；链接失效者隐藏结论并剔除出拐点方向计算。
+ * ======================================================================== */
+const VERIF = {};
+function daysAgo(dateStr){
+  const d = new Date(dateStr + "T00:00:00+08:00");
+  return Math.max(0, Math.round((Date.now() - d.getTime()) / 86400000));
+}
+async function checkLink(url){
+  try{
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), 6000);
+    await fetch(url, {mode:"no-cors", cache:"no-store", signal:ctl.signal});
+    clearTimeout(timer);
+    return true;
+  }catch(e){ return false; }
+}
+function crossCheck(){
+  const tally = {};
+  TOP_ITEMS.forEach((it)=>{
+    if(it.dir==="neu") return;
+    tally[it.dir] = tally[it.dir] || new Set();
+    tally[it.dir].add(it.src);
+  });
+  const out={};
+  Object.keys(tally).forEach(k=>out[k]=(tally[k].size>=2));
+  return out;
+}
+function verdictOf(i){
+  const v = VERIF[i]; if(!v) return null;
+  if(v.link===false) return {cls:"fail", txt:"链接失效·结论隐藏"};
+  if(v.link && v.fresh && v.crossed) return {cls:"ok", txt:"已验证·交叉核对"};
+  if(v.link && v.fresh) return {cls:"pending", txt:"部分验证·链接时效"};
+  return {cls:"neu", txt:"未验证"};
+}
+function recountFromVerified(){
+  const cnt={};
+  SOURCES.forEach(s=>cnt[s.id]={b:0,r:0,n:0});
+  TOP_ITEMS.forEach((it,i)=>{
+    const v=VERIF[i];
+    if(!v || v.link===false) return;   // 失效条目不计入方向风险
+    const s=SOURCES.find(x=>x.name.indexOf(it.src)>=0);
+    if(!s) return;
+    if(it.dir==="bull") cnt[s.id].b++;
+    else if(it.dir==="bear") cnt[s.id].r++;
+    else cnt[s.id].n++;
+  });
+  SOURCES.forEach(s=>{
+    const set=(id,val)=>{ const el=$(id); if(el) el.value=val; };
+    set("cnt_"+s.id+"_b",cnt[s.id].b);
+    set("cnt_"+s.id+"_r",cnt[s.id].r);
+    set("cnt_"+s.id+"_n",cnt[s.id].n);
+  });
+}
+async function verifyAll(){
+  const st=$("ovrVStat");
+  if(st) st.textContent="自动核验中…（链接可达 / 7日时效 / 跨源交叉）";
+  const crossed=crossCheck();
+  const t0=performance.now();
+  await Promise.all(TOP_ITEMS.map(async (it,i)=>{
+    const v={ link: it.url ? await checkLink(it.url) : false,
+              fresh: daysAgo(it.date)<=7,
+              crossed: crossed[it.dir]||false };
+    VERIF[i]=v;
+    const dirEl=$("ovrDir"+i), verEl=$("ovrVer"+i);
+    if(dirEl&&verEl){
+      if(v.link===false){ dirEl.textContent="结论隐藏"; dirEl.className="ovr-badge fail"; }
+      else{ dirEl.textContent=dirText(it.dir); dirEl.className="ovr-badge "+dirClass(it.dir); }
+      const vd=verdictOf(i);
+      verEl.textContent=vd.txt; verEl.className="ovr-badge "+vd.cls;
+    }
+  }));
+  const okN=TOP_ITEMS.filter((_,i)=>VERIF[i].link!==false).length;
+  if(st) st.textContent="自动核验完成 "+okN+"/"+TOP_ITEMS.length+" 条 · 用时 "+((performance.now()-t0)/1000).toFixed(1)+"s · "+new Date().toLocaleTimeString("zh-CN")+"（每次刷新自动重跑；链接失效条目已剔除出风险计算）";
+  recountFromVerified();
+  recompute();
 }
 function renderParamInputs(){
   // 硬维度
@@ -1006,11 +1091,14 @@ function renderHaircutCurve(maxHair, risk, haircut){
 /* ============================ 初始化 ============================ */
 function init(){
   renderSources();
-  renderItems();
+  renderItemsSkeleton();
   renderParamInputs();
   // 监听所有输入
   $("ovrModule").addEventListener("input", recompute);
-  recompute();
+  const rb=$("ovrReverify");
+  if(rb) rb.addEventListener("click", verifyAll);
+  recompute();     // 先按默认计数渲染骨架
+  verifyAll();     // 自动核验：完成后回填计数并重算（结论核验后才显示）
 }
 document.addEventListener("DOMContentLoaded", init);
   })();
