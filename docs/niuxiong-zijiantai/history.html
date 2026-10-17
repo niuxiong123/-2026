@@ -225,12 +225,25 @@
       </header>
 
       <main id="main" class="content">
+        <!-- ⭐ 小白快速通道：想看现在该买还是卖？直接去仪表盘 -->
+        <div style="background:linear-gradient(135deg,#E8F4FD 0%,#FFF8E8 100%);border:2px solid #2E86C1;border-radius:12px;padding:18px 22px;margin-bottom:22px;">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div style="font-size:36px;line-height:1;">🧭</div>
+            <div style="flex:1;min-width:280px;">
+              <div style="font-size:16px;font-weight:700;color:#1F2933;margin-bottom:4px;">想知道<b>现在该不该买、买多少</b>？</div>
+              <div style="font-size:13px;color:#4A5568;line-height:1.5;">这页是<b>历史回测</b>——验证温度模型"过去准不准"的证据，不是给当前操作建议的。想看实时建议，直接点下面按钮去仪表盘！</div>
+            </div>
+            <a href="./index.html" style="display:inline-block;background:#2E86C1;color:#fff;font-size:15px;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(46,134,193,.3);">👉 去看当前建议</a>
+          </div>
+        </div>
+
         <!-- ① 散点图 -->
         <section class="card chart-card" aria-labelledby="scatter-h">
           <div class="section-head"><h2 id="scatter-h">温度 – 未来收益散点</h2></div>
           <p class="section-note">每个点是一个月的温度（横轴）vs 之后收益（纵轴）。可 hover 读值。蓝=fwd21（21天后），橙=fwd63（63天后）。</p>
           <canvas id="scatter" height="360" aria-label="温度与未来收益的散点图，横轴为温度0-10，纵轴为未来收益率百分比"></canvas>
           <div id="scatter-empty" class="section-note" style="display:none">历史数据暂不可用。</div>
+          <p id="scatter-easy" style="font-size:14px;font-weight:600;color:#1F2933;background:#F0F7FF;border-left:4px solid #2E86C1;padding:10px 14px;margin:12px 0 0;border-radius:0 6px 6px 0;display:none;"></p>
         </section>
 
         <!-- ② 分档统计表 -->
@@ -243,6 +256,7 @@
             </table>
           </div>
           <p class="section-note">温度越低档、平均未来收益越高，说明模型含有信息量。</p>
+          <p id="bucket-easy" style="font-size:14px;font-weight:600;color:#1F2933;background:#F0FFF4;border-left:4px solid #1FA463;padding:10px 14px;margin:10px 0 0;border-radius:0 6px 6px 0;display:none;"></p>
         </section>
 
         <!-- ②.5 模型有没有用：统计检验（块9 增强） -->
@@ -583,10 +597,31 @@
 
       // 分档统计表
       const tb = document.getElementById('bucket-tbody');
-      tb.innerHTML = BUCKETS.map((b) => {
+      const bucketStats = BUCKETS.map((b) => {
         const g = rows.filter((r) => r.tempAdj >= b.min && r.tempAdj < (b.max === 10 ? Infinity : b.max));
-        return `<tr><td>${b.name}</td><td class="num">${avg(g.map((r) => r.fwd21)).toFixed(2)}%</td><td class="num">${avg(g.map((r) => r.fwd63)).toFixed(2)}%</td><td class="num">${g.length}</td></tr>`;
-      }).join('');
+        return { name: b.name, min: b.min, max: b.max, fwd21: avg(g.map((r) => r.fwd21)), fwd63: avg(g.map((r) => r.fwd63)), n: g.length };
+      });
+      tb.innerHTML = bucketStats.map((s) =>
+        `<tr><td>${s.name}</td><td class="num">${s.fwd21.toFixed(2)}%</td><td class="num">${s.fwd63.toFixed(2)}%</td><td class="num">${s.n}</td></tr>`
+      ).join('');
+
+      // 小白大白话解读：分档表
+      const coldBuckets = bucketStats.filter((s) => s.fwd21 > 0 && s.n >= 3);
+      const hotBuckets = bucketStats.filter((s) => s.fwd21 < 0 && s.n >= 3);
+      const best = bucketStats.reduce((a, b) => (b.fwd21 > a.fwd21 && b.n >= 3 ? b : a), bucketStats[0]);
+      const worst = bucketStats.reduce((a, b) => (b.fwd21 < a.fwd21 && b.n >= 3 ? b : a), bucketStats[bucketStats.length - 1]);
+      const bucketEasy = document.getElementById('bucket-easy');
+      if (bucketEasy && bucketStats.some((s) => s.n >= 3)) {
+        bucketEasy.style.display = 'block';
+        bucketEasy.textContent = `💡 小白解读：历史上温度 ${best.name} 区间时，后 21 天平均赚最多（${best.fwd21.toFixed(2)}%）；温度 ${worst.name} 区间时表现最弱（${worst.fwd21.toFixed(2)}%）。`;
+      }
+
+      // 小白大白话解读：散点图
+      const scatterEasy = document.getElementById('scatter-easy');
+      if (scatterEasy && best && worst) {
+        scatterEasy.style.display = 'block';
+        scatterEasy.textContent = `💡 小白解读：这张图里每个点代表一个月（蓝=21天后收益、橙=63天后收益）。点越靠上=赚越多。整体看：温度 ${best.name}（约 ${best.min}-${best.max}）区间的点普遍偏高；温度 ${worst.name} 区间的点偏低。`;
+      }
 
       // ── 模型有没有用：统计检验（块9 增强）──
       const v = computeVerdict(rows);
