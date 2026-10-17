@@ -286,7 +286,14 @@
     <p class="ovr-sub">综合 5 个硬维度（油价 / AI美股估值 / 霍尔木兹海峡 / 美元指数 / 美国就业）+ 外媒监测子系统，输出「海外风险分」并叠加到建议仓位。</p>
     <div class="ovr-alert" style="background:#FFF8EC;color:#8a6116;border:1px solid #F3E2C2;"><span class="ovr-ico">&#129514;</span><span><b>实验模块（DEMO）：</b>当前所有数值（5 维风险分、10 年价格分位、外媒拐点计数与新闻条目）均为内置<b>示例数据</b>，尚未接入主站真实采集管线，仅用于演示计算口径，不构成任何仓位建议。</span></div>
 
-    <!-- KPI 行 -->
+  <!-- ===================== 小白一句话结论横幅（核心） ===================== -->
+  <div class="ovr-card" style="border:2px solid var(--ovr-accent);background:#F6FAFF;">
+    <div style="font-size:12px;color:var(--ovr-sub);margin-bottom:4px;">📊 小白一眼看懂 · 当前该怎么做</div>
+    <div id="ovrTLDR" style="font-size:22px;font-weight:700;color:var(--ovr-ink);line-height:1.3;">加载中…</div>
+    <div style="font-size:12px;color:var(--ovr-sub);margin-top:6px;">说明：海外风险分越高越该减仓；建议仓位是在国内价格分位的基础上再扣减；下方是详细计算过程，供高级用户查阅。</div>
+  </div>
+
+  <!-- KPI 行 -->
     <div class="ovr-kpis">
       <div class="ovr-kpi">
         <div class="ovr-label">海外风险分（0–100，越高越危险）</div>
@@ -299,14 +306,14 @@
         <div class="ovr-note">= clamp(1−10年价格分位, 10%, 90%)</div>
       </div>
       <div class="ovr-kpi">
-        <div class="ovr-label">减仓折算 haircut</div>
+        <div class="ovr-label">建议减仓比例</div>
         <div class="ovr-val" id="ovrHair" style="color:var(--ovr-red)">—<span class="ovr-unit">%</span></div>
         <div class="ovr-note">= min(MAX_HAIRCUT, 风险分/100×MAX_HAIRCUT)；线性封顶 15%@100</div>
       </div>
       <div class="ovr-kpi">
         <div class="ovr-label">建议仓位_最终 P_final</div>
         <div class="ovr-val" id="ovrFinal" style="color:var(--ovr-green)">—<span class="ovr-unit">%</span></div>
-        <div class="ovr-note" id="ovrFinalNote">= P_main × (1 − haircut)</div>
+        <div class="ovr-note" id="ovrFinalNote">= P_main × (1 − 减仓比例)</div>
       </div>
     </div>
 
@@ -327,16 +334,16 @@
         <div class="ovr-legend" id="ovrCompLegend" style="margin-top:10px;"></div>
       </div>
       <div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 海外风险分 → haircut 分段阈值曲线</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 海外风险分 → 减仓比例映射曲线</div>
         <div id="ovrHairCurve"></div>
-        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:6px;">海外风险分越高减仓越多，线性封顶 15%@100；主仓位由国内价格分位轴决定，海外仅作减仓 overlay。蓝点=当前位置。</div>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:6px;">海外风险分越高减仓越多，线性封顶 15%@100；主仓位由国内价格分位轴决定，海外仅作减仓叠加。蓝点=当前位置。</div>
       </div>
     </div>
   </div>
 
   <!-- ===================== 2) 外媒监测子系统 ===================== -->
   <div class="ovr-card">
-    <h3>外媒监测子系统 <span class="ovr-tag">6 信源 · 拐点分布 · Top 重点</span></h3>
+    <h3>外媒监测子系统 <span class="ovr-tag">6 信源 · 转折信号分布 · Top 重点</span></h3>
 
     <div class="ovr-grid2">
       <!-- 左：6 信源列表 -->
@@ -349,16 +356,16 @@
         <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">🟢 官方/多边（IMF·美财政部·G7）＝硬约束 ｜ 🟡 彭博/路透＝交叉核对 ｜ 🔴 高盛等投行＝情绪温度计（勿同向加杠杆）</div>
       </div>
 
-      <!-- 右：拐点信号分布条形图 -->
+      <!-- 右：转折信号分布条形图 -->
       <div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 拐点信号分布（多空对称）</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">② 转折信号分布（多空对称）</div>
         <div class="ovr-bars" id="ovrBars"></div>
         <div class="ovr-legend">
-          <span><i style="background:var(--ovr-red)"></i>底部/看多（红）</span>
-          <span><i style="background:var(--ovr-green)"></i>顶部/看空（绿）</span>
+          <span><i style="background:var(--ovr-green)"></i>机会·适合买入（绿）</span>
+          <span><i style="background:var(--ovr-red)"></i>风险·该减仓（红）</span>
           <span><i style="background:var(--ovr-gray)"></i>中性（灰）</span>
         </div>
-        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">方向 = 标题+摘要中多空关键词命中数判定；暴涨后的顶部信号与暴跌后的底部信号同等可见。<b>多空结论在自动核验（链接可达 + 7 日内时效 + 跨源交叉）完成后才显示，未通过核验的条目不展示结论。</b></div>
+        <div style="font-size:11.5px;color:var(--ovr-sub);margin-top:8px;">方向按标题+摘要中多空关键词命中数判定；暴涨后的顶部信号与暴跌后的底部信号同等可见。<b>每条自动核验（链接可达+7日内时效+跨源交叉），核验完成才显示结论；链接失效条目自动剔除不进风险计算。</b></div>
       </div>
     </div>
 
@@ -379,7 +386,7 @@
 
   <!-- ===================== 3) 参数面板（可折叠，可编辑） ===================== -->
   <details class="ovr-card ovr-panel">
-    <summary>⚙️ 参数面板（权重 / 数值 可编辑 · 真实数值接入方式：填入 API / 手动）</summary>
+    <summary>⚙️ 高级用户专区 · 参数面板（权重 / 数值 可编辑）</summary>
     <div class="ovr-pbody">
       <div class="ovr-formula" style="margin-bottom:14px;">
         <b>核心公式（页面实时计算）</b><br>
@@ -414,7 +421,7 @@
           <span class="ovr-pnote">P_main = clamp(1−分位,10%,90%)，示例 40%→60%</span>
         </div>
         <div class="ovr-prow">
-          <label>MAX_HAIRCUT（海外 overlay 上限）</label>
+          <label>MAX_HAIRCUT（海外减仓上限）</label>
           <input type="number" step="0.01" id="maxHair" value="0.15">
           <span class="ovr-pnote">最多减仓 15%</span>
         </div>
@@ -755,21 +762,22 @@ const $ = (id)=>document.getElementById(id);
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const readNum = (id,def)=>{ const el=$(id); if(!el) return def; const v=parseFloat(el.value); return isNaN(v)?def:v; };
 
+/* 小白友好配色：风险高=红（危险该减仓），风险低=绿（安全可持有） */
 function riskColor(v){
-  if(v<=30) return "#1FA463";   // 低（绿=安全）
-  if(v<=50) return "#7FBF4D";   // 偏低
-  if(v<=70) return "#E8A33D";   // 中（琥珀）
-  if(v<=85) return "#E8632E";   // 高（橙红）
-  return "#E23B3B";             // 极高（红=危险）
+  if(v<=30) return "#1FA463";   // 低（绿=安全可持有）
+  if(v<=50) return "#7FBF4D";   // 偏低（浅绿）
+  if(v<=70) return "#E8A33D";   // 中（琥珀·注意）
+  if(v<=85) return "#E8632E";   // 高（橙红·该减仓）
+  return "#E23B3B";             // 极高（红·危险赶紧减）
 }
 function riskLevelText(v){
-  if(v<=30) return "低";
-  if(v<=50) return "偏低";
-  if(v<=70) return "中";
-  if(v<=85) return "高";
-  return "极高";
+  if(v<=30) return "安全可持有";
+  if(v<=50) return "偏低·可正常";
+  if(v<=70) return "中等·注意风险";
+  if(v<=85) return "偏高·该减仓";
+  return "危险·赶紧减";
 }
-function dirText(d){ return d==="bull"?"底部/看多": d==="bear"?"顶部/看空":"中性"; }
+function dirText(d){ return d==="bull"?"机会·适合买入": d==="bear"?"风险·该减仓":"持平·中性"; }
 function dirClass(d){ return d==="bull"?"bull": d==="bear"?"bear":"neu"; }
 
 /* ============================ 渲染静态骨架 ============================ */
@@ -994,13 +1002,26 @@ function recompute(){
   const cutTxt=`减仓 <b>${cut.toFixed(1)} 个百分点</b>，最终建议仓位 <b>${(pFinal*100).toFixed(1)}%</b>`;
   if(haircut<=0){
     alert.style.background="#E9F6EF"; alert.style.color="#136a3e";
-    at.innerHTML=`🟢 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：海外风险极低，维持主仓位 <b>${(pMain*100).toFixed(0)}%</b>，海外 overlay 不生效。`;
+    at.innerHTML=`🟢 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：海外风险极低，维持主仓位 <b>${(pMain*100).toFixed(0)}%</b>，海外额外调整不生效。`;
   }else if(risk>=70){
     alert.style.background="#FDECEC"; alert.style.color="#9a1f1f";
-    at.innerHTML=`🔴 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：触发海外减仓 overlay，在基础仓位 <b>${(pMain*100).toFixed(0)}%</b> 上明显${cutTxt}。`;
+    at.innerHTML=`🔴 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：触发海外减仓，在基础仓位 <b>${(pMain*100).toFixed(0)}%</b> 上明显${cutTxt}。`;
   }else{
     alert.style.background="#FFF1E6"; alert.style.color="#9a4a06";
-    at.innerHTML=`🟠 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：轻度触发海外 overlay，${cutTxt}，保持中性仓位。`;
+    at.innerHTML=`🟠 海外风险分 <b>${risk.toFixed(1)}（${riskLevelText(risk)}）</b>：轻度触发海外额外调整，${cutTxt}，保持中性仓位。`;
+  }
+
+  // —— 小白一句话 TLDR ——
+  const tldr=$("ovrTLDR");
+  if(tldr){
+    let advice, color;
+    if(risk<=30){ advice="海外很安全，可正常操作，建议仓位 "+(pFinal*100).toFixed(0)+"%"; color="#1FA463"; }
+    else if(risk<=50){ advice="海外偏低，基本放心，建议仓位 "+(pFinal*100).toFixed(0)+"%"; color="#7FBF4D"; }
+    else if(risk<=70){ advice="海外中等，注意风控，建议仓位 "+(pFinal*100).toFixed(0)+"%"; color="#E8A33D"; }
+    else if(risk<=85){ advice="海外偏高，建议减仓到 "+(pFinal*100).toFixed(0)+"%（扣 "+cut.toFixed(1)+" 点）"; color="#E8632E"; }
+    else{ advice="海外危险，赶紧减仓到 "+(pFinal*100).toFixed(0)+"%（扣 "+cut.toFixed(1)+" 点）"; color="#E23B3B"; }
+    tldr.textContent = advice;
+    tldr.style.color = color;
   }
 
   // —— 图表刷新 ——
@@ -1010,13 +1031,13 @@ function recompute(){
   renderHaircutCurve(maxHair, risk, haircut);
 }
 
-/* 拐点分布条形图（红=底部看多, 绿=顶部看空, 灰=中性） */
+/* 转折信号分布条形图（绿=机会·适合买入, 红=风险·该减仓, 灰=持平） */
 function renderBars(){
   const wrap=$("ovrBars"); wrap.innerHTML="";
   const rows=[
-    { name:"底部/看多", cls:"bull", color:"var(--ovr-red)",   get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_b`,s.demo.b),0) },
-    { name:"顶部/看空", cls:"bear", color:"var(--ovr-green)", get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_r`,s.demo.r),0) },
-    { name:"中性",      cls:"neu",  color:"var(--ovr-gray)",  get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_n`,s.demo.n),0) },
+    { name:"机会·适合买入", cls:"bull", color:"var(--ovr-green)", get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_b`,s.demo.b),0) },
+    { name:"风险·该减仓",   cls:"bear", color:"var(--ovr-red)",   get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_r`,s.demo.r),0) },
+    { name:"持平·中性",     cls:"neu",  color:"var(--ovr-gray)",  get:()=>SOURCES.reduce((a,s)=>a+readNum(`cnt_${s.id}_n`,s.demo.n),0) },
   ];
   const total=rows.reduce((a,r)=>a+r.get(),0)||1;
   rows.forEach(r=>{
