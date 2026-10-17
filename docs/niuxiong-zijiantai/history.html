@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
@@ -29,8 +29,8 @@
   <style>
 /* ============ 作用域前缀 ovr- ，避免污染宿主站点其他样式 ============ */
   .ovr-module{
-    --ovr-red:#E23B3B;        /* A股红：多/涨/底部看多 */
-    --ovr-green:#1FA463;      /* A股绿：空/跌/顶部看空 */
+    --ovr-red:#E23B3B;        /* 危险红：该减仓/风险提示 */
+    --ovr-green:#1FA463;      /* 安全绿：可持有/机会提示 */
     --ovr-gray:#9AA3AF;       /* 中性 */
     --ovr-ink:#1F2933;
     --ovr-sub:#6B7280;
@@ -71,7 +71,7 @@
   .ovr-table th{color:var(--ovr-sub);font-weight:600;font-size:12px;}
   .ovr-table tr:last-child td{border-bottom:none;}
 
-  /* 拐点分布条形图（纯 CSS 条形，无外部库） */
+  /* 转折信号分布条形图（纯 CSS 条形，无外部库） */
   .ovr-bars{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
   .ovr-bar-row{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;}
   .ovr-bar-row .ovr-bar-name{font-size:13px;color:var(--ovr-ink);}
@@ -83,8 +83,8 @@
 
   /* 信号徽章 */
   .ovr-badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;}
-  .ovr-badge.bull{background:#FDECEC;color:var(--ovr-red);}
-  .ovr-badge.bear{background:#E9F6EF;color:var(--ovr-green);}
+  .ovr-badge.bull{background:#E9F6EF;color:var(--ovr-green);}
+  .ovr-badge.bear{background:#FDECEC;color:var(--ovr-red);}
   .ovr-badge.neu{background:#EEF1F4;color:var(--ovr-sub);}
   .ovr-badge.ok{background:#E9F6EF;color:#136a3e;}
   .ovr-badge.fail{background:#FDECEC;color:#9a1f1f;}
@@ -284,7 +284,7 @@
   <div class="ovr-card">
     <h2 class="ovr-h">海外风险维度（含外媒监测）<span class="ovr-tag warn">实验模块·示例数据</span></h2>
     <p class="ovr-sub">综合 5 个硬维度（油价 / AI美股估值 / 霍尔木兹海峡 / 美元指数 / 美国就业）+ 外媒监测子系统，输出「海外风险分」并叠加到建议仓位。</p>
-    <div class="ovr-alert" style="background:#FFF8EC;color:#8a6116;border:1px solid #F3E2C2;"><span class="ovr-ico">&#129514;</span><span><b>实验模块（DEMO）：</b>当前所有数值（5 维风险分、10 年价格分位、外媒拐点计数与新闻条目）均为内置<b>示例数据</b>，尚未接入主站真实采集管线，仅用于演示计算口径，不构成任何仓位建议。</span></div>
+    <div class="ovr-alert" style="background:#FFF8EC;color:#8a6116;border:1px solid #F3E2C2;"><span class="ovr-ico">&#129514;</span><span><b>实验模块（DEMO）：</b>当前所有数值（5 维风险分、10 年价格分位、外媒转折信号计数与新闻条目）均为内置<b>示例数据</b>，尚未接入主站真实采集管线，仅用于演示计算口径，不构成任何仓位建议。</span></div>
 
   <!-- ===================== 小白一句话结论横幅（核心） ===================== -->
   <div class="ovr-card" style="border:2px solid var(--ovr-accent);background:#F6FAFF;">
@@ -391,8 +391,8 @@
       <div class="ovr-formula" style="margin-bottom:14px;">
         <b>核心公式（页面实时计算）</b><br>
         海外风险分 = Σ( 权重ᵢ × 风险分ᵢ )，i ∈ {美元指数15%, AI/美股13%, 布伦特12%, 美国就业11%, 霍尔木兹9%, 外媒复合40%}（已归一）<br>
-        外媒监测复合 = <code>mediaBlend × 拐点方向风险</code> + <code>(1−mediaBlend) × 8维度加权紧张度</code><br>
-        拐点方向风险 = 50 + (Σ 信源可信度ᵢ × 方向ᵢ / Σ 可信度ᵢ) × 50，方向ᵢ = (顶部看空 − 底部看多) / 总条目<br>
+        外媒监测复合 = <code>mediaBlend × 转折信号方向风险</code> + <code>(1−mediaBlend) × 8维度加权紧张度</code><br>
+        转折信号方向风险 = 50 + (Σ 信源可信度ᵢ × 方向ᵢ / Σ 可信度ᵢ) × 50，方向ᵢ = (顶部看空 − 底部看多) / 总条目<br>
         主仓位 <code>P_main = clamp(1 − 10年价格分位, 10%, 90%)</code>；<code>haircut = min(MAX_HAIRCUT, 风险分/100×MAX_HAIRCUT)</code>；<code>P_final = P_main × (1 − haircut)</code>
       </div>
 
@@ -411,9 +411,9 @@
           <span class="ovr-pnote">占海外风险分 40%（硬维度合计 60%）</span>
         </div>
         <div class="ovr-prow">
-          <label>拐点 / 维度 混合比 mediaBlend</label>
+          <label>转折信号 / 维度 混合比 mediaBlend</label>
           <input type="number" step="0.05" id="w_mediaBlend" value="0.6">
-          <span class="ovr-pnote">0.60 = 拐点方向60% + 8维张力40%（已确认）</span>
+          <span class="ovr-pnote">0.60 = 转折信号方向60% + 8维张力40%（已确认）</span>
         </div>
         <div class="ovr-prow">
           <label>10年价格分位 (%)</label>
@@ -429,7 +429,7 @@
 
       <!-- 信源可信度 -->
       <div class="ovr-pgroup">
-        <div class="ovr-gtitle">6 信源可信度（影响拐点方向加权）</div>
+        <div class="ovr-gtitle">6 信源可信度（影响转折信号方向加权）</div>
         <div id="ovrCredInputs"></div>
       </div>
 
@@ -441,7 +441,7 @@
 
       <div class="ovr-disclaim">
         ✅ 权重（5 硬维度 / 6 信源可信度 / 8 维度子权重 / 外媒复合 40% / 减仓分段阈值）已由<b>知识检索专家确认回填</b>。
-        ⚠️ 仅<b>真实风险分数值、10年价格分位、拐点计数、8维紧张度</b>待 API / 手动回填（当前为示例值）。真实接入方式：将 <code>DEMO</code> 数据替换为 API 返回，或在「参数面板」直接改；流水线可在 <code>&lt;script&gt;</code> 顶部 WEIGHTS / DEMO 改默认值。
+        ⚠️ 仅<b>真实风险分数值、10年价格分位、转折信号计数、8维紧张度</b>待 API / 手动回填（当前为示例值）。真实接入方式：将 <code>DEMO</code> 数据替换为 API 返回，或在「参数面板」直接改；流水线可在 <code>&lt;script&gt;</code> 顶部 WEIGHTS / DEMO 改默认值。
       </div>
     </div>
   </details>
@@ -671,7 +671,7 @@
   "use strict";
 /* =========================================================================
  *  WEIGHTS 配置对象 —— 已回填：海外风险分=5硬(0.60)+外媒复合(0.40)；叠加上限 MAX_HAIRCUT=0.15（线性减仓，15% 封顶）。
- *  媒体混合 mediaBlend=0.60（拐点方向60%+8维张力40%）；仅 DEMO 示例数值待 API/手动回填；修改此处即可全局生效（也可在「参数面板」实时改）。
+ *  媒体混合 mediaBlend=0.60（转折信号方向60%+8维张力40%）；仅 DEMO 示例数值待 API/手动回填；修改此处即可全局生效（也可在「参数面板」实时改）。
  * ========================================================================= */
 const WEIGHTS = {
   // —— 5 个硬/地缘维度（合计占海外风险分 60%，数值为占总额比例）——
@@ -684,7 +684,7 @@ const WEIGHTS = {
   },
   // —— 外媒监测复合权重（占海外风险分 40%）——
   foreignMediaWeight: 0.40,
-  // 拐点方向风险 vs 8维度加权紧张度 的混合比（已确认 0.60）
+  // 转折信号方向风险 vs 8维度加权紧张度 的混合比（已确认 0.60）
   mediaBlend: 0.60,
   // —— 建议仓位 overlay（已由知识检索专家确认）——
   // 主仓位（国内轴）：P_main = clamp(1 − 10年价格分位, 10%, 90%)；示例分位 40% → P_main 60%
@@ -812,7 +812,7 @@ function renderItemsSkeleton(){
 
 /* ============================ 自动核验流水线 ============================
  * 每次刷新自动执行：逐条验证 链接可达(no-cors 探测, 6s 超时) + 日期7日内 + 跨源交叉。
- * 全部完成后：通过者显示多空结论；链接失效者隐藏结论并剔除出拐点方向计算。
+ * 全部完成后：通过者显示多空结论；链接失效者隐藏结论并剔除出转折信号方向计算。
  * ======================================================================== */
 const VERIF = {};
 function daysAgo(dateStr){
@@ -905,7 +905,7 @@ function renderParamInputs(){
     const row=document.createElement("div"); row.className="ovr-prow";
     row.innerHTML=`<label>${s.name}</label>
       <input type="number" step="0.05" id="cred_${s.id}" value="${WEIGHTS.sourceCred[s.id]}">
-      <span class="ovr-pnote">拐点计数 看多<input type="number" id="cnt_${s.id}_b" value="${s.demo.b}" style="width:42px"> 看空<input type="number" id="cnt_${s.id}_r" value="${s.demo.r}" style="width:42px"> 中性<input type="number" id="cnt_${s.id}_n" value="${s.demo.n}" style="width:42px"></span>`;
+      <span class="ovr-pnote">转折信号计数 看多<input type="number" id="cnt_${s.id}_b" value="${s.demo.b}" style="width:42px"> 看空<input type="number" id="cnt_${s.id}_r" value="${s.demo.r}" style="width:42px"> 中性<input type="number" id="cnt_${s.id}_n" value="${s.demo.n}" style="width:42px"></span>`;
     cd.appendChild(row);
   });
   // 8 维度
@@ -922,7 +922,7 @@ function renderParamInputs(){
 /* ============================ 核心计算 ============================ */
 function computeForeignMedia(blend){
   blend = (blend===undefined) ? readNum("w_mediaBlend", WEIGHTS.mediaBlend) : blend;
-  // 1) 拐点方向风险（×信源可信度）
+  // 1) 转折信号方向风险（×信源可信度）
   let wd=0, ws=0;
   SOURCES.forEach(s=>{
     const b=readNum(`cnt_${s.id}_b`, s.demo.b);
@@ -1126,3 +1126,4 @@ document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
+
