@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-17",
+  "as_of": "2026-10-18",
   "source": "real",
   "M_t": 35.1,
   "generated_by": "sector_rollup.py",
@@ -61,9 +61,9 @@
     },
     "dividend": {
       "C": 49.5,
-      "signal": "watch",
+      "signal": "sell",
       "p": 76.2,
-      "regime": "neutral"
+      "regime": "high"
     },
     "med_etf": {
       "C": 47.0,
