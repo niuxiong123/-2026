@@ -169,18 +169,23 @@ export function renderPosition(result) {
   const path = $('position-path');
   if (val) val.textContent = result.positionFinal.toFixed(1);
   if (path) {
-    const capped = Math.min(result.positionTemp, result.constraints.creditCap, result.constraints.resonanceCap);
+    // 2026-10-20 升级：最终仓位含黄金坑Boost（温度仓位+gpBoost 再进三重硬约束）
+    const gp = result.goldenPit || { boost: 0, type: '常规' };
+    const gpB = gp.boost || 0;
+    const capped = Math.min(result.positionTemp + gpB, result.constraints.creditCap, result.constraints.resonanceCap);
     // 归因修复：原实现只看共振约束的 reason，信用约束真正生效时会误显示「卡在：不约束」
     const caps = [
-      { v: result.positionTemp, why: '温度仓位（未触硬约束）' },
+      { v: result.positionTemp + gpB, why: gpB > 0 ? `温度仓位+黄金坑Boost${gpB.toFixed(1)}（${gp.type}）` : '温度仓位（未触硬约束）' },
       { v: result.constraints.creditCap, why: '信用约束·社融同比' },
       { v: result.constraints.resonanceCap, why: result.constraints.resonanceReason || '共振约束' },
     ];
     const binder = caps.reduce((m, x) => (x.v < m.v ? x : m), caps[0]);
+    const gpWarn = gp.type === '下跌中继·勿盲加' ? ' ⚠下跌中继·勿盲加' : '';
     path.textContent =
-      `温度仓位 ${result.positionTemp.toFixed(1)} 成 → ` +
+      `温度仓位 ${result.positionTemp.toFixed(1)} 成${gpB > 0 ? ` + Boost ${gpB.toFixed(1)}` : ''} → ` +
       `硬约束取 min ${capped.toFixed(1)}（卡在：${binder.why}）→ ` +
-      `保守系数 ×${result.constraints.conservativeFactor.toFixed(2)}`;
+      `保守系数 ×${result.constraints.conservativeFactor.toFixed(2)}` +
+      (typeof result.bbii === 'number' ? ` ｜ BBII ${result.bbii.toFixed(1)}（方向计·仅解读）${gpWarn}` : '');
   }
 }
 

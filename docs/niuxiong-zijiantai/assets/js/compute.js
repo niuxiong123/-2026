@@ -231,8 +231,35 @@ export function computeAll(macro, quotes) {
   }
   const conservativeFactor = Math.max(0.8, 1.0 - 0.05 * triggers.length);
 
-  // ⑤ 最终仓位（§6.6）
-  const capped = Math.min(positionTemp, creditCap, resonanceCap);
+  // ④′ 黄金坑 Boost（2026-10-20 新增：PSI×温度，138月回测再校准；与方法页④′一致）
+  // PSI：优先读 macro.json 的 psi 字段；未接入时用 138 月 NLP 序列末值（托而不举区）
+  const PSI_FALLBACK = { value: 68.4, asOf: '2026-06', src: '138月NLP序列末值(待管线写入psi字段)' };
+  const psiUse = (data.psi && typeof data.psi.value === 'number') ? data.psi : PSI_FALLBACK;
+  const psi = psiUse.value;
+  let gpBoost = 0;
+  let gpType = '常规';
+  if (psi >= 60 && temp <= 3) { gpBoost = 2.0; gpType = '黄金坑·主触发'; }
+  else if (psi >= 70 && temp <= 4) { gpBoost = 1.0; gpType = '黄金坑·次触发'; }
+  else if (psi < 50 && temp <= 4) { gpType = '下跌中继·勿盲加'; }
+
+  // BBII 方向计（仅解读，不进仓位；防重复计分见方法页⑧）：估值取便宜度=10−贵热度，情绪倒U
+  const sentU = sentimentR.rounded <= 6 ? sentimentR.rounded : Math.max(0, 10 - sentimentR.rounded) * 1.5;
+  const earnUse = (data.earnings && typeof data.earnings.value === 'number')
+    ? data.earnings
+    : { value: 54, asOf: '2026-09', src: '基线(工业利润+社融种子)' };
+  const flowProxy = mapScore(get('margin_yi').value, [[15000, 3], [20000, 6], [25000, 8], [30000, 10]]);
+  const bbii = (
+    20 * trendR.rounded * 10 +
+    15 * (10 - valuationR.rounded) * 10 +
+    15 * liquidityR.rounded * 10 +
+    5 * sentU * 10 +
+    25 * psi +
+    12 * earnUse.value +
+    8 * flowProxy * 10
+  ) / 100;
+
+  // ⑤ 最终仓位（§6.6 + 黄金坑Boost 2026-10-20：Boost 加在 min 之前，仍受三重硬约束管辖）
+  const capped = Math.min(positionTemp + gpBoost, creditCap, resonanceCap);
   const positionFinal = round1(capped * conservativeFactor);
 
   // 牛熊钟
@@ -262,6 +289,14 @@ export function computeAll(macro, quotes) {
       triggers,
     },
     positionFinal,
+    goldenPit: {
+      psi,
+      psiAsOf: psiUse.asOf || null,
+      psiSrc: psiUse.src || null,
+      boost: gpBoost,
+      type: gpType,
+    },
+    bbii: Math.round(bbii * 10) / 10,
     clock,
     degraded,
     refDate: ref.toISOString().slice(0, 10),
