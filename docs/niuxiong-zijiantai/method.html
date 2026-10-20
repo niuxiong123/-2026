@@ -110,6 +110,17 @@
           <p class="section-note" style="margin:0"><b>数据现状（不装实时）：</b>宏观已接入 akshare 每日自动采集（29 字段中 11 个为真实值，其余保留基线并逐行标注）；温度与仓位已由真实数据驱动。回测序列 2015–2026-06 为首发静态回测（138 月），2026-10 起由管线按月自动追加（沪深300 日线口径，双成熟才落库）。公式同样全部可审计，各字段覆盖情况见 ⑤。</p>
         </div>
 
+        <!-- 实时读数（fetch data/macro.json，按①锚点本地计算；失败回退基线快照） -->
+        <section class="card" aria-labelledby="mlive">
+          <div class="section-head"><h2 id="mlive">⭐ 实时读数（BBII 与黄金坑扩展）</h2></div>
+          <p class="section-note">读取 <code>data/macro.json</code>（GitHub Actions 每日 akshare 采集），按①表格公开锚点本地计算；PSI 暂用 138 月序列末值 68.4（托而不举区），待管线在 macro.json 增加 <code>psi</code> 字段后自动切换实时。计算失败时回退内嵌基线快照并如实标注。</p>
+          <div id="liveBanner" class="section-note" style="display:none;color:#b45309;margin-bottom:8px"></div>
+          <div class="table-wrap">
+            <table class="data" id="liveTable"><tbody><tr><td>加载中…</td></tr></tbody></table>
+          </div>
+          <div id="liveAlert" class="section-note" style="margin-top:10px"></div>
+        </section>
+
         <!-- ① 四维打分公式表 -->
         <section class="card" aria-labelledby="m1">
           <div class="section-head"><h2 id="m1">① 四维打分公式</h2></div>
@@ -135,6 +146,7 @@
               </tbody>
             </table>
           </div>
+          <p class="section-note"><b>双模型语义说明（防重复计分）：</b>本表估值维＝<b>贵热度</b>（越贵分越高，服务温度计）；BBII 方向计取同一数据的反向（便宜度=10−贵热度）；情绪维在 BBII 中做倒U变换（狂热反扣）。共享 4 维在温度与 BBII 中<b>各只计 1 次</b>，且 BBII 不参与仓位计算——任一信号对最终仓位只影响一次。</p>
         </section>
 
         <!-- ② 温度合成公式 -->
@@ -159,7 +171,8 @@
         <!-- ④ 三重硬约束 -->
         <section class="card" aria-labelledby="m4">
           <div class="section-head"><h2 id="m4">④ 三重硬约束与保守系数</h2></div>
-          <p class="section-note">最终仓位 = round1( min(温度仓位, 信用上限, 共振上限) × 保守系数 )。</p>
+          <p class="section-note">最终仓位 = round1( min(温度仓位 + 黄金坑Boost, 信用上限, 共振上限) × 保守系数 )<br>
+黄金坑Boost：主触发(PSI≥60 且 temp≤3) +2.0 成 ｜ 次触发(PSI≥70 且 temp≤4) +1.0 成 ｜ 其余 0</p>
           <h3>① 信用约束 creditCap</h3>
           <div class="formula">creditCap = mapScore(credit_yoy, [[6→3], [7→4.5], [8→6], [8.5→10]])&nbsp;&nbsp;（社融收缩强压仓位）</div>
           <h3>② 共振约束 resonanceCap</h3>
@@ -167,6 +180,11 @@
 trend≤3 且 valuation≤3 → 10 成（双冷共振·黄金坑，不约束）
 valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
 其他 → 10 成（不约束）</div>
+          <h3>④′ 黄金坑 Boost（PSI × 温度）</h3>
+          <div class="formula">gpBoost = 2.0  若 PSI≥60 且 temp≤3（政策托+深超跌·历史+6.41%/命中75%）<br>
+gpBoost = 1.0  若 PSI≥70 且 temp≤4（政策底+超跌·历史+2.71%/命中61%）<br>
+gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中继·勿盲加」告警</div>
+          <p class="section-note">Boost 加在 min 之前：黄金坑是「极端便宜的加仓许可」，但仍受信用上限/共振上限/保守系数三重硬约束管辖，不突破既有安全绳。PSI 由六层话术 NLP 打分（L1字面词典/L2弦外沉默/L3言行印证/L5场合权重/L6制度固化），当月值随重大政策发言更新。</p>
           <h3>③ 保守系数 conservativeFactor</h3>
           <div class="formula">基线 1.0，每命中一条 −0.05，下限 0.80：
 &nbsp;china_fragile≥8 / vix≥25 / hormuz_risk≥7 / win_proximity≥6 / 核心字段 asOf 超 45 天</div>
@@ -180,6 +198,7 @@ valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
             <li><b>文件级</b>：quotes.json 拉取失败时，先走<b>腾讯 JSONP 兜底</b>（浏览器直连 qt.gtimg.cn，与采集脚本同一解析口径）；兜底也失败 → 行情条用 macro 内 vix / amt_yi / oil_brent 等基线值渲染并整块标灰。</li>
             <li><b>数据现状（不装实时）</b>：macro.json 由 akshare 每日自动采集 <b>11 个字段</b>（PMI / M1 / M2 / LPR / 沪深300 PE 及 10 年分位 / PB 分位 / 两融 / 贸易帐 / 美国失业率 / 70 城二手房同比），其余 18 个字段仍为内置基线——明细表「来源」列逐个标注，标灰即基线，不用猜。</li>
             <li><b>全站级</b>：三文件全失败 → 渲染基线快照 + 顶部黄条「数据不可用，以下为基线值」，计算引擎照常跑，永远给得出一个仓位数字。</li>
+            <li><b>数据源级联（2026-10-20 实测教训）</b>：东财 push2his 接口可能无预警断连 → 趋势源级联「东财 → akshare 新浪日线 → 沿用上次值」；VIX 级联「stooq → 本土 20 日已实现波动率代理」。<b>任何兜底/代理值必须在来源列如实标注「沿用/代理」，绝不伪装成实时</b>。</li>
           </ol>
         </section>
 
@@ -216,9 +235,40 @@ valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
                 <tr><td>quotes.*（hs300/sh/sz/cyb/kc/hsi/hstech/ndx/vix）</td><td>9 个指数</td><td>{price,pct,amtYi}</td><td>点 / %</td><td>日</td><td>腾讯行情</td></tr>
                 <tr><td>quotes.amtTotalYi / ok / asOf</td><td>成交额 / 状态 / 日期</td><td>number / bool / date</td><td>亿</td><td>日</td><td>腾讯行情</td></tr>
                 <tr><td>backtest[].tempAdj / fwd21 / fwd63</td><td>历史月度温度 / 21天 / 63天收益</td><td>number</td><td>0-10 / %</td><td>月</td><td>历史回测</td></tr>
+                <tr><td>psi</td><td>政策托举力（六层NLP）</td><td>number</td><td>0–100</td><td>事件/月</td><td>psi_nlp_engine（138月已回测）</td></tr>
+                <tr><td>bbii</td><td>牛熊强度指数</td><td>number</td><td>0–100</td><td>日</td><td>计算（7维加权）</td></tr>
+                <tr><td>gp_boost</td><td>黄金坑Boost</td><td>number</td><td>成</td><td>日</td><td>计算（PSI×温度）</td></tr>
               </tbody>
             </table>
           </div>
+        </section>
+
+        <!-- ⑧ BBII 方向计与黄金坑（2026-10-20 新增） -->
+        <section class="card" aria-labelledby="m8">
+          <div class="section-head"><h2 id="m8">⑧ 牛熊强度 BBII（方向计·仅解读）与黄金坑反向加仓</h2></div>
+          <p class="section-note">温度是「风险计」（越高越热→越降仓），BBII 是「方向计」（越高越牛，仅作牛熊解读、<b>不参与仓位计算</b>）。两表共享 4 维原始数据、各只计 1 次，不存在重复计分。</p>
+          <h3>BBII 公式（0–100，权重和=100）</h3>
+          <div class="formula">BBII = 0.25×PSI + 0.20×趋势 + 0.15×估值(便宜度) + 0.15×流动性 + 0.12×盈利 + 0.08×资金 + 0.05×情绪(倒U)</div>
+          <p class="section-note">共享4维取自①的同一数据：趋势/流动性原值×10；估值取<b>便宜度 = 10 − 贵热度</b>；情绪做<b>倒U变换</b>（6分为乐观峰值，狂热反扣）。独有3维：政策PSI（六层话术NLP，138月序列已回测：救市94/924=99/严监管27–30/托而不举75–81）、盈利基本面、资金流向。</p>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>BBII 区间</th><th>≥70</th><th>58–69</th><th>45–57</th><th>30–44</th><th>&lt;30</th></tr></thead>
+              <tbody><tr><td>解读（不调仓）</td><td>强牛区</td><td>慢牛区</td><td>震荡交界区</td><td>弱势/熊市区</td><td>熊市中晚期</td></tr></tbody>
+            </table>
+          </div>
+          <h3>黄金坑反向加仓（历史回测再校准，138 月）</h3>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>档位</th><th>触发条件</th><th>Boost</th><th>历史样本</th><th>fwd63 均值</th><th>正收益占比</th></tr></thead>
+              <tbody>
+                <tr><td>★ 主触发</td><td>PSI≥60 且 temp≤3</td><td>+2.0 成</td><td>n=16</td><td>+6.41%</td><td>75%</td></tr>
+                <tr><td>★ 次触发</td><td>PSI≥70 且 temp≤4</td><td>+1.0 成</td><td>n=18</td><td>+2.71%</td><td>61%</td></tr>
+                <tr><td>⚠ 下跌中继</td><td>PSI&lt;50 且 temp≤4</td><td>0（告警勿加）</td><td>n=6</td><td>−4.62%</td><td>0%</td></tr>
+                <tr><td>中间带</td><td>PSI 50–70 且 temp≤4</td><td>0（温度主导）</td><td>n=8</td><td>+6.75%</td><td>62%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="section-note">阈值敏感性：PSI 60–65 为稳健平台期，≥80 失效；中间带样本 n=8 偏小，维持温度主导。旧「正向加成」已被回测证伪（43.6% vs 纯温度 48.5%），已废弃。</p>
         </section>
 
         <!-- ⑦ 局限性与免责 -->
@@ -226,6 +276,7 @@ valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
           <div class="section-head"><h2 id="m7">⑦ 局限性与免责</h2></div>
           <div class="prose">
             <p>温度是「现在大概在哪个季节」的归纳，不预测明天涨跌；历史回测用的是事后统计口径，实时仓位只用当日可得数据，不存在未来函数。模型在极端行情、政策突变、数据停更时可能失效。</p>
+            <p>补充诚实边界（2026-10-20）：PSI（政策托举力）的方向预测力≈0（Pearson −0.035，强托举月命中 51%）——它精准划分政策 regime，但<b>不能预测涨跌</b>，故仅作黄金坑触发器与方向解读；黄金坑信号样本 n=16/18 偏小，阈值 60–65 为稳健平台期（PSI≥80 失效），需随每月新数据滚动复验；展示层已去重（BBII 面板不重画共享维卡片）。</p>
             <p>本面板为个人投资研究的公开分享，所有内容仅供参考与学习，不构成任何投资建议或要约。市场有风险，投资须独立决策，盈亏自负。过往表现不代表未来，模型在极端行情下亦可能失效。</p>
           </div>
           <div class="footer__cta">
@@ -266,6 +317,95 @@ valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
     overlay && overlay.addEventListener('click', close);
     closeBtn && closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
+  </script>
+  <script>
+    /* ===== 实时读数：按①表格公开锚点计算（与 compute.js 同锚点口径，便于审计） ===== */
+    const BASELINE = {"pmi": {"value": 50.1, "asOf": "2026-09-01", "src": "akshare·macro_china_pmi"}, "m1_yoy": {"value": 3.2, "asOf": "2026-09-01", "src": "akshare·macro_china_money_supply"}, "m2_yoy": {"value": 7.2, "asOf": "2026-09-01", "src": "akshare·macro_china_money_supply"}, "credit_yoy": {"value": 8.18, "asOf": "2026-04-01", "src": "基线(央行·社融存量同比)"}, "lpr1y": {"value": 3, "asOf": "2026-09-20", "src": "akshare·macro_china_lpr"}, "cn10y": {"value": 1.6822, "asOf": "2026-09-30", "src": "基线(中债)"}, "us10y": {"value": 5.31, "asOf": "2026-10-05", "src": "基线(FRED)"}, "hs300_pe": {"value": 12.38, "asOf": "2026-10-19", "src": "akshare·stock_index_pe_lg"}, "hs300_pe_pct": {"value": 55.4, "asOf": "2026-10-19", "src": "akshare·stock_index_pe_lg·10年分位"}, "hs300_pb_pct": {"value": 32.2, "asOf": "2026-10-19", "src": "akshare·stock_index_pb_lg·10年分位"}, "hsi_pe_pct": {"value": 50.6, "asOf": "2026-10-05", "src": "基线(恒生 10年分位代理)"}, "erp": {"value": 5.291, "asOf": "2026-09-30", "src": "基线(计算)"}, "margin_yi": {"value": 24809.1, "asOf": "2026-10-16", "src": "akshare·沪深交易所两融余额合计"}, "northbound": {"value": 0, "asOf": "2026-10-06", "src": "基线(港交所)"}, "breadth_up": {"value": 46.4, "asOf": "2026-09-30", "src": "基线(乐咕乐股)"}, "ah_premium": {"value": 140, "asOf": "2026-10-06", "src": "基线(AH溢价)"}, "amt_yi": {"value": 17028, "asOf": "2026-09-30", "src": "基线(两市)"}, "oil_brent": {"value": 97.82, "asOf": "2026-10-06", "src": "基线(布伦特油价)"}, "dxy": {"value": 101.87, "asOf": "2026-10-06", "src": "基线(美元指数)"}, "us_unemploy": {"value": 4.2, "asOf": "2025-09-01", "src": "akshare·macro_usa_unemployment_rate"}, "nasdaq_pct": {"value": 3.66, "asOf": "2026-10-05", "src": "基线(纳指20日)"}, "re_yoy": {"value": -0.85, "asOf": "2026-09-01", "src": "akshare·70城二手住宅同比(akshare·macro_china_new_house_price)"}, "vix": {"value": 21.67, "asOf": "2026-10-03", "src": "基线(CBOE VIX)"}, "trade_balance": {"value": 982.4, "asOf": "2025-09-01", "src": "akshare·macro_china_trade_balance"}, "ai_bubble": {"value": 7.1, "asOf": "2026-10-05", "src": "推导(纳指+美债)"}, "hormuz_risk": {"value": 6.5, "asOf": "2026-10-06", "src": "推导(油价)"}, "paths_lit": {"value": 6.2, "asOf": "2026-10-06", "src": "推导(综合)"}, "win_proximity": {"value": 4.1, "asOf": "2026-10-06", "src": "推导(真实压力:油价+VIX+纳指+美债)"}, "china_fragile": {"value": 8.2, "asOf": "2026-08-01", "src": "推导(70城二手房同比)"}};
+    const PSI_FALLBACK = {value: 68.4, asOf: "2026-06", src: "138月NLP序列末值(待管线写入psi字段)"};
+    const EARN_FALLBACK = {value: 54, asOf: "2026-09", src: "基线(工业利润+社融种子)"};
+    function lin(v, pts){
+      if(v<=pts[0][0]) return pts[0][1];
+      for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(v>=a[0]&&v<=b[0])return a[1]+(v-a[0])*(b[1]-a[1])/(b[0]-a[0]);}
+      return pts[pts.length-1][1];
+    }
+    function sentBBII(sc){ return sc<=6 ? sc : Math.max(0,(10-sc))*1.5; }
+    function fval(m,k){ const x=(m||{})[k]; return x&&typeof x.value==="number" ? x.value : null; }
+    function fsrc(m,k){ const x=(m||{})[k]; return x? (x.src||"-") : "缺失"; }
+    function fasof(m,k){ const x=(m||{})[k]; return x? (x.asOf||"-") : "-"; }
+    function computeAll(m){
+      const g=(k,d)=>{const v=fval(m,k);return v==null?d:v;};
+      // ① 锚点（与上方表格一字不差）
+      const trend = 0.4*lin(g("nasdaq_pct",3.66),[[-5,1],[0,3],[5,5],[10,7],[15,9]])
+                  + 0.3*lin(g("breadth_up",46.4),[[30,2],[50,5],[80,9]])
+                  + 0.3*lin(g("vix",21.67),[[12,8],[20,5],[30,1]]);
+      const val = 0.4*lin(g("hs300_pe_pct",55.4),[[10,1],[50,5],[90,9]])
+                + 0.3*lin(g("hs300_pb_pct",32.2),[[10,1],[50,5],[90,9]])
+                + 0.2*lin(g("erp",5.291),[[7,1],[5,5],[2,9]])
+                + 0.1*lin(g("hsi_pe_pct",50.6),[[10,1],[50,5],[90,9]]);
+      const liq = 0.4*lin(g("m1_yoy",3.2),[[0,1],[5,5],[15,9]])
+                + 0.3*lin(g("credit_yoy",8.18),[[8,3],[10,5],[13,9]])
+                + 0.3*lin(g("lpr1y",3),[[4.6,2],[3.85,5],[3.0,8]]);
+      const sent = 0.3*lin(g("margin_yi",24809.1),[[15000,3],[20000,6],[25000,8],[30000,10]])
+                 + 0.25*lin(g("amt_yi",17028),[[6000,2],[10000,5],[17000,7],[25000,10]])
+                 + 0.25*lin(g("vix",21.67),[[12,9],[20,5],[30,1]])
+                 + 0.2*lin(g("ah_premium",140),[[130,5],[155,8]]);
+      const clamp10=x=>Math.max(0,Math.min(10,x));
+      const t=clamp10(trend),v=clamp10(val),l=clamp10(liq),s=clamp10(sent);
+      const temp=0.30*t+0.30*v+0.20*l+0.20*s;
+      const map=[[0,9.5],[2,9],[4,7],[5,6],[6,5],[7,3.5],[8,2],[9,1],[10,0.5]];
+      let pos; if(temp<=0)pos=9.5; else if(temp>=10)pos=0.5;
+      else for(let i=0;i<map.length-1;i++){const a=map[i],b=map[i+1];if(temp>=a[0]&&temp<=b[0]){pos=a[1]+(temp-a[0])*(b[1]-a[1])/(b[0]-a[0]);break;}}
+      // PSI
+      const psiObj = (m&&m.psi&&typeof m.psi.value==="number") ? m.psi : PSI_FALLBACK;
+      const psi = psiObj.value;
+      // 黄金坑
+      let boost=0,gpType="常规";
+      if(psi>=60&&temp<=3){boost=2.0;gpType="黄金坑·主触发";}
+      else if(psi>=70&&temp<=4){boost=1.0;gpType="黄金坑·次触发";}
+      else if(psi<50&&temp<=4){gpType="下跌中继·勿盲加";}
+      // BBII
+      const earn=(m&&m.earnings&&typeof m.earnings.value==="number")?m.earnings:EARN_FALLBACK;
+      const flowProxy=lin(g("margin_yi",24809.1),[[15000,3],[20000,6],[25000,8],[30000,10]]);
+      const bbii=(20*t*10+15*(10-v)*10+15*l*10+5*sentBBII(s)*10+25*psi+12*earn.value+8*flowProxy*10)/100;
+      // 三重硬约束
+      const creditCap=lin(g("credit_yoy",8.18),[[6,3],[7,4.5],[8,6],[8.5,10]]);
+      let resCap=10;
+      if(t>=7&&v>=7)resCap=3;
+      else if(v>=7.5&&s>=8)resCap=4;
+      let cf=1.0;
+      if(g("china_fragile",8.2)>=8)cf-=0.05;
+      if(g("vix",21.67)>=25)cf-=0.05;
+      const final=Math.min(9.5,Math.max(0,Math.min(pos+boost,creditCap,resCap))*cf);
+      return {t,v,l,s,temp,pos,psi,psiObj,boost,gpType,bbii,earn,flowProxy,creditCap,resCap,cf,final};
+    }
+    function render(r, mode){
+      const tb=document.querySelector("#liveTable tbody");
+      const tag = mode==="baseline" ? "基线快照" : "实时";
+      tb.innerHTML=`
+        <tr><td><b>① 牛熊温度（风险计）</b></td><td class="num"><b>${r.temp.toFixed(2)}</b> / 10</td><td>趋势${r.t.toFixed(1)}·估值${r.v.toFixed(1)}·流动性${r.l.toFixed(1)}·情绪${r.s.toFixed(1)}（按①锚点）</td><td>${tag}</td></tr>
+        <tr><td>→ 温度映射仓位</td><td class="num">${r.pos.toFixed(2)} 成</td><td>③仓位映射线性插值</td><td>-</td></tr>
+        <tr><td>政策托举力 PSI</td><td class="num">${r.psi}</td><td>${r.psiObj.src||""}</td><td>${r.psiObj.asOf||"-"}</td></tr>
+        <tr><td>黄金坑判定</td><td class="num">${r.gpType}</td><td>Boost ${r.boost} 成</td><td>-</td></tr>
+        <tr><td><b>② BBII（方向计·仅解读）</b></td><td class="num"><b>${r.bbii.toFixed(1)}</b> / 100</td><td>估值取便宜度(10−${r.v.toFixed(1)}=${(10-r.v).toFixed(1)})·情绪倒U；不作仓位加成</td><td>${tag}</td></tr>
+        <tr><td>三重硬约束</td><td class="num">信用${r.creditCap.toFixed(1)} / 共振${r.resCap} / 系数${r.cf.toFixed(2)}</td><td>④原规则不变</td><td>-</td></tr>
+        <tr><td><b>③ 最终建议仓位</b></td><td class="num"><b>${r.final.toFixed(1)} 成</b></td><td>min(温度${r.pos.toFixed(2)}+Boost${r.boost}, 信用, 共振)×${r.cf.toFixed(2)}</td><td>${tag}</td></tr>`;
+      const al=document.getElementById("liveAlert");
+      al.textContent = `✓ 判读：${r.gpType==="常规"?"无黄金坑信号（PSI "+r.psi+"，温度需≤3才主触发）":r.gpType}；BBII ${r.bbii.toFixed(1)} 仅方向解读、不进仓位公式（重复计分自查见⑧）。`;
+    }
+    (async()=>{
+      try{
+        const r=await fetch("data/macro.json");
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        const j=await r.json();
+        const res=computeAll(j.data||{});
+        render(res,"live");
+      }catch(e){
+        document.getElementById("liveBanner").style.display="block";
+        document.getElementById("liveBanner").textContent="⚠ data/macro.json 读取失败（"+e.message+"），以下为内嵌基线快照（2026-10-19 采集），非实时。";
+        const res=computeAll(BASELINE);
+        render(res,"baseline");
+      }
+    })();
   </script>
 </body>
 </html>
