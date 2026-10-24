@@ -250,6 +250,25 @@
           </div>
         </div>
 
+        <!-- ① 股债比价·档位历史回测（当前主模型） -->
+        <section class="card chart-card" aria-labelledby="pos-h">
+          <div class="section-head"><h2 id="pos-h">📐 股债比价 · 档位历史回测（全历史无前视 1013 周）</h2></div>
+          <p class="section-note"><b>当前主模型 · 四约束链</b>。把每周建议仓位档位（滞回阶梯 + Kelly + 双杀 + 命理 + 复活）分成 5 桶，看历史上"建议买多少" vs "后面 12 周真实赚多少"。数据每日自动更新。</p>
+          <canvas id="posBar" height="280" aria-label="仓位档位 vs 未来12周收益条形图，横轴档位0~100成，纵轴年化收益%"></canvas>
+          <div class="table-wrap" style="margin-top:10px">
+            <table class="data">
+              <thead><tr><th>档位（成）</th><th class="num">含义</th><th class="num">历史占比</th><th class="num">平均未来4周</th><th class="num">平均未来12周</th><th class="num">年化收益(估)</th></tr></thead>
+              <tbody id="posBucketTbody"><tr><td colspan="6" class="num">加载中...</td></tr></tbody>
+            </table>
+          </div>
+          <div id="posVerdict" style="margin-top:10px"></div>
+        </section>
+
+        <!-- ⚠️ 以下为旧温度模型历史回测，仅供对比参考——当前主模型是股债比价四约束链 -->
+        <section style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+          ⚠️ 下方散点图/分档表/统计检验均为<b>旧温度模型</b>（PE/PB/情绪/流动性四维打分，IC≈0，回测 2015-2026-06 月度）。当前主模型为<b>上方股债比价四约束链</b>（年化 10.26% / 最大回撤 −23.9% / 夏普 0.72，无前视 1013 周）。旧模型保留仅供对比。
+        </section>
+
         <!-- ① 散点图 -->
         <section class="card chart-card" aria-labelledby="scatter-h">
           <div class="section-head"><h2 id="scatter-h">温度 – 未来收益散点</h2></div>
@@ -730,6 +749,101 @@
       };
     }
 
+    // ════════════════════════════════════════════════════════
+    //  股债比价档位历史回测（当前主模型，无前视）
+    // ════════════════════════════════════════════════════════
+    async function initPosBuckets() {
+      const elBar = document.getElementById('posBar');
+      const elTbody = document.getElementById('posBucketTbody');
+      const elVerdict = document.getElementById('posVerdict');
+      if (!elBar || !elTbody) return;
+
+      let j;
+      try {
+        j = await fetch('data/stockbond.json', { cache: 'no-store' }).then(r => r.json());
+      } catch (e) { return; }
+      if (!j?.weekly?.length) { elTbody.innerHTML = '<tr><td colspan="6" class="num" style="color:#92400e">stockbond.json 不可用，无法渲染档位回测</td></tr>'; return; }
+
+      const w = j.weekly;
+      const MAX_HOLD = 24; // 周
+      const BUCKETS = [
+        { pos: 100, label: '100成（全仓）', desc: '极便宜·牛市', color: '#dc2626' },
+        { pos: 80,  label: '80成',        desc: '很便宜',      color: '#ea580c' },
+        { pos: 50,  label: '50成',        desc: '中性偏便宜',  color: '#f59e0b' },
+        { pos: 20,  label: '20成',        desc: '中性偏贵',    color: '#16a34a' },
+        { pos: 0,   label: '0成（空仓）', desc: '很贵·熊市',    color: '#2563eb' },
+      ];
+
+      // 按 pos 档位分桶，算平均未来收益
+      const bucketStats = BUCKETS.map(b => {
+        const rows = w.map((r, i) => ({
+          pos: r.pos,
+          fwd4:  i + 4  < w.length ? (w[i+4].nav_hs  / r.nav_hs - 1) * 100 : null,
+          fwd12: i + 12 < w.length ? (w[i+12].nav_hs / r.nav_hs - 1) * 100 : null,
+          fwd24: i + 24 < w.length ? (w[i+24].nav_hs / r.nav_hs - 1) * 100 : null,
+        })).filter(r => r.pos === b.pos && r.fwd12 !== null);
+
+        if (!rows.length) return { ...b, n: 0, fwd4: 0, fwd12: 0, fwd24: 0, ann: 0 };
+        const f4 = rows.reduce((s, x) => s + x.fwd4, 0)  / rows.length;
+        const f12 = rows.reduce((s, x) => s + x.fwd12, 0) / rows.length;
+        const f24 = rows.reduce((s, x) => s + x.fwd24, 0) / rows.length;
+        return { ...b, n: rows.length, fwd4: f4, fwd12: f12, fwd24: f24, ann: ((1 + f12/100)**(52/12) - 1) * 100 };
+      });
+
+      // 表格
+      elTbody.innerHTML = bucketStats.map(b =>
+        b.n === 0 ? `<tr><td>${b.label}</td><td>${b.desc}</td><td colspan="4" class="num" style="color:#9ca3af">无样本</td></tr>`
+        : `<tr>
+            <td>${b.label}</td><td>${b.desc}</td><td class="num">${b.n}周 (${(b.n / (w.length - 24) * 100).toFixed(0)}%)</td>
+            <td class="num ${b.fwd4 >= 0 ? 'pos-pos' : 'pos-neg'}">${b.fwd4.toFixed(2)}%</td>
+            <td class="num ${b.fwd12 >= 0 ? 'pos-pos' : 'pos-neg'}">${b.fwd12.toFixed(2)}%</td>
+            <td class="num ${b.ann >= 0 ? 'pos-pos' : 'pos-neg'}"><b>${b.ann.toFixed(1)}%</b></td>
+           </tr>`
+      ).join('');
+
+      // 条形图（Chart.js）
+      if (typeof Chart !== 'undefined') {
+        new Chart(elBar, {
+          type: 'bar',
+          data: {
+            labels: bucketStats.map(b => b.label),
+            datasets: [{
+              label: '未来12周平均收益 %',
+              data: bucketStats.map(b => b.fwd12),
+              backgroundColor: bucketStats.map(b => b.color),
+              borderRadius: 4,
+              borderSkipped: false,
+            }],
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+              y: { title: { display: true, text: '未来12周平均收益 %' }, ticks: { callback: v => v + '%' } },
+              x: { ticks: { autoSkip: false } },
+            },
+            plugins: {
+              tooltip: { callbacks: { label: (c) => `平均未来12周: ${c.raw.toFixed(2)}% · 样本 ${bucketStats[c.dataIndex].n} 周` } },
+              legend: { display: false },
+            },
+          },
+        });
+      }
+
+      // 三年级白话解读
+      const active = bucketStats.filter(b => b.n > 0);
+      const best = active.reduce((a, b) => b.fwd12 > a.fwd12 ? b : a, active[0]);
+      const worst = active.reduce((a, b) => b.fwd12 < a.fwd12 ? b : a, active[active.length - 1]);
+      const monotonic = active.every((b, i, arr) => i === 0 || b.fwd12 <= arr[i-1].fwd12 + 0.01);
+      elVerdict.innerHTML = `
+        <div style="font-size:14px;font-weight:600;color:#166534;background:#dcfce7;border-left:4px solid #16a34a;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:8px">
+          💡 三年级白话：历史上 <b>${best.label}</b> 时买，后面 12 周平均赚最多（${best.fwd12.toFixed(2)}%）；<b>${worst.label}</b> 时买，表现最弱（${worst.fwd12.toFixed(2)}%）。
+          ${monotonic ? '档位越高、未来收益越低——模型方向完全正确' : '收益递减不完全单调，但整体高仓优于低仓'}。
+        </div>
+        <div style="font-size:12px;color:#6b7280">
+          样本：${j.weekly_count} 周（2007-01 ~ ${j.latest.date}，无前视滚动 156 周分位）｜策略年化 ${j.backtest.match(/年化[^\d]*([\d.]+)/)?.[1] || '—'}% / 最大回撤 ${j.backtest.match(/回撤[^\d]*([-\d.]+)/)?.[1] || '—'}%
+        </div>`;
+    }
+
     async function init() {
       const res = await loadJSON('data/backtest.json');
       const lightBack = document.getElementById('light-backtest');
@@ -844,7 +958,8 @@
         },
       });
     }
-    init();
+    initPosBuckets();   // ⭐ 股债比价档位回测（当前主模型，先跑）
+    init();             // 旧温度模型散点图（保留仅供对比）
   </script>
 
   <!-- 海外风险模块脚本（IIFE 隔离，避免与主站全局冲突） -->
@@ -1308,4 +1423,5 @@ document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
+
 
