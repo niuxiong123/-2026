@@ -26,3 +26,9 @@ jobs:
 
       - name: 跑内部一致性校验
         run: node tests/verify_site.js
+
+      - name: 仓位引擎单测（滞回/Kelly/双杀/命理/复活）
+        run: python3 tests/test_hyst_core.py
+
+      - name: 股债数据契约校验（防键名漂移静默降级）
+        run: python3 tests/test_json_contract.py

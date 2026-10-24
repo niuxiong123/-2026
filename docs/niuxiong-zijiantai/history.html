@@ -477,7 +477,7 @@
           <div id="stockbond-empty" class="section-note" style="display:none">股债数据暂不可用（data/stockbond.json 未生成或加载失败）。</div>
           <div id="stockbond-meta" class="section-note" style="margin-top:10px"></div>
           <div id="stockbond-hyst" style="margin-top:8px;padding:12px;border-radius:8px;background:#f8f9fa;font-size:14px"></div>
-          <p class="section-note" style="margin-top:10px">★滞回阶梯阈值（升档/降档分离，防反复横跳）：跌入才升档——分位≤5%→满仓、≤15%→8成、≤35%→5成、≤65%→2成；涨过才降档——>15%→8成、>35%→5成、>65%→2成、>80%→清仓。2007–2026 月度回测：年化 11.17%、最大回撤 −15.4%、全年换档 48 次。历史回测不代表未来，非投资建议。</p>
+          <p class="section-note" style="margin-top:10px">★四道约束依次收紧：<b>①滞回阶梯</b>（升档/降档分离，防反复横跳）——跌入才升档：分位≤5%→满仓、≤15%→8成、≤35%→5成、≤65%→2成；涨过才降档：>15%→8成、>35%→5成、>65%→2成、>80%→清仓。<b>②动态 Kelly</b>——μ/λ 随分位线性插值，配 3 年滚动波动率与十年国债利率，半凯利封顶并设 30 成下限。<b>③股债双杀熔断</b>——沪深300 与二级债基近 20 个交易日同时下跌（股 ≤−5% 且债 ≤−1%）时压至 20 成；若分位仍 ≤15% 且阶梯档位未降，复活条款回补至 50 成（防 2022 年那种地板假信号一刀切关死）。<b>④命理纪律封顶</b>——随分位递减：5%→100、10%→80、20%→60、40%→40、65%→20、>65%→0；≤5% 放开、涨过 20% 收回；2026–2027 财杀攻身年地板区只放到 80 成。2007–2026 无前视 1013 周回测：年化 10.26%、最大回撤 −23.9%、夏普 0.72（旧口径 11.17%/−15.4% 为月度再平衡乐观口径，已废弃）。历史回测不代表未来，非投资建议。</p>
         </section>
       </main>
     </div>
@@ -591,17 +591,42 @@
       if (meta) meta.textContent = "数据截至 " + L.date + " ｜ 沪深300全收益 " + L.nav_hs +
         " ｜ 二级债基 " + L.nav_bond + " ｜ 比值 R = " + L.ratio_R +
         " ｜ 全历史分位（2007 起）" + L.pct + "%";
-      var h = HMAP[L.pos] || ["—", "#666", "—"];
+      var FINAL = (L.final_position != null) ? L.final_position : L.pos;
+      var h = HMAP[FINAL] || HMAP[L.pos] || ["—", "#666", "—"];
       if (badge) {
-        badge.textContent = "当前执行档位：" + L.pos + " 成";
+        badge.textContent = "当前执行档位：" + FINAL + " 成";
         badge.style.background = h[1] + "1a";
         badge.style.color = h[1];
       }
-      if (hyst) hyst.innerHTML =
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
-        '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + h[1] + '"></span>' +
-        '<strong style="color:' + h[1] + '">★滞回阶梯建议仓位：' + h[0] + '</strong>' +
-        '<span style="color:#6b7280">· 当前档位触发条件：分位 ≤ ' + h[2] + '（跌入才升档、涨过才降档）</span></div>';
+      if (hyst) {
+        var rows = [
+          ["① 滞回阶梯", L.pos + " 成", "分位 " + L.pct + "% 落入 " + (HMAP[L.pos] ? HMAP[L.pos][2] : "—") + " 档"],
+          ["② 动态 Kelly", (L.kelly_cap != null ? L.kelly_cap + " 成" : "—"),
+           "μ/λ 随分位插值 · 滚动 σ = " + (L.sigma != null ? (L.sigma * 100).toFixed(2) + "%" : "—")
+           + " · 无风险利率 " + (L.rf != null ? (L.rf * 100).toFixed(2) + "%" : "—") + "（十年国债）"],
+          ["③ 股债双杀", (L.dk_triggered ? "触发 → " + L.dk_cap + " 成" : "未触发"),
+           L.dk_triggered
+             ? "股 20 日 " + (L.dk_hs20 * 100).toFixed(2) + "%（阈值 −5%）· 债 20 日 "
+               + (L.dk_bond20 * 100).toFixed(2) + "%（阈值 −1%）"
+             : "股债 20 日跌幅未同时越线"],
+          ["④ 命理纪律", L.mystic_cap + " 成",
+           "乙木身弱·财旺杀强；高位递减、地板区分批放开；2026–2027 财杀攻身年地板区只放到 80 成"],
+        ];
+        var html = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + h[1] + '"></span>' +
+          '<strong style="color:' + h[1] + '">★当前执行仓位：' + FINAL + ' 成</strong>' +
+          '<span style="color:#6b7280">· ' + (L.final_reason || "取滞回阶梯档位") + '</span></div>';
+        html += '<table style="width:100%;margin-top:10px;border-collapse:collapse;font-size:13px">';
+        for (var i = 0; i < rows.length; i++) {
+          html += '<tr><td style="padding:4px 8px 4px 0;color:#374151;white-space:nowrap;vertical-align:top">' + rows[i][0] + '</td>' +
+                  '<td style="padding:4px 12px 4px 0;font-weight:600;white-space:nowrap;vertical-align:top">' + rows[i][1] + '</td>' +
+                  '<td style="padding:4px 0;color:#6b7280">' + rows[i][2] + '</td></tr>';
+        }
+        html += '</table>';
+        html += '<div style="margin-top:8px;color:#6b7280;font-size:12px">最终仓位 = 四道约束取最小；' +
+                '双杀打在地板上（分位仍 ≤15% 且阶梯档位未降）时复活条款回补至 50 成。</div>';
+        hyst.innerHTML = html;
+      }
     }).catch(function (e) {
       if (empty) empty.style.display = "block";
       if (meta) meta.textContent = "⚠ 股债数据未就绪：" + e.message + "（请先手动 Run 一次 stockbond-daily.yml 生成数据）";
