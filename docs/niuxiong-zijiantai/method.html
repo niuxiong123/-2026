@@ -105,7 +105,7 @@
       </header>
 
       <main id="main" class="content">
-        <p class="prose" style="max-width:720px">不藏着。下面把四维打分、温度合成、仓位映射、三重硬约束、降级规则、数据字典全部摊开。所有锚点、权重与 <code>compute.js</code> 里的常量一一对应，可审计。</p>
+        <p class="prose" style="max-width:720px">不藏着。下面把四维打分、温度合成、仓位映射、三重硬约束、降级规则、数据字典全部摊开。所有锚点、权重与 <code>compute.js</code> 里的常量一一对应，可审计。<b>现行执行口径为「方案C · 股债比价四约束链」</b>（见 ⑤，首页「当前执行档位」即由它给出）；温度模型及其仓位映射自 2026-10-24 起降级为历史方法与解读参考。</p>
         <div class="card" role="note" style="border-left:4px solid #d4a72c;margin-bottom:16px;max-width:720px">
           <p class="section-note" style="margin:0"><b>数据现状（不装实时）：</b>宏观已接入 akshare 每日自动采集（29 字段中 11 个为真实值，其余保留基线并逐行标注）；温度与仓位已由真实数据驱动。回测序列 2015–2026-06 为首发静态回测（138 月），2026-10 起由管线按月自动追加（沪深300 日线口径，双成熟才落库）。公式同样全部可审计，各字段覆盖情况见 ⑤。</p>
         </div>
@@ -158,8 +158,11 @@
 
         <!-- ③ 仓位映射表 -->
         <section class="card" aria-labelledby="m3">
-          <div class="section-head"><h2 id="m3">③ 仓位映射（温度 → 成数）</h2></div>
-          <p class="section-note">线性插值。温度越高，温度仓位越低。</p>
+          <div class="section-head">
+            <h2 id="m3">③ 仓位映射（温度 → 成数）</h2>
+            <span class="section-badge">历史方法 · 仅供参考</span>
+          </div>
+          <p class="section-note">线性插值。温度越高，温度仓位越低。<b>2026-10-24 起执行口径已切换至「方案C · 股债比价四约束链」</b>，本表保留为历史方法与解读参考，不再作为执行依据。</p>
           <div class="table-wrap">
             <table class="data">
               <thead><tr><th>温度</th><th class="num">0</th><th class="num">2</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">9</th><th class="num">10</th></tr></thead>
@@ -170,9 +173,13 @@
 
         <!-- ④ 三重硬约束 -->
         <section class="card" aria-labelledby="m4">
-          <div class="section-head"><h2 id="m4">④ 三重硬约束与保守系数</h2></div>
+          <div class="section-head">
+            <h2 id="m4">④ 三重硬约束与保守系数</h2>
+            <span class="section-badge">历史方法 · 仅供参考</span>
+          </div>
           <p class="section-note">最终仓位 = round1( min(温度仓位 + 黄金坑Boost, 信用上限, 共振上限) × 保守系数 )<br>
-黄金坑Boost：主触发(PSI≥60 且 temp≤3) +2.0 成 ｜ 次触发(PSI≥70 且 temp≤4) +1.0 成 ｜ 其余 0</p>
+黄金坑Boost：主触发(PSI≥60 且 temp≤3) +2.0 成 ｜ 次触发(PSI≥70 且 temp≤4) +1.0 成 ｜ 其余 0<br>
+<b>2026-10-24 起执行口径已切换至「方案C · 股债比价四约束链」</b>，本章保留为历史方法与解读参考。</p>
           <h3>① 信用约束 creditCap</h3>
           <div class="formula">creditCap = mapScore(credit_yoy, [[6→3], [7→4.5], [8→6], [8.5→10]])&nbsp;&nbsp;（社融收缩强压仓位）</div>
           <h3>② 共振约束 resonanceCap</h3>
@@ -190,9 +197,61 @@ gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中�
 &nbsp;china_fragile≥8 / vix≥25 / hormuz_risk≥7 / win_proximity≥6 / 核心字段 asOf 超 45 天</div>
         </section>
 
-        <!-- ⑤ 降级规则 -->
+        <!-- ⑤ 方案C · 股债比价四约束链（现行执行口径） -->
         <section class="card" aria-labelledby="m5">
-          <div class="section-head"><h2 id="m5">⑤ 降级（标灰）规则</h2></div>
+          <div class="section-head">
+            <h2 id="m5">⑤ 方案C · 股债比价四约束链（现行执行口径）</h2>
+            <span class="section-badge">现行执行 · 每日更新</span>
+          </div>
+          <p class="section-note">本页上方 ③ 温度仓位映射、④ 三重硬约束自 2026-10-24 起已降级为历史方法与解读参考；<b>真正每天在跑、首页「当前执行档位」展示的，是下面这套「股债比价四约束链」</b>。它不关心「市场现在热不热」，而是回答「股和债，谁更便宜」——先算一个比值 R，再让四条约束依次把仓位往下拧，最后取最保守的一档。</p>
+
+          <h3>模型 R：股债比价怎么算</h3>
+          <div class="formula">R = 沪深300全收益指数 ÷ 债腿<br>
+债腿 = 中证全债 H11001 × 80% + 沪深300全收益 × 20%（按月再平衡 + 终点校准 5.03）<br>
+全样本分位自 2007-01 起计算</div>
+          <p class="section-note">R 越大，说明股票相对债券越便宜，越该多买；R 越小，说明股票相对贵了，越该收手。把每天的 R 放到 2007 年至今的全样本里排个分位（站在历史长河里看今天处在便宜还是贵的位置），再决定档位。</p>
+
+          <h3>① 滞回阶梯（核心，单一真源）</h3>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>档位（按 R 分位由高到低）</th><th class="num">仓位</th></tr></thead>
+              <tbody>
+                <tr><td>满仓档</td><td class="num">100.00成</td></tr>
+                <tr><td>高仓档</td><td class="num">80.00成</td></tr>
+                <tr><td>中仓档</td><td class="num">50.00成</td></tr>
+                <tr><td>低仓档</td><td class="num">20.00成</td></tr>
+                <tr><td>空仓档</td><td class="num">0.00成</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="formula">双阈值滞回：跨档需突破更严格的阈值，防来回跳档（单一真源 hyst_core.py）</div>
+          <p class="section-note"><b>为什么这么设计——防抖：</b>市场小幅震荡时，如果「碰线就换挡」，仓位会一天满仓一天空仓地乱跳，既伤手续费也让人无所适从。双阈值滞回让「上去」和「下来」用不同的门槛，必须真正反转才换挡，把噪音过滤掉。这条是整条链的核心，全站唯一真源在 <code>hyst_core.py</code>，其他页面都引用它，不另起炉灶。</p>
+          <p class="section-note"><b>单位口径（务必看清）：</b>本站「成」= 百分点。100成 = 满仓（100%），60成 = 60%，显示保留两位小数，如「50.00成」。它<b>不是</b>「一成 = 10%」的旧式说法——50.00成就是半仓，不是 5%。具体分位阈值以 <code>hyst_core.py</code> 为准，本页不展开。</p>
+
+          <h3>② 动态 Kelly（对阶梯档位做修正）</h3>
+          <div class="formula">插值 μ / λ + 滚动 σ（156 周）+ cn10y → 对 ① 的档位做修正</div>
+          <p class="section-note"><b>为什么这么设计——防过度自信：</b>Kelly 公式的本质是「赔率好、把握大就多下注，但永远别全压」。这里用预期收益 μ、风险厌恶 λ、过去约 3 年（156 周）的实际波动 σ，再叠加十年国债收益率 cn10y 作无风险参照，对阶梯给的档位做「理性微调」——波动大时自动收一收，避免你在看似便宜、实则颠簸的行情里一把梭。</p>
+
+          <h3>③ 股债双杀熔断</h3>
+          <div class="formula">股 20 日 ≤ −5% 且 债 20 日 ≤ −1% → 强制压到 20成</div>
+          <p class="section-note"><b>为什么这么设计——防极端：</b>正常情况下股跌债涨（债券避险），股债双杀往往意味着流动性危机或系统性恐慌，历史上这种时候「抄底」常常抄在半山腰。一旦股票和债券 20 日同时大跌，不管分位多低，直接熔断压到 20成，先活下来再说。</p>
+
+          <h3>④ 命理纪律（可选叠加）</h3>
+          <div class="formula">随分位递减 + 双阈值滞回 + 2026–2027 地板区上限 80成<br>
+附复活条款：满足条件可恢复</div>
+          <p class="section-note">这是一条<b>可选</b>的叠加纪律（非强制计算项）：分位越低、纪律越松，同样用双阈值滞回防抖；在 2026–2027 的地板区设了 80成 上限，避免过度悲观空仓踏空；另有「复活条款」允许在市场条件修复后回升仓位，而不是一次性判死刑。</p>
+
+          <h3>最终仓位：取链条中最保守的一档</h3>
+          <p class="section-note">四条约束不是「取平均」，而是「层层下拧」——<b>最终仓位 = 链条里最保守（最低）的那一档</b>。滞回给底仓，Kelly 微调，双杀熔断兜底，命理纪律可选再加一层安全垫。宁可少赚、不可大亏，这是整条链的设计哲学。</p>
+          <p class="section-note"><b>当前执行仓位在哪看：</b>由 GitHub Actions 每日生成并写入 <code>stockbond.json</code>，首页「当前执行档位」实时展示。今日量级约在 50.00成 附近，<b>具体数字以首页实时数据为准</b>，本页不写死，以免与线上脱钩。</p>
+
+          <h3>诚实的局限</h3>
+          <p class="section-note">① <b>债腿是有意乐观的假设：</b>债腿用「中证全债 H11001 × 80% + 沪深300全收益 × 20%」混合并做 +5.03 终点校准，会让比值 R 整体偏「股更便宜」一些，从而倾向于给出更高仓位——这是我们刻意保留的乐观假设，读者需知晓其方向性。② <b>分位样本含成分调整偏差：</b>沪深300 等指数历史上多次调整成分股，2007 年至今的全样本分位会受这类调整影响，极端分位附近的解读需打折扣。</p>
+        </section>
+
+        <!-- ⑥ 降级规则（顺延） -->
+        <section class="card" aria-labelledby="m6">
+          <div class="section-head"><h2 id="m6">⑥ 降级（标灰）规则</h2></div>
           <ol class="prose" style="font-size:14px">
             <li><b>字段级</b>：macro 某字段缺失 / asOf 超 90 天 → 使用内置基线值，明细表该行灰底 + 「基线」徽标，其维度子权重不变（用基线值照常计分），但触发保守系数的陈旧惩罚。</li>
             <li><b>文件级</b>：quotes.json 拉取失败时，先走<b>腾讯 JSONP 兜底</b>（浏览器直连 qt.gtimg.cn，与采集脚本同一解析口径）；兜底也失败 → 行情条用 macro 内 vix / amt_yi / oil_brent 等基线值渲染并整块标灰。</li>
@@ -202,9 +261,9 @@ gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中�
           </ol>
         </section>
 
-        <!-- ⑥ 数据字典 -->
-        <section class="card" aria-labelledby="m6">
-          <div class="section-head"><h2 id="m6">⑥ 数据字典</h2></div>
+        <!-- ⑦ 数据字典 -->
+        <section class="card" aria-labelledby="m7">
+          <div class="section-head"><h2 id="m7">⑦ 数据字典</h2></div>
           <p class="section-note">macro.json（31 项）· quotes.json · backtest.json。字段名与仓库内 JSON 完全一致。</p>
           <div class="table-wrap">
             <table class="data">
@@ -271,9 +330,9 @@ gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中�
           <p class="section-note">阈值敏感性：PSI 60–65 为稳健平台期，≥80 失效；中间带样本 n=8 偏小，维持温度主导。旧「正向加成」已被回测证伪（43.6% vs 纯温度 48.5%），已废弃。</p>
         </section>
 
-        <!-- ⑦ 局限性与免责 -->
-        <section class="card" aria-labelledby="m7">
-          <div class="section-head"><h2 id="m7">⑦ 局限性与免责</h2></div>
+        <!-- ⑨ 局限性与免责 -->
+        <section class="card" aria-labelledby="m9">
+          <div class="section-head"><h2 id="m9">⑨ 局限性与免责</h2></div>
           <div class="prose">
             <p>温度是「现在大概在哪个季节」的归纳，不预测明天涨跌；历史回测用的是事后统计口径，实时仓位只用当日可得数据，不存在未来函数。模型在极端行情、政策突变、数据停更时可能失效。</p>
             <p>补充诚实边界（2026-10-20）：PSI（政策托举力）的方向预测力≈0（Pearson −0.035，强托举月命中 51%）——它精准划分政策 regime，但<b>不能预测涨跌</b>，故仅作黄金坑触发器与方向解读；黄金坑信号样本 n=16/18 偏小，阈值 60–65 为稳健平台期（PSI≥80 失效），需随每月新数据滚动复验；展示层已去重（BBII 面板不重画共享维卡片）。</p>
