@@ -46,7 +46,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f docs/niuxiong-zijiantai/data/stockbond.json
           git diff --cached --quiet && echo "No change" || git commit -m "chore(data): stockbond 自动更新 $(date +%F)"
-          git push || echo "push failed — will alert below"
+          git push
 
       # ④ 失败告警（GitHub Actions bot 发 issue）
       - name: Alert on failure
