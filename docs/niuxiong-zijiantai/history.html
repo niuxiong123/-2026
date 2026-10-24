@@ -225,13 +225,26 @@
       </header>
 
       <main id="main" class="content">
+        <!-- ★ 置顶：股债两线图 + 当前执行仓位四约束分解（2026-10-24 用户要求置顶） -->
+        <section class="card chart-card" aria-labelledby="stockbond-h">
+          <div class="section-head"><h2 id="stockbond-h">股债两线图 · 沪深300全收益 vs 二级债基</h2><span id="stockbond-badge" style="margin-left:10px;padding:3px 10px;border-radius:999px;background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:600;white-space:nowrap">当前执行档位：载入中…</span></div>
+          <p class="section-note">2004 年底 = 1，对数坐标，周频。蓝线 = 沪深300全收益（含分红再投资，真实数据）；橙线 = 二级债基模拟（中证全债×80% + 沪深300全收益×20%，按月再平衡，水平校准至公开二级债基指数终点约 5.03；非官方指数）。灰底 = 历史熊市区间。悬停可读当日比值 R、历史分位与 ★滞回阶梯建议仓位。</p>
+          <div style="height:460px;position:relative">
+            <canvas id="stockbond" aria-label="沪深300全收益与二级债基累计净值对数坐标对比图，周频，含熊市阴影区间"></canvas>
+          </div>
+          <div id="stockbond-empty" class="section-note" style="display:none">股债数据暂不可用（data/stockbond.json 未生成或加载失败）。</div>
+          <div id="stockbond-meta" class="section-note" style="margin-top:10px"></div>
+          <div id="stockbond-hyst" style="margin-top:8px;padding:12px;border-radius:8px;background:#f8f9fa;font-size:14px"></div>
+          <p class="section-note" style="margin-top:10px">★四道约束依次收紧：<b>①滞回阶梯</b>（升档/降档分离，防反复横跳）——跌入才升档：分位≤5%→满仓、≤15%→8成、≤35%→5成、≤65%→2成；涨过才降档：>15%→8成、>35%→5成、>65%→2成、>80%→清仓。<b>②动态 Kelly</b>——μ/λ 随分位线性插值，配 3 年滚动波动率与十年国债利率，半凯利封顶并设 30 成下限。<b>③股债双杀熔断</b>——沪深300 与二级债基近 20 个交易日同时下跌（股 ≤−5% 且债 ≤−1%）时压至 20 成；若分位仍 ≤15% 且阶梯档位未降，复活条款回补至 50 成（防 2022 年那种地板假信号一刀切关死）。<b>④命理纪律封顶</b>——随分位递减：5%→100、10%→80、20%→60、40%→40、65%→20、>65%→0；≤5% 放开、涨过 20% 收回；2026–2027 财杀攻身年地板区只放到 80 成。2007–2026 无前视 1013 周回测：年化 10.26%、最大回撤 −23.9%、夏普 0.72（旧口径 11.17%/−15.4% 为月度再平衡乐观口径，已废弃）。历史回测不代表未来，非投资建议。</p>
+        </section>
+
         <!-- ⭐ 小白快速通道：想看现在该买还是卖？直接去仪表盘 -->
         <div style="background:linear-gradient(135deg,#E8F4FD 0%,#FFF8E8 100%);border:2px solid #2E86C1;border-radius:12px;padding:18px 22px;margin-bottom:22px;">
           <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
             <div style="font-size:36px;line-height:1;">🧭</div>
             <div style="flex:1;min-width:280px;">
-              <div style="font-size:16px;font-weight:700;color:#1F2933;margin-bottom:4px;">想知道<b>现在该不该买、买多少</b>？</div>
-              <div style="font-size:13px;color:#4A5568;line-height:1.5;">这页是<b>历史回测</b>——验证温度模型"过去准不准"的证据，不是给当前操作建议的。想看实时建议，直接点下面按钮去仪表盘！</div>
+              <div style="font-size:16px;font-weight:700;color:#1F2933;margin-bottom:4px;">本页顶部就是<b>当前执行仓位</b>（四约束链 · 每日自动更新）</div>
+              <div style="font-size:13px;color:#4A5568;line-height:1.5;">这页同时有两部分：顶部股债两线图 + 四约束分解 = <b>当前执行仓位</b>；下方散点/分档/统计检验 = <b>历史回测证据</b>（验证模型"过去准不准"）。想看全站实时仪表盘，点下面按钮。</div>
             </div>
             <a href="./index.html" style="display:inline-block;background:#2E86C1;color:#fff;font-size:15px;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none;box-shadow:0 2px 8px rgba(46,134,193,.3);">👉 去看当前建议</a>
           </div>
@@ -467,18 +480,6 @@
   </div>
 
 </section>
-              <!-- 股债两线图：沪深300全收益 vs 二级债基（对数坐标，周频，2004-12-31=1） -->
-        <section class="card chart-card" aria-labelledby="stockbond-h">
-          <div class="section-head"><h2 id="stockbond-h">股债两线图 · 沪深300全收益 vs 二级债基</h2><span id="stockbond-badge" style="margin-left:10px;padding:3px 10px;border-radius:999px;background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:600;white-space:nowrap">当前执行档位：载入中…</span></div>
-          <p class="section-note">2004 年底 = 1，对数坐标，周频。蓝线 = 沪深300全收益（含分红再投资，真实数据）；橙线 = 二级债基模拟（中证全债×80% + 沪深300全收益×20%，按月再平衡，水平校准至公开二级债基指数终点约 5.03；非官方指数）。灰底 = 历史熊市区间。悬停可读当日比值 R、历史分位与 ★滞回阶梯建议仓位。</p>
-          <div style="height:460px;position:relative">
-            <canvas id="stockbond" aria-label="沪深300全收益与二级债基累计净值对数坐标对比图，周频，含熊市阴影区间"></canvas>
-          </div>
-          <div id="stockbond-empty" class="section-note" style="display:none">股债数据暂不可用（data/stockbond.json 未生成或加载失败）。</div>
-          <div id="stockbond-meta" class="section-note" style="margin-top:10px"></div>
-          <div id="stockbond-hyst" style="margin-top:8px;padding:12px;border-radius:8px;background:#f8f9fa;font-size:14px"></div>
-          <p class="section-note" style="margin-top:10px">★四道约束依次收紧：<b>①滞回阶梯</b>（升档/降档分离，防反复横跳）——跌入才升档：分位≤5%→满仓、≤15%→8成、≤35%→5成、≤65%→2成；涨过才降档：>15%→8成、>35%→5成、>65%→2成、>80%→清仓。<b>②动态 Kelly</b>——μ/λ 随分位线性插值，配 3 年滚动波动率与十年国债利率，半凯利封顶并设 30 成下限。<b>③股债双杀熔断</b>——沪深300 与二级债基近 20 个交易日同时下跌（股 ≤−5% 且债 ≤−1%）时压至 20 成；若分位仍 ≤15% 且阶梯档位未降，复活条款回补至 50 成（防 2022 年那种地板假信号一刀切关死）。<b>④命理纪律封顶</b>——随分位递减：5%→100、10%→80、20%→60、40%→40、65%→20、>65%→0；≤5% 放开、涨过 20% 收回；2026–2027 财杀攻身年地板区只放到 80 成。2007–2026 无前视 1013 周回测：年化 10.26%、最大回撤 −23.9%、夏普 0.72（旧口径 11.17%/−15.4% 为月度再平衡乐观口径，已废弃）。历史回测不代表未来，非投资建议。</p>
-        </section>
       </main>
     </div>
   </div>
