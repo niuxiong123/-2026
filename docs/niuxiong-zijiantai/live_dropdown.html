@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -80,10 +80,24 @@
 </div>
 
 <div class="hero card">
-  <div class="k">🎯 建议仓位 —— 买卖多少，就按这个数字执行</div>
+  <div class="k">🧭 板块冷热参考 · 执行档位见首页（四约束链股债比价模型）</div>
   <div class="v" id="pos">--<span style="font-size:24px"> 成</span></div>
   <div class="posbar"><i id="posBar" style="width:50%"></i></div>
+  <div style="font-size:11.5px;color:var(--sub);margin-top:6px">⚠ 本页原独立公式已下线（无 IC 检验无回测），执行档位统一为四约束链股债比价模型 · 数据每日自动更新</div>
 </div>
+
+<script>
+// B3 修改 2026-10-24：hero 独立执行公式下线，统一显示四约束链股债比价仓位
+(async function() {
+  const j = await fetch('data/stockbond.json', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
+  const el = document.getElementById('pos');
+  if (j?.latest && el) {
+    el.childNodes[0].textContent = j.latest.final_position.toFixed(2);
+    const bar = document.getElementById('posBar');
+    if (bar) bar.style.width = Math.min(100, j.latest.final_position) + '%';
+  }
+})();
+</script>
 <div class="grid3">
   <div class="card"><div class="k" title="温度计（0=冰点机会 / 10=过热风险）">温度计（0冰点↔10过热）</div><div class="v" id="temp">--</div><div class="thermo"><i id="thermoMark" style="left:50%"></i></div></div>
   <div class="card"><div class="k">底部概率</div><div class="v" id="pbot" style="color:var(--dn)">--%</div></div>
@@ -391,3 +405,4 @@ fetchAllQuotes();
 </script>
 </body>
 </html>
+

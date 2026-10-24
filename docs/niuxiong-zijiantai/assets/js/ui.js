@@ -1,4 +1,4 @@
-// ui.js —— 渲染层（温度卡/仓位卡/牛熊钟/四维/行情条/明细表/状态灯/标灰）
+﻿// ui.js —— 渲染层（温度卡/仓位卡/牛熊钟/四维/行情条/明细表/状态灯/标灰）
 // 站点：恒福丨水木清华。规范依据：design-spec.md + content-plan.md 首页区块顺序。
 import { QUOTE_FIELDS, BASELINE_SNAPSHOT } from './fetcher.js';
 
@@ -164,28 +164,48 @@ export function renderTemp(result) {
 }
 
 // ── 今日建议仓位大卡（content-plan ④，固定话术模板） ──
-export function renderPosition(result) {
+// === 2026-10-24 B1 修改 ===
+// 四约束链（stockbond.json）作为主仓位信号，旧温度模型降级副面板参考
+export function renderPosition(result, stockbond) {
   const val = $('position-value');
   const path = $('position-path');
-  if (val) val.textContent = result.positionFinal.toFixed(1);
-  if (path) {
-    // 2026-10-20 升级：最终仓位含黄金坑Boost（温度仓位+gpBoost 再进三重硬约束）
-    const gp = result.goldenPit || { boost: 0, type: '常规' };
-    const gpB = gp.boost || 0;
-    const capped = Math.min(result.positionTemp + gpB, result.constraints.creditCap, result.constraints.resonanceCap);
-    // 归因修复：原实现只看共振约束的 reason，信用约束真正生效时会误显示「卡在：不约束」
-    const caps = [
-      { v: result.positionTemp + gpB, why: gpB > 0 ? `温度仓位+黄金坑Boost${gpB.toFixed(1)}（${gp.type}）` : '温度仓位（未触硬约束）' },
-      { v: result.constraints.creditCap, why: '信用约束·社融同比' },
-      { v: result.constraints.resonanceCap, why: result.constraints.resonanceReason || '共振约束' },
-    ];
-    const binder = caps.reduce((m, x) => (x.v < m.v ? x : m), caps[0]);
-    const gpWarn = gp.type === '下跌中继·勿盲加' ? ' ⚠下跌中继·勿盲加' : '';
-    path.textContent =
-      `温度仓位 ${result.positionTemp.toFixed(1)} 成${gpB > 0 ? ` + Boost ${gpB.toFixed(1)}` : ''} → ` +
-      `硬约束取 min ${capped.toFixed(1)}（卡在：${binder.why}）→ ` +
-      `保守系数 ×${result.constraints.conservativeFactor.toFixed(2)}` +
-      (typeof result.bbii === 'number' ? ` ｜ BBII ${result.bbii.toFixed(1)}（方向计·仅解读）${gpWarn}` : '');
+  const subCard = $('position-sub');
+
+  const gp = result.goldenPit || { boost: 0, type: '常规' };
+  const gpB = gp.boost || 0;
+  const tempCapped = Math.min(result.positionTemp + gpB, result.constraints.creditCap, result.constraints.resonanceCap);
+
+  if (stockbond && !stockbond.degraded && typeof stockbond.finalPosition === 'number') {
+    if (val) val.textContent = stockbond.finalPosition.toFixed(2);
+    if (path) {
+      path.innerHTML =
+        '<b style="color:#2563eb">四约束链·股债比价R</b>：' +
+        '滞回阶梯' + (stockbond.posLadder || '—') + ' → ' +
+        'Kelly' + (stockbond.kellyCap ?? '—') + ' → ' +
+        '双杀' + (stockbond.dkTriggered ? '触发(→20)' : '未触发') + ' → ' +
+        '命理' + (stockbond.mysticOpen ? '已放开' : (stockbond.mysticOpen === false ? (stockbond.mysticCap || '—') + '成' : '—')) + ' → ' +
+        '<b style="color:#dc2626">最终 ' + stockbond.finalPosition.toFixed(2) + ' 成</b><br>' +
+        '<span style="font-size:11px;color:#6b7280">' + (stockbond.reason || '') + ' · 数据 ' + (stockbond.date || stockbond.generatedAt || '—') + '</span>';
+    }
+  } else {
+    if (val) val.textContent = result.positionFinal.toFixed(1);
+    if (path) {
+      const caps = [
+        { v: result.positionTemp + gpB, why: gpB > 0 ? '温度仓位+黄金坑Boost' + gpB.toFixed(1) + '（' + gp.type + '）' : '温度仓位（未触硬约束）' },
+        { v: result.constraints.creditCap, why: '信用约束·社融同比' },
+        { v: result.constraints.resonanceCap, why: result.constraints.resonanceReason || '共振约束' },
+      ];
+      const binder = caps.reduce((m, x) => (x.v < m.v ? x : m), caps[0]);
+      path.innerHTML =
+        '<b style="color:#b45309">⚠ stockbond.json 不可用，降级用旧温度模型</b><br>' +
+        '温度仓位 ' + result.positionTemp.toFixed(1) + ' 成' + (gpB > 0 ? ' + Boost ' + gpB.toFixed(1) : '') + ' → ' +
+        '硬约束取 min ' + tempCapped.toFixed(1) + '（卡在：' + binder.why + '）→ ' +
+        '保守系数 ×' + result.constraints.conservativeFactor.toFixed(2);
+    }
+  }
+
+  if (subCard) {
+    subCard.innerHTML = '温度参考：' + result.positionTemp.toFixed(1) + '成 · 硬约束后：' + tempCapped.toFixed(1) + '成 · 保守系数×' + result.constraints.conservativeFactor.toFixed(2) + ' → <b>' + result.positionFinal.toFixed(1) + '成</b>（旧模型·仅供解读）';
   }
 }
 
@@ -403,7 +423,7 @@ export function renderDashboard(result, ctx) {
   showAllDown(ctx.allDown);
   renderQuotes(ctx.quotes, ctx.macroData);
   renderTemp(result);
-  renderPosition(result);
+  renderPosition(result, ctx.stockbond);
   renderTempTrendChart(ctx.backtest, result.temp, ctx.quotesAsOf || ctx.macroAsOf, ctx.daily);
   renderClock(result);
   renderScores(result);
@@ -411,3 +431,4 @@ export function renderDashboard(result, ctx) {
   const up = $('last-updated');
   if (up) up.textContent = `最后更新：行情 ${ctx.quotesAsOf || '—'} ｜ 宏观 ${ctx.macroAsOf || '—'}`;
 }
+

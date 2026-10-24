@@ -1,6 +1,11 @@
 // main.js —— 入口：fetch → compute → render；刷新按钮；移动抽屉导航
 // 站点：恒福丨水木清华（首页仪表盘）
-import { fetchAll } from './fetcher.js';
+// === 2026-10-24 B1 修改 ===
+// 1. 并行 fetch stockbond.json（四约束链 Python 端生成器输出）
+// 2. 仓位 hero 优先显示 final_position（50.00 成），旧温度模型降级副面板
+// 铁律：不动 compute.js 引擎函数、不动 fetcher.js 四 JSON 契约
+
+import { fetchAll, loadJSON } from './fetcher.js';
 import { computeAll } from './compute.js';
 import * as ui from './ui.js';
 
@@ -12,21 +17,52 @@ function maxAsOf(data) {
   }
   return max;
 }
+
 function latestBacktestDate(b) {
   if (!b || !b.length) return null;
   return b[b.length - 1].date;
 }
 
 let refreshing = false;
+
 async function run() {
   if (refreshing) return;
-  const ctxRaw = await fetchAll();
+  // 并行拉五源：四 JSON（原 fetcher）+ stockbond.json（四约束链）
+  const [ctxRaw, sbRes] = await Promise.all([
+    fetchAll(),
+    loadJSON('data/stockbond.json'),
+  ]);
+
+  // stockbond.json 解析（文件级失败 → 后续降级处理）
+  let stockbond = null;
+  if (sbRes.ok && sbRes.data && sbRes.data.latest) {
+    stockbond = {
+      finalPosition: sbRes.data.latest.final_position,
+      reason: sbRes.data.latest.final_reason,
+      date: sbRes.data.latest.date,
+      pct: sbRes.data.latest.pct,
+      posLadder: sbRes.data.latest.pos,
+      kellyCap: sbRes.data.latest.kelly_cap,
+      dkTriggered: sbRes.data.latest.dk_triggered,
+      mysticOpen: sbRes.data.latest.mystic_open,
+      mysticCap: sbRes.data.latest.mystic_cap,
+      generatedAt: sbRes.data.generated_at,
+      source: sbRes.data.source,
+      degraded: false,
+    };
+  } else {
+    stockbond = { degraded: true };
+  }
+
+  // 旧温度引擎（不动，铁律）
   const result = computeAll(ctxRaw.macroData, ctxRaw.quotes);
+
   ui.renderDashboard(result, {
     ...ctxRaw,
     macroAsOf: maxAsOf(ctxRaw.macroData),
     quotesAsOf: ctxRaw.quotes ? ctxRaw.quotes.asOf : null,
     backtestAsOf: latestBacktestDate(ctxRaw.backtest),
+    stockbond,  // B1 新增：四约束链结果，渲染层优先用
   });
 }
 

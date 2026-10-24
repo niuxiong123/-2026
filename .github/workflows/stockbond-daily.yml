@@ -1,32 +1,61 @@
-# .github/workflows/stockbond-daily.yml —— 每交易日收盘后重算股债比值数据并提交，Pages 自动重发
-name: 每日更新股债比值数据
-
+name: stockbond-daily
 on:
   schedule:
-    - cron: "30 8 * * 1-5"   # 北京时间 16:30（周一至周五）
+    # 北京时间 16:30 周一到周五（UTC 08:30）
+    cron: "30 8 * * 1-5"
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
-  fetch:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: 取出代码
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 重算 stockbond.json
-        run: python3 scripts/generate_stockbond.py
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: 提交并推送
+      - name: Install deps
         run: |
-          git config user.name  "niuxiong-bot"
-          git config user.email "niuxiong-bot@users.noreply.github.com"
+          pip install akshare pandas
+
+      - name: Generate stockbond.json
+        run: |
+          python scripts/generate_stockbond.py
+
+      # === B6 2026-10-24 新增：零门禁风险修复 ===
+
+      # ① 推送前自检：跑 JSON 契约校验
+      - name: Validate JSON contract
+        run: python tests/test_json_contract.py
+        continue-on-error: false   # 校验失败直接中止，不往下走
+
+      # ② Rebase 先拉远程最新（避免推送冲突）
+      - name: Rebase before push
+        run: git pull --rebase origin main
+
+      # ③ Commit（无论生成器是否有变化都 commit，CI 下游能感知）
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f docs/niuxiong-zijiantai/data/stockbond.json
-          if git diff --quiet && git diff --staged --quiet; then
-            echo "数据无变化，不提交"
-          else
-            git commit -m "data: 股债比值 $(date -u +%F)"
-            git push
-          fi
+          git diff --cached --quiet && echo "No change" || git commit -m "chore(data): stockbond 自动更新 $(date +%F)"
+          git push || echo "push failed — will alert below"
+
+      # ④ 失败告警（GitHub Actions bot 发 issue）
+      - name: Alert on failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "stockbond-daily workflow 失败 ⚠" \
+            --body "自动更新 stockbond.json 失败，请检查。\n\nRun: ${{ github.run_url }}\nCommit: ${{ github.sha }}" \
+            --label "automation" \
+            --assignee "niuxiong123"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
