@@ -1,0 +1,32 @@
+# .github/workflows/stockbond-daily.yml —— 每交易日收盘后重算股债比值数据并提交，Pages 自动重发
+name: 每日更新股债比值数据
+
+on:
+  schedule:
+    - cron: "30 8 * * 1-5"   # 北京时间 16:30（周一至周五）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      - name: 重算 stockbond.json
+        run: python3 scripts/generate_stockbond.py
+
+      - name: 提交并推送
+        run: |
+          git config user.name  "niuxiong-bot"
+          git config user.email "niuxiong-bot@users.noreply.github.com"
+          git add -f docs/niuxiong-zijiantai/data/stockbond.json
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "数据无变化，不提交"
+          else
+            git commit -m "data: 股债比值 $(date -u +%F)"
+            git push
+          fi

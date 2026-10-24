@@ -467,6 +467,18 @@
   </div>
 
 </section>
+              <!-- 股债两线图：沪深300全收益 vs 二级债基（对数坐标，周频，2004-12-31=1） -->
+        <section class="card chart-card" aria-labelledby="stockbond-h">
+          <div class="section-head"><h2 id="stockbond-h">股债两线图 · 沪深300全收益 vs 二级债基</h2><span id="stockbond-badge" style="margin-left:10px;padding:3px 10px;border-radius:999px;background:#f3f4f6;color:#6b7280;font-size:13px;font-weight:600;white-space:nowrap">当前执行档位：载入中…</span></div>
+          <p class="section-note">2004 年底 = 1，对数坐标，周频。蓝线 = 沪深300全收益（含分红再投资，真实数据）；橙线 = 二级债基模拟（中证全债×80% + 沪深300全收益×20%，按月再平衡，水平校准至公开二级债基指数终点约 5.03；非官方指数）。灰底 = 历史熊市区间。悬停可读当日比值 R、历史分位与 ★滞回阶梯建议仓位。</p>
+          <div style="height:460px;position:relative">
+            <canvas id="stockbond" aria-label="沪深300全收益与二级债基累计净值对数坐标对比图，周频，含熊市阴影区间"></canvas>
+          </div>
+          <div id="stockbond-empty" class="section-note" style="display:none">股债数据暂不可用（data/stockbond.json 未生成或加载失败）。</div>
+          <div id="stockbond-meta" class="section-note" style="margin-top:10px"></div>
+          <div id="stockbond-hyst" style="margin-top:8px;padding:12px;border-radius:8px;background:#f8f9fa;font-size:14px"></div>
+          <p class="section-note" style="margin-top:10px">★滞回阶梯阈值（升档/降档分离，防反复横跳）：跌入才升档——分位≤5%→满仓、≤15%→8成、≤35%→5成、≤65%→2成；涨过才降档——>15%→8成、>35%→5成、>65%→2成、>80%→清仓。2007–2026 月度回测：年化 11.17%、最大回撤 −15.4%、全年换档 48 次。历史回测不代表未来，非投资建议。</p>
+        </section>
       </main>
     </div>
   </div>
@@ -489,6 +501,115 @@
 
   <!-- Chart.js vendored 本地（site-spec §7，不走 CDN 运行时） -->
   <script src="assets/js/lib/chart.umd.min.js"></script>
+<script>
+// 股债两线图：沪深300全收益 vs 二级债基（对数坐标、周频、熊市阴影、滞回档位）
+// 数据：data/stockbond.json（由 scripts/generate_stockbond.py 每日生成）
+(function () {
+  var BEAR = [["2008-05", "2009-01"], ["2011-04", "2012-12"], ["2015-06", "2016-01"],
+              ["2018-01", "2018-12"], ["2022-01", "2024-09"]];
+  var HMAP = {
+    100: ["🟢 满仓（分批买入）", "#16a34a", "5%"],
+    80:  ["🟢 8成（分批买入）", "#16a34a", "15%"],
+    50:  ["🟡 5成（中性持有）", "#ca8a04", "35%"],
+    20:  ["🟠 2成（降低仓位）", "#ea580c", "65%"],
+    0:   ["🔴 清仓（持币观望）", "#dc2626", ">65%"]
+  };
+  function ready(fn) {
+    if (document.readyState !== "loading") fn();
+    else document.addEventListener("DOMContentLoaded", fn);
+  }
+  ready(function () {
+    var cv = document.getElementById("stockbond");
+    var empty = document.getElementById("stockbond-empty");
+    var meta = document.getElementById("stockbond-meta");
+    var hyst = document.getElementById("stockbond-hyst");
+    var badge = document.getElementById("stockbond-badge");
+    if (!cv) return;
+    if (!window.Chart) {
+      if (empty) empty.style.display = "block";
+      if (meta) meta.textContent = "⚠ Chart.js 未加载";
+      return;
+    }
+    fetch("data/stockbond.json").then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (j) {
+      var recs = j.weekly || [];
+      if (recs.length < 50) throw new Error("数据点不足（" + recs.length + "）");
+      var labels = recs.map(function (r) { return r.date; });
+      var months = labels.map(function (l) { return l.slice(0, 7); });
+      new Chart(cv, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            { label: "沪深300全收益", data: recs.map(function (r) { return r.nav_hs; }),
+              borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.04)", borderWidth: 2, pointRadius: 0, tension: 0.05 },
+            { label: "二级债基（模拟）", data: recs.map(function (r) { return r.nav_bond; }),
+              borderColor: "#d97706", backgroundColor: "rgba(217,119,6,0.04)", borderWidth: 2, pointRadius: 0, tension: 0.05 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          scales: {
+            y: { type: "logarithmic", title: { display: true, text: "累计净值（对数，2004-12-31=1）" },
+                 ticks: { callback: function (v) { return v.toFixed(1); } } },
+            x: { ticks: { maxTicksLimit: 12 }, title: { display: true, text: "时间（周频）" } }
+          },
+          plugins: {
+            legend: { position: "top" },
+            tooltip: { callbacks: { afterBody: function (items) {
+              var r = recs[items[0].dataIndex];
+              return ["比值 R = " + r.ratio_R, "历史分位 = " + r.pct + "%", "★滞回阶梯仓位 = " + r.pos + " 成"];
+            } } }
+          }
+        },
+        plugins: [{
+          id: "bearZones",
+          beforeDatasetsDraw: function (c) {
+            var a = c.chartArea, s = c.scales;
+            if (!a) return;
+            var ctx = c.ctx; ctx.save();
+            BEAR.forEach(function (z) {
+              var i0 = -1, i1 = -1;
+              for (var i = 0; i < months.length; i++) {
+                if (i0 < 0 && months[i] >= z[0]) i0 = i;
+                if (months[i] <= z[1]) i1 = i;
+              }
+              if (i0 < 0) return;
+              if (i1 < i0) i1 = i0;
+              var x1 = s.x.getPixelForValue(i0), x2 = s.x.getPixelForValue(i1);
+              ctx.fillStyle = "rgba(120,120,120,0.12)";
+              ctx.fillRect(x1, a.top, x2 - x1, a.bottom - a.top);
+            });
+            ctx.restore();
+          }
+        }]
+      });
+      var L = j.latest || recs[recs.length - 1];
+      if (meta) meta.textContent = "数据截至 " + L.date + " ｜ 沪深300全收益 " + L.nav_hs +
+        " ｜ 二级债基 " + L.nav_bond + " ｜ 比值 R = " + L.ratio_R +
+        " ｜ 全历史分位（2007 起）" + L.pct + "%";
+      var h = HMAP[L.pos] || ["—", "#666", "—"];
+      if (badge) {
+        badge.textContent = "当前执行档位：" + L.pos + " 成";
+        badge.style.background = h[1] + "1a";
+        badge.style.color = h[1];
+      }
+      if (hyst) hyst.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+        '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + h[1] + '"></span>' +
+        '<strong style="color:' + h[1] + '">★滞回阶梯建议仓位：' + h[0] + '</strong>' +
+        '<span style="color:#6b7280">· 当前档位触发条件：分位 ≤ ' + h[2] + '（跌入才升档、涨过才降档）</span></div>';
+    }).catch(function (e) {
+      if (empty) empty.style.display = "block";
+      if (meta) meta.textContent = "⚠ 股债数据未就绪：" + e.message + "（请先手动 Run 一次 stockbond-daily.yml 生成数据）";
+    });
+  });
+})();
+</script>
+
   <script type="module">
     import { loadJSON } from './assets/js/fetcher.js';
     import * as ui from './assets/js/ui.js';
