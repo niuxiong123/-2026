@@ -1,7 +1,10 @@
-# 宏观数据每日采集 + 温度/回测序列记录（第⑤⑥步 item①/⑤/回测）
-# 流程：akshare 采集 macro.json → node 直跑 compute.js 记录当日温度 → 回测序列按月追加 → 一并写回仓库
+# 宏观数据每日采集 + 温度序列记录（第⑤⑥步 item①/⑤）
+# 流程：akshare 采集 macro.json → node 直跑 compute.js 记录当日温度 → 一并写回仓库
 # 说明：akshare 接口偶有区域性失败，collect_macro.py 缺一不写整份 + 最小成功数护栏；
-#       温度/回测计算不复制逻辑：温度直跑线上 compute.js，回测只追加双成熟新行（不碰历史 138 行）。
+#       温度计算不复制逻辑：温度直跑线上 compute.js。
+# B5（2026-10-24）：backtest.json 旧管线更新已停止——旧温度模型 IC≈0、展示层已移除，
+#   update_backtest.py 不再由本 workflow 调用；backtest.json 冻结在最后状态，仅作历史档案
+#   供 fetcher.js 静态读取。如需恢复，取消下方注释并同步解除脚本内的弃用软锁。
 name: macro-daily
 
 on:
@@ -36,14 +39,15 @@ jobs:
       - name: 记录当日温度（直跑 compute.js）
         run: node scripts/compute_temp.mjs
 
-      - name: 回测序列按月追加（双成熟才落库，不碰历史行）
-        run: python scripts/update_backtest.py
+      # B5（2026-10-24）：旧温度模型回测序列停更，此步已停用（见文件头注释）
+      # - name: 回测序列按月追加（双成熟才落库，不碰历史行）
+      #   run: python scripts/update_backtest.py
 
       - name: 写回仓库（先 rebase 再推，失败重试一次）
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/niuxiong-zijiantai/data/macro.json docs/niuxiong-zijiantai/data/temp_daily.json docs/niuxiong-zijiantai/data/backtest.json
+          git add docs/niuxiong-zijiantai/data/macro.json docs/niuxiong-zijiantai/data/temp_daily.json
           if git diff --cached --quiet; then
             echo "无变化，跳过提交"
             exit 0

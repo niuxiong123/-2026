@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # update_backtest.py —— 回测序列向前自动追加（第⑥步 item1：回测数据源接入自动采集）
 #
+# ⛔ 已停更（B5，2026-10-24）：旧温度模型 IC≈0，其展示层（history.html 旧温度四段）已删除，
+#    macro-daily.yml 不再调用本脚本；backtest.json 冻结在最后状态，仅作历史档案。
+#    如确需手动补历史行：设置环境变量 FORCE_BACKTEST=1 后运行（脚本内软锁会放行）。
+#
 # 原则（诚实优先）：
 #   1. 只追加，永不修改/删除既有 138 行历史（2015-01 ~ 2026-06 为首发静态回测）。
 #   2. 新增行必须「双成熟」才落库：
@@ -13,8 +17,15 @@
 import argparse
 import datetime as dt
 import json
+import os
 import sys
 from pathlib import Path
+
+# B5 弃用软锁（2026-10-24）：默认空跑退出；FORCE_BACKTEST=1 才放行
+if os.environ.get("FORCE_BACKTEST") != "1":
+    print("[B5 2026-10-24] backtest.json 旧管线已停更（旧温度模型 IC≈0、展示层已移除）。"
+          "如确需手动补历史行，请设置 FORCE_BACKTEST=1 后运行。")
+    sys.exit(0)
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "docs" / "niuxiong-zijiantai"
