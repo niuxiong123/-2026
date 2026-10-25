@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>恒福丨水木清华方法论 | 温度与仓位怎么算出来的</title>
-  <meta name="description" content="牛熊温度、四维打分、三重硬约束是怎么算的？全部公式、权重、降级规则公开可查。一篇能看懂的大白话，帮你判断这份仓位参考值不值得信。" />
-  <meta name="keywords" content="仓位建议怎么算,牛熊温度怎么算出来的,四维打分是什么意思,牛熊钟怎么看,仓位建议靠谱吗" />
+  <title>恒福丨水木清华方法论 | 大盘仓位与板块选择，怎么用</title>
+  <meta name="description" content="用大白话讲清两件事：现在该拿多少仓位（方案C·股债比价，每日更新），以及同样一笔钱往哪些板块偏（下方量化看板，十年回测选出的最靠谱方法）。方法、仓位逻辑、风险提示公开可查。" />
+  <meta name="keywords" content="仓位建议怎么看,股债比价什么意思,板块看板怎么读,宏观闸门红黄绿,量化研究分享" />
   <link rel="canonical" href="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" />
   <!-- Open Graph -->
   <meta property="og:type" content="article" />
   <meta property="og:locale" content="zh_CN" />
   <meta property="og:site_name" content="恒福丨水木清华" />
-  <meta property="og:title" content="恒福丨水木清华方法论｜温度与仓位怎么算出来的" />
-  <meta property="og:description" content="全部公式、权重、降级规则公开可查。" />
+  <meta property="og:title" content="恒福丨水木清华方法论｜仓位与板块，怎么用" />
+  <meta property="og:description" content="方法、仓位逻辑、风险提示公开可查。" />
   <meta property="og:url" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" />
   <meta property="og:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="恒福丨水木清华方法论｜温度与仓位怎么算出来的" />
-  <meta name="twitter:description" content="全部公式、权重、降级规则公开可查。" />
+  <meta name="twitter:title" content="恒福丨水木清华方法论｜仓位与板块，怎么用" />
+  <meta name="twitter:description" content="方法、仓位逻辑、风险提示公开可查。" />
   <meta name="twitter:image" content="https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/og-cover.png" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
@@ -46,12 +46,12 @@
     "founder": { "@type": "Person", "name": "萧沐川", "alternateName": "xiaomuchuan" }
   }
   </script>
-  <!-- Article（datePublished/dateModified 固定首发日；后续如有内容修订可在构建期更新 dateModified） -->
+  <!-- Article -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": "恒福丨水木清华方法论：牛熊温度与今日建议仓位怎么算出来的",
+    "headline": "恒福丨水木清华方法论：仓位与板块，怎么用",
     "author": { "@type": "Person", "name": "萧沐川", "alternateName": "xiaomuchuan" },
     "publisher": {
       "@type": "Organization",
@@ -59,11 +59,19 @@
       "logo": { "@type": "ImageObject", "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg" }
     },
     "datePublished": "2026-10-11",
-    "dateModified": "2026-10-12",
+    "dateModified": "2026-10-25",
     "inLanguage": "zh-CN",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" }
   }
   </script>
+  <!-- 嵌入看板样式（仅本页使用，复用站点深色 token，含降级 fallback） -->
+  <style>
+    .embed-frame{background:var(--deep-canvas,#0d1117);border:1px solid var(--deep-border,#30363d);border-radius:var(--radius-card,6px);overflow:hidden;margin-top:12px;}
+    .embed-frame iframe{display:block;width:100%;height:1200px;border:0;}
+    @media(max-width:768px){.embed-frame iframe{height:860px;}}
+    .led{display:inline-block;width:.8em;height:.8em;border-radius:50%;vertical-align:middle;margin-right:.3em;}
+    .led--red{background:#e5484d;} .led--amber{background:#d4a72c;} .led--green{background:#3fb950;}
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主内容</a>
@@ -100,249 +108,132 @@
           <button class="icon-btn topbar__menu-btn" id="menu-btn" aria-label="打开导航菜单" aria-controls="nav-drawer" aria-expanded="false">
             <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 3h14v2H1V3Zm0 4h14v2H1V7Zm0 4h14v2H1v-2Z"/></svg>
           </button>
-          <h1 class="topbar__title">温度和仓位，是怎么算出来的</h1>
+          <h1 class="topbar__title">仓位与板块，怎么用</h1>
         </div>
       </header>
 
       <main id="main" class="content">
-        <p class="prose" style="max-width:720px">不藏着。下面把四维打分、温度合成、仓位映射、三重硬约束、降级规则、数据字典全部摊开。所有锚点、权重与 <code>compute.js</code> 里的常量一一对应，可审计。<b>现行执行口径为「方案C · 股债比价四约束链」</b>（见 ⑤，首页「当前执行档位」即由它给出）；温度模型及其仓位映射自 2026-10-24 起降级为历史方法与解读参考。</p>
-        <div class="card" role="note" style="border-left:4px solid #d4a72c;margin-bottom:16px;max-width:720px">
-          <p class="section-note" style="margin:0"><b>数据现状（不装实时）：</b>宏观已接入 akshare 每日自动采集（29 字段中 11 个为真实值，其余保留基线并逐行标注）；温度与仓位已由真实数据驱动。回测序列 2015–2026-06 为首发静态回测（138 月），2026-10 起由管线按月自动追加（沪深300 日线口径，双成熟才落库）。公式同样全部可审计，各字段覆盖情况见 ⑤。</p>
+        <p class="prose" style="max-width:760px">这个页面用大白话讲清两件事，帮你判断「钱该怎么摆」：<b>① 大盘仓位</b>——现在该拿多少股票、留多少现金（每天更新的「方案C·股债比价」）；<b>② 板块选择</b>——同样一笔钱，往哪些行业 / ETF 板块偏（下方「板块量化看板」，用十年回测选出的最靠谱方法）。两件事互补：仓位管「拿多少」，板块管「往哪放」。下面的内容都是个人研究分享，<b>不是投资建议</b>。</p>
+
+        <div class="card" role="note" style="border-left:4px solid #d4a72c;margin-bottom:16px;max-width:760px">
+          <p class="section-note" style="margin:0"><b>数据说明（不装实时）：</b>宏观数据由 GitHub Actions 每日自动采集（部分字段为真实值，部分为基线值并逐行标注）；板块看板为定期更新的静态快照。所有「今日具体数字」以首页实时数据为准，本页只讲方法，不写死数值。</p>
         </div>
 
-        <!-- 实时读数（fetch data/macro.json，按①锚点本地计算；失败回退基线快照） -->
-        <section class="card" aria-labelledby="mlive">
-          <div class="section-head"><h2 id="mlive">⭐ 实时读数（BBII 与黄金坑扩展）</h2></div>
-          <p class="section-note">读取 <code>data/macro.json</code>（GitHub Actions 每日 akshare 采集），按①表格公开锚点本地计算；PSI 暂用 138 月序列末值 68.4（托而不举区），待管线在 macro.json 增加 <code>psi</code> 字段后自动切换实时。计算失败时回退内嵌基线快照并如实标注。</p>
-          <div id="liveBanner" class="section-note" style="display:none;color:#b45309;margin-bottom:8px"></div>
-          <div class="table-wrap">
-            <table class="data" id="liveTable"><tbody><tr><td>加载中…</td></tr></tbody></table>
-          </div>
-          <div id="liveAlert" class="section-note" style="margin-top:10px"></div>
-        </section>
-
-        <!-- ① 四维打分公式表 -->
+        <!-- 一、大盘仓位（方案C） -->
         <section class="card" aria-labelledby="m1">
-          <div class="section-head"><h2 id="m1">① 四维打分公式</h2></div>
-          <p class="section-note">四个维度各由若干指标锚点插值成 0–10 分（区间外 clamp 到端点），再按子权重合成。语义：分数越高越热、越危险。</p>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>维度</th><th>权重</th><th>组成字段</th><th>锚点 [输入→分数]</th><th>子权重</th></tr></thead>
-              <tbody>
-                <tr><td rowspan="3">趋势 trend</td><td rowspan="3">0.30</td><td>nasdaq_pct（纳指20日%）</td><td>[-5→1, 0→3, 5→5, 10→7, 15→9]</td><td>0.4</td></tr>
-                <tr><td>breadth_up（上涨家数占比%）</td><td>[30→2, 50→5, 80→9]</td><td>0.3</td></tr>
-                <tr><td>vix（反向：越低越亢奋）</td><td>[12→8, 20→5, 30→1]</td><td>0.3</td></tr>
-                <tr><td rowspan="4">估值 valuation</td><td rowspan="4">0.30</td><td>hs300_pe_pct（PE 10年分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.4</td></tr>
-                <tr><td>hs300_pb_pct（PB 10年分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.3</td></tr>
-                <tr><td>erp（股债性价比%，越高越便宜→反向）</td><td>[7→1, 5→5, 2→9]</td><td>0.2</td></tr>
-                <tr><td>hsi_pe_pct（恒生分位%）</td><td>[10→1, 50→5, 90→9]</td><td>0.1</td></tr>
-                <tr><td rowspan="3">流动性 liquidity</td><td rowspan="3">0.20</td><td>m1_yoy（%）</td><td>[0→1, 5→5, 15→9]</td><td>0.4</td></tr>
-                <tr><td>credit_yoy（社融存量同比%）</td><td>[8→3, 10→5, 13→9]</td><td>0.3</td></tr>
-                <tr><td>lpr1y（%，越低越宽松→反向）</td><td>[4.6→2, 3.85→5, 3.0→8]</td><td>0.3</td></tr>
-                <tr><td rowspan="4">情绪 sentiment</td><td rowspan="4">0.20</td><td>margin_yi（两融余额，亿）</td><td>[15000→3, 20000→6, 25000→8, 30000→10]</td><td>0.3</td></tr>
-                <tr><td>amt_yi（两市成交额，亿）</td><td>[6000→2, 10000→5, 17000→7, 25000→10]</td><td>0.25</td></tr>
-                <tr><td>vix（反向）</td><td>[12→9, 20→5, 30→1]</td><td>0.25</td></tr>
-                <tr><td>ah_premium（AH溢价，越高 A 越贵）</td><td>[130→5, 155→8]</td><td>0.2</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="section-note"><b>双模型语义说明（防重复计分）：</b>本表估值维＝<b>贵热度</b>（越贵分越高，服务温度计）；BBII 方向计取同一数据的反向（便宜度=10−贵热度）；情绪维在 BBII 中做倒U变换（狂热反扣）。共享 4 维在温度与 BBII 中<b>各只计 1 次</b>，且 BBII 不参与仓位计算——任一信号对最终仓位只影响一次。</p>
+          <div class="section-head"><h2 id="m1">一、大盘仓位怎么定（方案C · 股债比价）</h2></div>
+          <p class="prose" style="max-width:760px"><b>大白话：</b>不猜「明天涨不涨」，只比「股票和债券，谁更便宜」。算一个比值 R（沪深300全收益 ÷ 一个以债券为主的「债腿」），再把 R 放到 2007 年至今的全样本里排个历史分位——<b>分位越低，股票越便宜，越该多拿；分位越高，越该收手</b>。</p>
+          <p class="prose" style="max-width:760px"><b>四道安全锁（层层往下拧，最后取最保守的一档）：</b></p>
+          <ul class="prose" style="max-width:760px;font-size:15px;line-height:1.9">
+            <li><b>阶梯档位</b>：按 R 分位给满仓 / 高 / 中 / 低 / 空五档；用「双阈值滞回」防抖——市场小幅震荡时不会一天满仓一天空仓地乱跳。</li>
+            <li><b>凯利微调</b>：用过去约 3 年实际波动，波动大时自动收一收，防止「一把梭」。</li>
+            <li><b>股债双杀熔断</b>：股票、债券 20 日同时大跌，说明可能是流动性危机，直接压到 20 成，先活下来。</li>
+            <li><b>命理纪律（可选）</b>：2026–2027 地板区设上限，避免过度悲观踏空；条件修复后可回升，不是一次性判死刑。</li>
+          </ul>
+          <p class="prose" style="max-width:760px"><b>看哪里：</b>今日具体仓位由 GitHub Actions 写入 <code>stockbond.json</code>，在首页「当前执行档位」实时展示，本页不写死。</p>
+          <p class="prose" style="max-width:760px"><b>单位提醒（务必看清）：</b>本站「成」= 百分点。100 成 = 满仓（100%），50 成 = 半仓（50%），显示保留两位小数。它<b>不是</b>旧式「一成 = 10%」——50.00 成就是半仓，不是 5%。</p>
         </section>
 
-        <!-- ② 温度合成公式 -->
+        <!-- 二、板块量化看板 -->
         <section class="card" aria-labelledby="m2">
-          <div class="section-head"><h2 id="m2">② 温度合成</h2></div>
-          <div class="formula">temp = 0.30 × trend + 0.30 × valuation + 0.20 × liquidity + 0.20 × sentiment&nbsp;&nbsp;（保留 2 位小数）</div>
-          <p class="section-note">标签：≤3 偏冷·结构性机会；3&lt;temp&lt;5 中性；5≤temp&lt;7 偏热；≥7 过热·减仓。</p>
+          <div class="section-head"><h2 id="m2">二、板块量化看板（下方嵌入 · 十年回测选出的最靠谱方法）</h2></div>
+          <p class="prose" style="max-width:760px"><b>大白话：</b>用 A 股三轮牛市（2014–2015 / 2019–2021 / 2024–至今）共 241 个时点的「留一交叉回测」，从 9 套因子方案里选出<b>最能提前认出领涨板块</b>的那一套，再用它给 36 只 ETF 打分组：<b>买进 / 持有 / 卖出</b>。它管的是「往哪放」，和上面的仓位（「拿多少」）配合用。</p>
+
+          <h3>怎么读这张看板（通俗版）</h3>
+          <ul class="prose" style="max-width:760px;font-size:15px;line-height:1.9">
+            <li><b>买进 / 加仓</b>：当前信号偏强，可纳入观察或建仓候选。</li>
+            <li><b>持有</b>：信号中性，拿着就行。</li>
+            <li><b>卖出 / 减仓</b>：信号转弱，考虑落袋。</li>
+            <li><b>灯号（宏观闸门）</b>：<span class="led led--red"></span>🔴 红 = 暂停新增买进（观察期总仓 ≤ 30%）；<span class="led led--amber"></span>🟡 黄 = 谨慎（≤ 45%）；<span class="led led--green"></span>🟢 绿 = 可积极（≤ 45%）。</li>
+            <li><b>仓位尺子</b>：单只 ETF 别超过总仓的 <b>12%</b>；红闸时新建仓 = 0%，先把现有仓位管好。</li>
+          </ul>
+
+          <h3>最优解（回测说了算，不靠拍脑袋）</h3>
+          <ul class="prose" style="max-width:760px;font-size:15px;line-height:1.9">
+            <li><b>主干用「D · 九因子等权」</b>——十年回测 Top1 命中 2/3（9 套里最高）、高分组超额 +0.468（最高），是最稳的。</li>
+            <li><b>「H · 半动态权重」</b> AUC 与 D 并列第一，但 Top1 和超额略低，作为<b>第二意见</b>并列展示，不取代 D。</li>
+            <li><b>当前宏观为 🔴 红闸</b>，所有「买进」信号已自动降级为「观察」，不急着动手——这正是闸门的用意。</li>
+          </ul>
+          <p class="section-note">看板内还有完整的因子体系、五档指令、凯利与闸门说明，想深究可展开。看板内分组信号为量化研究演示，<b>不构成投资建议</b>。</p>
+
+          <div class="embed-frame">
+            <iframe id="sq-frame" src="sector_system.html" loading="lazy" title="板块量化看板（sector_quant 实跑）" scrolling="no"></iframe>
+          </div>
+          <div class="footer__cta">
+            <a class="btn btn--primary" href="sector_system.html" target="_blank" rel="noopener">新窗口全屏打开看板</a>
+          </div>
+          <p class="section-note">嵌入说明：看板与本站同源部署，iframe 高度自适应；若浏览器禁用框架会显示空白，点上方按钮可直接打开。</p>
         </section>
 
-        <!-- ③ 仓位映射表 -->
+        <!-- 三、风险提示 -->
         <section class="card" aria-labelledby="m3">
-          <div class="section-head">
-            <h2 id="m3">③ 仓位映射（温度 → 成数）</h2>
-            <span class="section-badge">历史方法 · 仅供参考</span>
-          </div>
-          <p class="section-note">线性插值。温度越高，温度仓位越低。<b>2026-10-24 起执行口径已切换至「方案C · 股债比价四约束链」</b>，本表保留为历史方法与解读参考，不再作为执行依据。</p>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>温度</th><th class="num">0</th><th class="num">2</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">9</th><th class="num">10</th></tr></thead>
-              <tbody><tr><td>仓位（成）</td><td class="num">9.5</td><td class="num">9</td><td class="num">7</td><td class="num">6</td><td class="num">5</td><td class="num">3.5</td><td class="num">2</td><td class="num">1</td><td class="num">0.5</td></tr></tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- ④ 三重硬约束 -->
-        <section class="card" aria-labelledby="m4">
-          <div class="section-head">
-            <h2 id="m4">④ 三重硬约束与保守系数</h2>
-            <span class="section-badge">历史方法 · 仅供参考</span>
-          </div>
-          <p class="section-note">最终仓位 = round1( min(温度仓位 + 黄金坑Boost, 信用上限, 共振上限) × 保守系数 )<br>
-黄金坑Boost：主触发(PSI≥60 且 temp≤3) +2.0 成 ｜ 次触发(PSI≥70 且 temp≤4) +1.0 成 ｜ 其余 0<br>
-<b>2026-10-24 起执行口径已切换至「方案C · 股债比价四约束链」</b>，本章保留为历史方法与解读参考。</p>
-          <h3>① 信用约束 creditCap</h3>
-          <div class="formula">creditCap = mapScore(credit_yoy, [[6→3], [7→4.5], [8→6], [8.5→10]])&nbsp;&nbsp;（社融收缩强压仓位）</div>
-          <h3>② 共振约束 resonanceCap</h3>
-          <div class="formula">trend≥7 且 valuation≥7 → 3 成（双热共振·牛顶减仓）
-trend≤3 且 valuation≤3 → 10 成（双冷共振·黄金坑，不约束）
-valuation≥7.5 且 sentiment≥8 → 4 成（估值情绪双极端）
-其他 → 10 成（不约束）</div>
-          <h3>④′ 黄金坑 Boost（PSI × 温度）</h3>
-          <div class="formula">gpBoost = 2.0  若 PSI≥60 且 temp≤3（政策托+深超跌·历史+6.41%/命中75%）<br>
-gpBoost = 1.0  若 PSI≥70 且 temp≤4（政策底+超跌·历史+2.71%/命中61%）<br>
-gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中继·勿盲加」告警</div>
-          <p class="section-note">Boost 加在 min 之前：黄金坑是「极端便宜的加仓许可」，但仍受信用上限/共振上限/保守系数三重硬约束管辖，不突破既有安全绳。PSI 由六层话术 NLP 打分（L1字面词典/L2弦外沉默/L3言行印证/L5场合权重/L6制度固化），当月值随重大政策发言更新。</p>
-          <h3>③ 保守系数 conservativeFactor</h3>
-          <div class="formula">基线 1.0，每命中一条 −0.05，下限 0.80：
-&nbsp;china_fragile≥8 / vix≥25 / hormuz_risk≥7 / win_proximity≥6 / 核心字段 asOf 超 45 天</div>
-        </section>
-
-        <!-- ⑤ 方案C · 股债比价四约束链（现行执行口径） -->
-        <section class="card" aria-labelledby="m5">
-          <div class="section-head">
-            <h2 id="m5">⑤ 方案C · 股债比价四约束链（现行执行口径）</h2>
-            <span class="section-badge">现行执行 · 每日更新</span>
-          </div>
-          <p class="section-note">本页上方 ③ 温度仓位映射、④ 三重硬约束自 2026-10-24 起已降级为历史方法与解读参考；<b>真正每天在跑、首页「当前执行档位」展示的，是下面这套「股债比价四约束链」</b>。它不关心「市场现在热不热」，而是回答「股和债，谁更便宜」——先算一个比值 R，再让四条约束依次把仓位往下拧，最后取最保守的一档。</p>
-
-          <h3>模型 R：股债比价怎么算</h3>
-          <div class="formula">R = 沪深300全收益指数 ÷ 债腿<br>
-债腿 = 中证全债 H11001 × 80% + 沪深300全收益 × 20%（按月再平衡 + 终点校准 5.03）<br>
-全样本分位自 2007-01 起计算</div>
-          <p class="section-note">R 越大，说明股票相对债券越便宜，越该多买；R 越小，说明股票相对贵了，越该收手。把每天的 R 放到 2007 年至今的全样本里排个分位（站在历史长河里看今天处在便宜还是贵的位置），再决定档位。</p>
-
-          <h3>① 滞回阶梯（核心，单一真源）</h3>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>档位（按 R 分位由高到低）</th><th class="num">仓位</th></tr></thead>
-              <tbody>
-                <tr><td>满仓档</td><td class="num">100.00成</td></tr>
-                <tr><td>高仓档</td><td class="num">80.00成</td></tr>
-                <tr><td>中仓档</td><td class="num">50.00成</td></tr>
-                <tr><td>低仓档</td><td class="num">20.00成</td></tr>
-                <tr><td>空仓档</td><td class="num">0.00成</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="formula">双阈值滞回：跨档需突破更严格的阈值，防来回跳档（单一真源 hyst_core.py）</div>
-          <p class="section-note"><b>为什么这么设计——防抖：</b>市场小幅震荡时，如果「碰线就换挡」，仓位会一天满仓一天空仓地乱跳，既伤手续费也让人无所适从。双阈值滞回让「上去」和「下来」用不同的门槛，必须真正反转才换挡，把噪音过滤掉。这条是整条链的核心，全站唯一真源在 <code>hyst_core.py</code>，其他页面都引用它，不另起炉灶。</p>
-          <p class="section-note"><b>单位口径（务必看清）：</b>本站「成」= 百分点。100成 = 满仓（100%），60成 = 60%，显示保留两位小数，如「50.00成」。它<b>不是</b>「一成 = 10%」的旧式说法——50.00成就是半仓，不是 5%。具体分位阈值以 <code>hyst_core.py</code> 为准，本页不展开。</p>
-
-          <h3>② 动态 Kelly（对阶梯档位做修正）</h3>
-          <div class="formula">插值 μ / λ + 滚动 σ（156 周）+ cn10y → 对 ① 的档位做修正</div>
-          <p class="section-note"><b>为什么这么设计——防过度自信：</b>Kelly 公式的本质是「赔率好、把握大就多下注，但永远别全压」。这里用预期收益 μ、风险厌恶 λ、过去约 3 年（156 周）的实际波动 σ，再叠加十年国债收益率 cn10y 作无风险参照，对阶梯给的档位做「理性微调」——波动大时自动收一收，避免你在看似便宜、实则颠簸的行情里一把梭。</p>
-
-          <h3>③ 股债双杀熔断</h3>
-          <div class="formula">股 20 日 ≤ −5% 且 债 20 日 ≤ −1% → 强制压到 20成</div>
-          <p class="section-note"><b>为什么这么设计——防极端：</b>正常情况下股跌债涨（债券避险），股债双杀往往意味着流动性危机或系统性恐慌，历史上这种时候「抄底」常常抄在半山腰。一旦股票和债券 20 日同时大跌，不管分位多低，直接熔断压到 20成，先活下来再说。</p>
-
-          <h3>④ 命理纪律（可选叠加）</h3>
-          <div class="formula">随分位递减 + 双阈值滞回 + 2026–2027 地板区上限 80成<br>
-附复活条款：满足条件可恢复</div>
-          <p class="section-note">这是一条<b>可选</b>的叠加纪律（非强制计算项）：分位越低、纪律越松，同样用双阈值滞回防抖；在 2026–2027 的地板区设了 80成 上限，避免过度悲观空仓踏空；另有「复活条款」允许在市场条件修复后回升仓位，而不是一次性判死刑。</p>
-
-          <h3>最终仓位：取链条中最保守的一档</h3>
-          <p class="section-note">四条约束不是「取平均」，而是「层层下拧」——<b>最终仓位 = 链条里最保守（最低）的那一档</b>。滞回给底仓，Kelly 微调，双杀熔断兜底，命理纪律可选再加一层安全垫。宁可少赚、不可大亏，这是整条链的设计哲学。</p>
-          <p class="section-note"><b>当前执行仓位在哪看：</b>由 GitHub Actions 每日生成并写入 <code>stockbond.json</code>，首页「当前执行档位」实时展示。今日量级约在 50.00成 附近，<b>具体数字以首页实时数据为准</b>，本页不写死，以免与线上脱钩。</p>
-
-          <h3>诚实的局限</h3>
-          <p class="section-note">① <b>债腿是有意乐观的假设：</b>债腿用「中证全债 H11001 × 80% + 沪深300全收益 × 20%」混合并做 +5.03 终点校准，会让比值 R 整体偏「股更便宜」一些，从而倾向于给出更高仓位——这是我们刻意保留的乐观假设，读者需知晓其方向性。② <b>分位样本含成分调整偏差：</b>沪深300 等指数历史上多次调整成分股，2007 年至今的全样本分位会受这类调整影响，极端分位附近的解读需打折扣。</p>
-        </section>
-
-        <!-- ⑥ 降级规则（顺延） -->
-        <section class="card" aria-labelledby="m6">
-          <div class="section-head"><h2 id="m6">⑥ 降级（标灰）规则</h2></div>
-          <ol class="prose" style="font-size:14px">
-            <li><b>字段级</b>：macro 某字段缺失 / asOf 超 90 天 → 使用内置基线值，明细表该行灰底 + 「基线」徽标，其维度子权重不变（用基线值照常计分），但触发保守系数的陈旧惩罚。</li>
-            <li><b>文件级</b>：quotes.json 拉取失败时，先走<b>腾讯 JSONP 兜底</b>（浏览器直连 qt.gtimg.cn，与采集脚本同一解析口径）；兜底也失败 → 行情条用 macro 内 vix / amt_yi / oil_brent 等基线值渲染并整块标灰。</li>
-            <li><b>数据现状（不装实时）</b>：macro.json 由 akshare 每日自动采集 <b>11 个字段</b>（PMI / M1 / M2 / LPR / 沪深300 PE 及 10 年分位 / PB 分位 / 两融 / 贸易帐 / 美国失业率 / 70 城二手房同比），其余 18 个字段仍为内置基线——明细表「来源」列逐个标注，标灰即基线，不用猜。</li>
-            <li><b>全站级</b>：三文件全失败 → 渲染基线快照 + 顶部黄条「数据不可用，以下为基线值」，计算引擎照常跑，永远给得出一个仓位数字。</li>
-            <li><b>数据源级联（2026-10-20 实测教训）</b>：东财 push2his 接口可能无预警断连 → 趋势源级联「东财 → akshare 新浪日线 → 沿用上次值」；VIX 级联「stooq → 本土 20 日已实现波动率代理」。<b>任何兜底/代理值必须在来源列如实标注「沿用/代理」，绝不伪装成实时</b>。</li>
-          </ol>
-        </section>
-
-        <!-- ⑦ 数据字典 -->
-        <section class="card" aria-labelledby="m7">
-          <div class="section-head"><h2 id="m7">⑦ 数据字典</h2></div>
-          <p class="section-note">macro.json（31 项）· quotes.json · backtest.json。字段名与仓库内 JSON 完全一致。</p>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>字段</th><th>中文</th><th>类型</th><th>单位</th><th>频率</th><th>来源</th></tr></thead>
-              <tbody>
-                <tr><td>pmi</td><td>PMI</td><td>number</td><td>点</td><td>月</td><td>统计局</td></tr>
-                <tr><td>m1_yoy / m2_yoy</td><td>M1 / M2 同比</td><td>number</td><td>%</td><td>月</td><td>央行</td></tr>
-                <tr><td>credit_yoy</td><td>社融存量同比</td><td>number</td><td>%</td><td>月</td><td>央行</td></tr>
-                <tr><td>lpr1y</td><td>LPR(1年)</td><td>number</td><td>%</td><td>月</td><td>LPR</td></tr>
-                <tr><td>cn10y / us10y</td><td>中债 / 美债10年</td><td>number</td><td>%</td><td>日</td><td>中债 / FRED</td></tr>
-                <tr><td>hs300_pe</td><td>沪深300 PE</td><td>number</td><td>倍</td><td>日</td><td>中证</td></tr>
-                <tr><td>hs300_pe_pct / hs300_pb_pct</td><td>PE / PB 10年分位</td><td>number</td><td>%</td><td>日</td><td>中证 / 乐咕</td></tr>
-                <tr><td>hsi_pe_pct</td><td>恒生 PE 分位</td><td>number</td><td>%</td><td>日</td><td>恒生</td></tr>
-                <tr><td>erp</td><td>股债性价比</td><td>number</td><td>%</td><td>日</td><td>计算</td></tr>
-                <tr><td>margin_yi</td><td>两融余额</td><td>number</td><td>亿</td><td>日</td><td>交易所</td></tr>
-                <tr><td>northbound</td><td>北向资金</td><td>number</td><td>亿</td><td>日</td><td>港交所</td></tr>
-                <tr><td>breadth_up</td><td>上涨家数占比</td><td>number</td><td>%</td><td>日</td><td>乐咕乐股</td></tr>
-                <tr><td>ah_premium</td><td>AH 溢价</td><td>number</td><td>点</td><td>日</td><td>AH 溢价</td></tr>
-                <tr><td>amt_yi</td><td>两市成交额</td><td>number</td><td>亿</td><td>日</td><td>两市</td></tr>
-                <tr><td>oil_brent</td><td>布伦特油价</td><td>number</td><td>美元/桶</td><td>日</td><td>布伦特</td></tr>
-                <tr><td>dxy</td><td>美元指数</td><td>number</td><td>点</td><td>日</td><td>美元指数</td></tr>
-                <tr><td>us_unemploy</td><td>美国失业率</td><td>number</td><td>%</td><td>月</td><td>BLS / FRED</td></tr>
-                <tr><td>nasdaq_pct</td><td>纳指20日%</td><td>number</td><td>%</td><td>日</td><td>纳指</td></tr>
-                <tr><td>re_yoy</td><td>70城二手房同比</td><td>number</td><td>%</td><td>月</td><td>统计局</td></tr>
-                <tr><td>vix</td><td>VIX 波动率</td><td>number</td><td>点</td><td>日</td><td>CBOE</td></tr>
-                <tr><td>trade_balance</td><td>贸易帐</td><td>number</td><td>亿美元</td><td>月</td><td>海关</td></tr>
-                <tr><td>ai_bubble / hormuz_risk / paths_lit / win_proximity / china_fragile</td><td>AI泡沫 / 霍尔木兹 / 地缘 / 真实压力 / 地产脆弱</td><td>number</td><td>点</td><td>日</td><td>推导</td></tr>
-                <tr><td>quotes.*（hs300/sh/sz/cyb/kc/hsi/hstech/ndx/vix）</td><td>9 个指数</td><td>{price,pct,amtYi}</td><td>点 / %</td><td>日</td><td>腾讯行情</td></tr>
-                <tr><td>quotes.amtTotalYi / ok / asOf</td><td>成交额 / 状态 / 日期</td><td>number / bool / date</td><td>亿</td><td>日</td><td>腾讯行情</td></tr>
-                <tr><td>backtest[].tempAdj / fwd21 / fwd63</td><td>历史月度温度 / 21天 / 63天收益</td><td>number</td><td>0-10 / %</td><td>月</td><td>历史回测</td></tr>
-                <tr><td>psi</td><td>政策托举力（六层NLP）</td><td>number</td><td>0–100</td><td>事件/月</td><td>psi_nlp_engine（138月已回测）</td></tr>
-                <tr><td>bbii</td><td>牛熊强度指数</td><td>number</td><td>0–100</td><td>日</td><td>计算（7维加权）</td></tr>
-                <tr><td>gp_boost</td><td>黄金坑Boost</td><td>number</td><td>成</td><td>日</td><td>计算（PSI×温度）</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- ⑧ BBII 方向计与黄金坑（2026-10-20 新增） -->
-        <section class="card" aria-labelledby="m8">
-          <div class="section-head"><h2 id="m8">⑧ 牛熊强度 BBII（方向计·仅解读）与黄金坑反向加仓</h2></div>
-          <p class="section-note">温度是「风险计」（越高越热→越降仓），BBII 是「方向计」（越高越牛，仅作牛熊解读、<b>不参与仓位计算</b>）。两表共享 4 维原始数据、各只计 1 次，不存在重复计分。</p>
-          <h3>BBII 公式（0–100，权重和=100）</h3>
-          <div class="formula">BBII = 0.25×PSI + 0.20×趋势 + 0.15×估值(便宜度) + 0.15×流动性 + 0.12×盈利 + 0.08×资金 + 0.05×情绪(倒U)</div>
-          <p class="section-note">共享4维取自①的同一数据：趋势/流动性原值×10；估值取<b>便宜度 = 10 − 贵热度</b>；情绪做<b>倒U变换</b>（6分为乐观峰值，狂热反扣）。独有3维：政策PSI（六层话术NLP，138月序列已回测：救市94/924=99/严监管27–30/托而不举75–81）、盈利基本面、资金流向。</p>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>BBII 区间</th><th>≥70</th><th>58–69</th><th>45–57</th><th>30–44</th><th>&lt;30</th></tr></thead>
-              <tbody><tr><td>解读（不调仓）</td><td>强牛区</td><td>慢牛区</td><td>震荡交界区</td><td>弱势/熊市区</td><td>熊市中晚期</td></tr></tbody>
-            </table>
-          </div>
-          <h3>黄金坑反向加仓（历史回测再校准，138 月）</h3>
-          <div class="table-wrap">
-            <table class="data">
-              <thead><tr><th>档位</th><th>触发条件</th><th>Boost</th><th>历史样本</th><th>fwd63 均值</th><th>正收益占比</th></tr></thead>
-              <tbody>
-                <tr><td>★ 主触发</td><td>PSI≥60 且 temp≤3</td><td>+2.0 成</td><td>n=16</td><td>+6.41%</td><td>75%</td></tr>
-                <tr><td>★ 次触发</td><td>PSI≥70 且 temp≤4</td><td>+1.0 成</td><td>n=18</td><td>+2.71%</td><td>61%</td></tr>
-                <tr><td>⚠ 下跌中继</td><td>PSI&lt;50 且 temp≤4</td><td>0（告警勿加）</td><td>n=6</td><td>−4.62%</td><td>0%</td></tr>
-                <tr><td>中间带</td><td>PSI 50–70 且 temp≤4</td><td>0（温度主导）</td><td>n=8</td><td>+6.75%</td><td>62%</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="section-note">阈值敏感性：PSI 60–65 为稳健平台期，≥80 失效；中间带样本 n=8 偏小，维持温度主导。旧「正向加成」已被回测证伪（43.6% vs 纯温度 48.5%），已废弃。</p>
-        </section>
-
-        <!-- ⑨ 局限性与免责 -->
-        <section class="card" aria-labelledby="m9">
-          <div class="section-head"><h2 id="m9">⑨ 局限性与免责</h2></div>
-          <div class="prose">
-            <p>温度是「现在大概在哪个季节」的归纳，不预测明天涨跌；历史回测用的是事后统计口径，实时仓位只用当日可得数据，不存在未来函数。模型在极端行情、政策突变、数据停更时可能失效。</p>
-            <p>补充诚实边界（2026-10-20）：PSI（政策托举力）的方向预测力≈0（Pearson −0.035，强托举月命中 51%）——它精准划分政策 regime，但<b>不能预测涨跌</b>，故仅作黄金坑触发器与方向解读；黄金坑信号样本 n=16/18 偏小，阈值 60–65 为稳健平台期（PSI≥80 失效），需随每月新数据滚动复验；展示层已去重（BBII 面板不重画共享维卡片）。</p>
-            <p>本面板为个人投资研究的公开分享，所有内容仅供参考与学习，不构成任何投资建议或要约。市场有风险，投资须独立决策，盈亏自负。过往表现不代表未来，模型在极端行情下亦可能失效。</p>
-          </div>
+          <div class="section-head"><h2 id="m3">三、务必知道的风险</h2></div>
+          <ul class="prose" style="max-width:760px;font-size:15px;line-height:1.9">
+            <li><b>这是归纳，不是预言</b>：模型告诉你「历史上类似情况后多半怎么走」，不预测明天涨跌。</li>
+            <li><b>会失效</b>：极端行情、政策突变、数据停更时，模型可能失灵。</li>
+            <li><b>没有未来函数</b>：回测用事后统计口径，实时只用当日可得数据。</li>
+            <li><b>个人分享</b>：仅供参考与学习，不是投资建议或要约；市场有风险，决策请独立判断，盈亏自负。过往表现不代表未来。</li>
+          </ul>
           <div class="footer__cta">
             <a class="btn btn--primary" href="./">回到面板</a>
             <a class="btn btn--secondary" href="./history.html">看历史回测</a>
           </div>
         </section>
+
+        <!-- 技术原理（可展开审计，默认隐藏运算逻辑） -->
+        <details class="card" aria-labelledby="mtech" style="max-width:980px">
+          <summary style="cursor:pointer;font-weight:600;font-size:16px;padding:4px 0">▸ 技术原理（想深究可展开 · 公开可审计）</summary>
+          <div style="margin-top:14px">
+            <p class="section-note">下面是从 2026-10-25 起保留的方法细节，便于审计与回溯。日常阅读不需要看这一节。</p>
+
+            <h3>① 温度模型（历史方法 · 仅供参考，现行执行已切换为方案C）</h3>
+            <p class="section-note">四维（趋势 / 估值 / 流动性 / 情绪）各由若干指标锚点插值成 0–10 分，再按 0.30 / 0.30 / 0.20 / 0.20 合成「温度」；温度越高越热、越该降仓（≤3 偏冷、3–5 中性、5–7 偏热、≥7 过热）。该模型自 2026-10-24 起已降级为历史方法与解读参考，不再作为执行依据。</p>
+
+            <h3>② 方案C · 股债比价四约束链（现行执行口径）</h3>
+            <p class="section-note">核心：R = 沪深300全收益 ÷ 债腿（中证全债×80% + 沪深300全收益×20%，按月再平衡 + 终点校准 5.03）；全样本分位自 2007-01 起算。四条约束依次下拧，最终仓位取最保守的一档：① 滞回阶梯（满/高/中/低/空，双阈值防抖，单一真源 hyst_core.py）；② 动态 Kelly 微调（插值 μ/λ + 滚动 σ 156 周 + cn10y）；③ 股债双杀熔断（股20日≤−5% 且 债20日≤−1% → 压到 20 成）；④ 命理纪律（可选，2026–2027 地板区上限 80 成）。<b>诚实局限：</b>债腿是有意偏乐观的假设（让 R 整体偏「股更便宜」），分位样本含指数成分调整偏差。</p>
+
+            <h3>③ 降级 / 兜底规则（万一数据断了怎么办）</h3>
+            <ol class="prose" style="font-size:14px">
+              <li><b>字段级</b>：某字段缺失 / 超过 90 天 → 用内置基线值，明细表该行灰底 + 「基线」徽标，并触发保守系数的陈旧惩罚。</li>
+              <li><b>文件级</b>：行情拉取失败 → 先走腾讯 JSONP 兜底（浏览器直连 qt.gtimg.cn）；兜底也失败 → 行情条用基线值渲染并整块标灰。</li>
+              <li><b>全站级</b>：三文件全失败 → 渲染基线快照 + 顶部黄条提示，计算引擎照常跑，永远给得出一个仓位数字。</li>
+              <li><b>数据源级联</b>：东财接口可能无预警断连 → 趋势源级联「东财 → akshare 新浪日线 → 沿用上次值」；任何兜底 / 代理值必须在来源列如实标注，绝不伪装成实时。</li>
+            </ol>
+
+            <h3>④ 保守系数（已接入的触发）</h3>
+            <p class="section-note">基线 1.0，每命中一条 −0.05，下限 0.80：<b>china_fragile≥8 / vix≥25</b>（已接入代码）。注：原文档还列有 hormuz_risk≥7 / win_proximity≥6 / 核心字段 asOf 超 45 天 三条，目前为规划项、尚未接入计算代码——此处以实际代码为准，不夸大。</p>
+
+            <h3>⑤ 数据字典（macro.json 主要字段）</h3>
+            <div class="table-wrap">
+              <table class="data">
+                <thead><tr><th>字段</th><th>中文</th><th>单位</th><th>频率</th><th>来源</th></tr></thead>
+                <tbody>
+                  <tr><td>pmi</td><td>PMI</td><td>点</td><td>月</td><td>统计局</td></tr>
+                  <tr><td>m1_yoy / m2_yoy</td><td>M1 / M2 同比</td><td>%</td><td>月</td><td>央行</td></tr>
+                  <tr><td>credit_yoy</td><td>社融存量同比</td><td>%</td><td>月</td><td>央行</td></tr>
+                  <tr><td>lpr1y</td><td>LPR(1年)</td><td>%</td><td>月</td><td>LPR</td></tr>
+                  <tr><td>cn10y / us10y</td><td>中债 / 美债10年</td><td>%</td><td>日</td><td>中债 / FRED</td></tr>
+                  <tr><td>hs300_pe / hs300_pe_pct / hs300_pb_pct</td><td>沪深300 PE / PE·PB 10年分位</td><td>倍 / %</td><td>日</td><td>中证 / 乐咕</td></tr>
+                  <tr><td>hsi_pe_pct</td><td>恒生 PE 分位</td><td>%</td><td>日</td><td>恒生</td></tr>
+                  <tr><td>erp</td><td>股债性价比</td><td>%</td><td>日</td><td>计算</td></tr>
+                  <tr><td>margin_yi</td><td>两融余额</td><td>亿</td><td>日</td><td>交易所</td></tr>
+                  <tr><td>breadth_up</td><td>上涨家数占比</td><td>%</td><td>日</td><td>乐咕乐股</td></tr>
+                  <tr><td>ah_premium</td><td>AH 溢价</td><td>点</td><td>日</td><td>AH 溢价</td></tr>
+                  <tr><td>amt_yi</td><td>两市成交额</td><td>亿</td><td>日</td><td>两市</td></tr>
+                  <tr><td>oil_brent</td><td>布伦特油价</td><td>美元/桶</td><td>日</td><td>布伦特</td></tr>
+                  <tr><td>dxy</td><td>美元指数</td><td>点</td><td>日</td><td>美元指数</td></tr>
+                  <tr><td>us_unemploy</td><td>美国失业率</td><td>%</td><td>月</td><td>BLS / FRED</td></tr>
+                  <tr><td>nasdaq_pct</td><td>纳指20日%</td><td>%</td><td>日</td><td>纳指</td></tr>
+                  <tr><td>re_yoy</td><td>70城二手房同比</td><td>%</td><td>月</td><td>统计局</td></tr>
+                  <tr><td>vix</td><td>VIX 波动率</td><td>点</td><td>日</td><td>CBOE</td></tr>
+                  <tr><td>trade_balance</td><td>贸易帐</td><td>亿美元</td><td>月</td><td>海关</td></tr>
+                  <tr><td>quotes.*</td><td>9 个指数行情</td><td>点 / %</td><td>日</td><td>腾讯行情</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="section-note">共约 29 个宏观字段（11 个为真实采集值，其余为内置基线并逐行标注）；另含 quotes.json（行情）与 backtest.json（历史回测）。字段名与仓库内 JSON 完全一致。</p>
+          </div>
+        </details>
       </main>
     </div>
   </div>
@@ -377,94 +268,12 @@ gpBoost = 0    其余；且 PSI&lt;50 且 temp≤4 时面板显示「下跌中�
     closeBtn && closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
   </script>
+  <!-- 看板同源自适应高度：接收 sector_system.html 广播的内容高度 -->
   <script>
-    /* ===== 实时读数：按①表格公开锚点计算（与 compute.js 同锚点口径，便于审计） ===== */
-    const BASELINE = {"pmi": {"value": 50.1, "asOf": "2026-09-01", "src": "akshare·macro_china_pmi"}, "m1_yoy": {"value": 3.2, "asOf": "2026-09-01", "src": "akshare·macro_china_money_supply"}, "m2_yoy": {"value": 7.2, "asOf": "2026-09-01", "src": "akshare·macro_china_money_supply"}, "credit_yoy": {"value": 8.18, "asOf": "2026-04-01", "src": "基线(央行·社融存量同比)"}, "lpr1y": {"value": 3, "asOf": "2026-09-20", "src": "akshare·macro_china_lpr"}, "cn10y": {"value": 1.6822, "asOf": "2026-09-30", "src": "基线(中债)"}, "us10y": {"value": 5.31, "asOf": "2026-10-05", "src": "基线(FRED)"}, "hs300_pe": {"value": 12.38, "asOf": "2026-10-19", "src": "akshare·stock_index_pe_lg"}, "hs300_pe_pct": {"value": 55.4, "asOf": "2026-10-19", "src": "akshare·stock_index_pe_lg·10年分位"}, "hs300_pb_pct": {"value": 32.2, "asOf": "2026-10-19", "src": "akshare·stock_index_pb_lg·10年分位"}, "hsi_pe_pct": {"value": 50.6, "asOf": "2026-10-05", "src": "基线(恒生 10年分位代理)"}, "erp": {"value": 5.291, "asOf": "2026-09-30", "src": "基线(计算)"}, "margin_yi": {"value": 24809.1, "asOf": "2026-10-16", "src": "akshare·沪深交易所两融余额合计"}, "northbound": {"value": 0, "asOf": "2026-10-06", "src": "基线(港交所)"}, "breadth_up": {"value": 46.4, "asOf": "2026-09-30", "src": "基线(乐咕乐股)"}, "ah_premium": {"value": 140, "asOf": "2026-10-06", "src": "基线(AH溢价)"}, "amt_yi": {"value": 17028, "asOf": "2026-09-30", "src": "基线(两市)"}, "oil_brent": {"value": 97.82, "asOf": "2026-10-06", "src": "基线(布伦特油价)"}, "dxy": {"value": 101.87, "asOf": "2026-10-06", "src": "基线(美元指数)"}, "us_unemploy": {"value": 4.2, "asOf": "2025-09-01", "src": "akshare·macro_usa_unemployment_rate"}, "nasdaq_pct": {"value": 3.66, "asOf": "2026-10-05", "src": "基线(纳指20日)"}, "re_yoy": {"value": -0.85, "asOf": "2026-09-01", "src": "akshare·70城二手住宅同比(akshare·macro_china_new_house_price)"}, "vix": {"value": 21.67, "asOf": "2026-10-03", "src": "基线(CBOE VIX)"}, "trade_balance": {"value": 982.4, "asOf": "2025-09-01", "src": "akshare·macro_china_trade_balance"}, "ai_bubble": {"value": 7.1, "asOf": "2026-10-05", "src": "推导(纳指+美债)"}, "hormuz_risk": {"value": 6.5, "asOf": "2026-10-06", "src": "推导(油价)"}, "paths_lit": {"value": 6.2, "asOf": "2026-10-06", "src": "推导(综合)"}, "win_proximity": {"value": 4.1, "asOf": "2026-10-06", "src": "推导(真实压力:油价+VIX+纳指+美债)"}, "china_fragile": {"value": 8.2, "asOf": "2026-08-01", "src": "推导(70城二手房同比)"}};
-    const PSI_FALLBACK = {value: 68.4, asOf: "2026-06", src: "138月NLP序列末值(待管线写入psi字段)"};
-    const EARN_FALLBACK = {value: 54, asOf: "2026-09", src: "基线(工业利润+社融种子)"};
-    function lin(v, pts){
-      if(v<=pts[0][0]) return pts[0][1];
-      for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];if(v>=a[0]&&v<=b[0])return a[1]+(v-a[0])*(b[1]-a[1])/(b[0]-a[0]);}
-      return pts[pts.length-1][1];
-    }
-    function sentBBII(sc){ return sc<=6 ? sc : Math.max(0,(10-sc))*1.5; }
-    function fval(m,k){ const x=(m||{})[k]; return x&&typeof x.value==="number" ? x.value : null; }
-    function fsrc(m,k){ const x=(m||{})[k]; return x? (x.src||"-") : "缺失"; }
-    function fasof(m,k){ const x=(m||{})[k]; return x? (x.asOf||"-") : "-"; }
-    function computeAll(m){
-      const g=(k,d)=>{const v=fval(m,k);return v==null?d:v;};
-      // ① 锚点（与上方表格一字不差）
-      const trend = 0.4*lin(g("nasdaq_pct",3.66),[[-5,1],[0,3],[5,5],[10,7],[15,9]])
-                  + 0.3*lin(g("breadth_up",46.4),[[30,2],[50,5],[80,9]])
-                  + 0.3*lin(g("vix",21.67),[[12,8],[20,5],[30,1]]);
-      const val = 0.4*lin(g("hs300_pe_pct",55.4),[[10,1],[50,5],[90,9]])
-                + 0.3*lin(g("hs300_pb_pct",32.2),[[10,1],[50,5],[90,9]])
-                + 0.2*lin(g("erp",5.291),[[7,1],[5,5],[2,9]])
-                + 0.1*lin(g("hsi_pe_pct",50.6),[[10,1],[50,5],[90,9]]);
-      const liq = 0.4*lin(g("m1_yoy",3.2),[[0,1],[5,5],[15,9]])
-                + 0.3*lin(g("credit_yoy",8.18),[[8,3],[10,5],[13,9]])
-                + 0.3*lin(g("lpr1y",3),[[4.6,2],[3.85,5],[3.0,8]]);
-      const sent = 0.3*lin(g("margin_yi",24809.1),[[15000,3],[20000,6],[25000,8],[30000,10]])
-                 + 0.25*lin(g("amt_yi",17028),[[6000,2],[10000,5],[17000,7],[25000,10]])
-                 + 0.25*lin(g("vix",21.67),[[12,9],[20,5],[30,1]])
-                 + 0.2*lin(g("ah_premium",140),[[130,5],[155,8]]);
-      const clamp10=x=>Math.max(0,Math.min(10,x));
-      const t=clamp10(trend),v=clamp10(val),l=clamp10(liq),s=clamp10(sent);
-      const temp=0.30*t+0.30*v+0.20*l+0.20*s;
-      const map=[[0,9.5],[2,9],[4,7],[5,6],[6,5],[7,3.5],[8,2],[9,1],[10,0.5]];
-      let pos; if(temp<=0)pos=9.5; else if(temp>=10)pos=0.5;
-      else for(let i=0;i<map.length-1;i++){const a=map[i],b=map[i+1];if(temp>=a[0]&&temp<=b[0]){pos=a[1]+(temp-a[0])*(b[1]-a[1])/(b[0]-a[0]);break;}}
-      // PSI
-      const psiObj = (m&&m.psi&&typeof m.psi.value==="number") ? m.psi : PSI_FALLBACK;
-      const psi = psiObj.value;
-      // 黄金坑
-      let boost=0,gpType="常规";
-      if(psi>=60&&temp<=3){boost=2.0;gpType="黄金坑·主触发";}
-      else if(psi>=70&&temp<=4){boost=1.0;gpType="黄金坑·次触发";}
-      else if(psi<50&&temp<=4){gpType="下跌中继·勿盲加";}
-      // BBII
-      const earn=(m&&m.earnings&&typeof m.earnings.value==="number")?m.earnings:EARN_FALLBACK;
-      const flowProxy=lin(g("margin_yi",24809.1),[[15000,3],[20000,6],[25000,8],[30000,10]]);
-      const bbii=(20*t*10+15*(10-v)*10+15*l*10+5*sentBBII(s)*10+25*psi+12*earn.value+8*flowProxy*10)/100;
-      // 三重硬约束
-      const creditCap=lin(g("credit_yoy",8.18),[[6,3],[7,4.5],[8,6],[8.5,10]]);
-      let resCap=10;
-      if(t>=7&&v>=7)resCap=3;
-      else if(v>=7.5&&s>=8)resCap=4;
-      let cf=1.0;
-      if(g("china_fragile",8.2)>=8)cf-=0.05;
-      if(g("vix",21.67)>=25)cf-=0.05;
-      const final=Math.min(9.5,Math.max(0,Math.min(pos+boost,creditCap,resCap))*cf);
-      return {t,v,l,s,temp,pos,psi,psiObj,boost,gpType,bbii,earn,flowProxy,creditCap,resCap,cf,final};
-    }
-    function render(r, mode){
-      const tb=document.querySelector("#liveTable tbody");
-      const tag = mode==="baseline" ? "基线快照" : "实时";
-      tb.innerHTML=`
-        <tr><td><b>① 牛熊温度（风险计）</b></td><td class="num"><b>${r.temp.toFixed(2)}</b> / 10</td><td>趋势${r.t.toFixed(1)}·估值${r.v.toFixed(1)}·流动性${r.l.toFixed(1)}·情绪${r.s.toFixed(1)}（按①锚点）</td><td>${tag}</td></tr>
-        <tr><td>→ 温度映射仓位</td><td class="num">${r.pos.toFixed(2)} 成</td><td>③仓位映射线性插值</td><td>-</td></tr>
-        <tr><td>政策托举力 PSI</td><td class="num">${r.psi}</td><td>${r.psiObj.src||""}</td><td>${r.psiObj.asOf||"-"}</td></tr>
-        <tr><td>黄金坑判定</td><td class="num">${r.gpType}</td><td>Boost ${r.boost} 成</td><td>-</td></tr>
-        <tr><td><b>② BBII（方向计·仅解读）</b></td><td class="num"><b>${r.bbii.toFixed(1)}</b> / 100</td><td>估值取便宜度(10−${r.v.toFixed(1)}=${(10-r.v).toFixed(1)})·情绪倒U；不作仓位加成</td><td>${tag}</td></tr>
-        <tr><td>三重硬约束</td><td class="num">信用${r.creditCap.toFixed(1)} / 共振${r.resCap} / 系数${r.cf.toFixed(2)}</td><td>④原规则不变</td><td>-</td></tr>
-        <tr><td><b>③ 最终建议仓位</b></td><td class="num"><b>${r.final.toFixed(1)} 成</b></td><td>min(温度${r.pos.toFixed(2)}+Boost${r.boost}, 信用, 共振)×${r.cf.toFixed(2)}</td><td>${tag}</td></tr>`;
-      const al=document.getElementById("liveAlert");
-      al.textContent = `✓ 判读：${r.gpType==="常规"?"无黄金坑信号（PSI "+r.psi+"，温度需≤3才主触发）":r.gpType}；BBII ${r.bbii.toFixed(1)} 仅方向解读、不进仓位公式（重复计分自查见⑧）。`;
-    }
-    (async()=>{
-      try{
-        const r=await fetch("data/macro.json");
-        if(!r.ok) throw new Error("HTTP "+r.status);
-        const j=await r.json();
-        const res=computeAll(j.data||{});
-        render(res,"live");
-      }catch(e){
-        document.getElementById("liveBanner").style.display="block";
-        document.getElementById("liveBanner").textContent="⚠ data/macro.json 读取失败（"+e.message+"），以下为内嵌基线快照（2026-10-19 采集），非实时。";
-        const res=computeAll(BASELINE);
-        render(res,"baseline");
-      }
-    })();
+    (function(){var f=document.getElementById("sq-frame");if(!f)return;
+      window.addEventListener("message",function(e){
+        if(e.data&&e.data.type==="sq-height"){f.style.height=Math.max(600,e.data.h+24)+"px";}
+      });})();
   </script>
 </body>
 </html>
