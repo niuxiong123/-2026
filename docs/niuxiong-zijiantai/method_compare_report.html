@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模块对比 + 组合建模 + 真实回测 + 最优解筛选（2026-10-27）</title>
+<style>
+  :root{--bg:#f5f7fa;--card:#fff;--ink:#1f2933;--sub:#52606d;--line:#e4e7eb;--accent:#2563eb;--red:#c0392b;--green:#1e8e5a;--amber:#d98324;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;font-size:15px;}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 60px;}
+  header{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;border-radius:14px;padding:24px 28px;margin-bottom:20px;}
+  header h1{margin:0 0 6px;font-size:22px;}
+  header p{margin:0;color:#cbd5e1;font-size:13px;}
+  .tldr{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px 20px;margin-bottom:20px;}
+  .tldr h2{margin:0 0 8px;font-size:16px;color:#9a3412;}
+  .tldr p{margin:5px 0;font-size:14px;color:#7c2d12;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .card h2{margin:0 0 14px;font-size:18px;border-left:4px solid var(--accent);padding-left:10px;}
+  .card h3{font-size:15.5px;color:var(--sub);margin:18px 0 8px;}
+  table{width:100%;border-collapse:collapse;font-size:12.8px;margin:8px 0 4px;}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top;}
+  th{background:#f0f4f8;color:var(--sub);font-weight:600;}
+  .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;}
+  .t-good{background:#dcfce7;color:#166534;} .t-mid{background:#fef3c7;color:#92400e;} .t-bad{background:#fee2e2;color:#991b1b;}
+  .num{font-weight:700;} .neg{color:var(--red);} .pos{color:var(--green);}
+  .note{font-size:12.3px;color:var(--sub);margin-top:8px;}
+  .disc{font-size:11.5px;color:#94a3b8;border-top:1px dashed var(--line);padding-top:12px;margin-top:22px;}
+  .hl{background:#eff6ff;border-left:4px solid var(--accent);padding:12px 14px;border-radius:8px;font-size:14px;margin:10px 0;}
+  .hl.ok{background:#f0f9f4;border-color:var(--green);}
+  .hl.warn{background:#fff8f0;border-color:var(--amber);}
+  ol li,ul li{margin:4px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>模块对比 + 组合建模 + 真实回测 + 最优解筛选</h1>
+  <p>对比对象：本机实时研判系统（http://127.0.0.1:8686） vs 公开方法论页（method.html）｜ 数据截至 2026-10-27 ｜ 回测：沪深300 月/日线、恒生科技、12 只 ETF NAV（2005–2026）</p>
+</header>
+
+<div class="tldr">
+  <h2>一句话结论（先读）</h2>
+  <p><b>① 两系统各有所长、互不替代：</b>本机 8686 强在「标的决策纪律 + 图形化 + 62 只逐只判定」，method.html 强在「公开可访问 + 系统化大盘仓位（方案C）+ 因子研究底稿」。最优做法不是二选一，而是<b>缝合</b>。</p>
+  <p><b>② 回测铁证：</b>宽基择时跑不赢买入持有（CAGR 1.6%–3.5% vs 6.9%），但模型的真正价值在两端——<b>底部区识别 11/12、顶部 4/6</b>，以及<b>ETF 优选 +150%~+200%</b>。所以最优解是「把模型当 TILT 工具，不当开关」。</p>
+  <p><b>③ 本次采用的最优解（已从 4+ 方案中选出）：</b>方案C 管仓位 + 8686「低点买ETF·高点卖ETF」规则管标的 + 九因子板块轮动作底稿，三者缝合进 method.html 的「标的决策」决策页（含 Tc 89/30 经验带、数形结合图、综合判断、实操参考、全部标的）。</p>
+</div>
+
+<!-- 一、模块逐项对比 -->
+<div class="card">
+  <h2>一、模块逐项对比：本机 8686 系统 vs 公开 method.html</h2>
+  <table>
+    <tr><th style="width:15%">功能模块</th><th style="width:30%">本机 8686 系统</th><th style="width:30%">公开 method.html</th><th style="width:25%">优劣 / 取舍</th></tr>
+    <tr><td><b>大盘仓位模型</b></td><td>无独立大盘仓位引擎；只给 ETF 档位，靠 PE / ret_250 / Tc 间接判断</td><td>有「方案C·股债比价」四约束链（股债比价+滞回阶梯+动态Kelly+股债双杀熔断）</td><td><span class="tag t-good">method 优</span> 8686 缺系统化仓位，方案C 正好补上</td></tr>
+    <tr><td><b>标的决策引擎</b></td><td>「低点买ETF·高点卖ETF」规则：估值极值+深跌+动量拐点+成交冰点+政策底五维 → Tc 温度；买/卖档位线</td><td>「九因子等权 D」板块轮动（留一交叉回测 Top1 命中 2/3）</td><td><span class="tag t-mid">互补</span> 8686 重「何时/买哪只」纪律；method 重「板块领涨识别」</td></tr>
+    <tr><td><b>可视化</b></td><td>数形结合可缩放 SVG（沪深300 月线+买卖点+Tc 曲线+深跌带+<b>Tc 89/30 经验带</b>）</td><td>文字为主 + 嵌入 sector_system 图表</td><td><span class="tag t-good">8686 优</span> 图形化、可交互、可缩放</td></tr>
+    <tr><td><b>综合判断</b></td><td>8 项数值体检 + 一句话结论（数形结合）</td><td>无（只讲方法）</td><td><span class="tag t-good">8686 优</span></td></tr>
+    <tr><td><b>实操落地</b></td><td>分批加仓路径 + 卖出三档 + ETF 盘中排序</td><td>灯号/仓位尺子（单只≤12%、红闸≤30%）</td><td><span class="tag t-mid">互补</span></td></tr>
+    <tr><td><b>全部标的覆盖</b></td><td>62 只 ETF 逐只判定（主买/浅买/接近买区/中性/卖侧）+ 可标记备忘</td><td>36 只 ETF 分组展示</td><td><span class="tag t-good">8686 优</span> 覆盖更广、可交互标记</td></tr>
+    <tr><td><b>加息/宏观闸</b></td><td>美联储加息闸（封顶 3 成、高久期科技禁买）</td><td>宏观闸门红黄绿（≤30 / ≤45）</td><td><span class="tag t-mid">互补</span></td></tr>
+    <tr><td><b>实时性 / 可访问性</b></td><td>本机后端实时抓取（仅 localhost）</td><td>GitHub Actions 每日快照（公网可访问）</td><td><span class="tag t-good">method 优</span> 公开可访问、可部署</td></tr>
+    <tr><td><b>回测披露</b></td><td>底部 11/12、顶部 4/6、ETF +150%~+200%</td><td>九因子 Top1 2/3、高分组超额 +0.468</td><td><span class="tag t-mid">各有侧重</span></td></tr>
+    <tr><td><b>命理叠加</b></td><td>已移除（纯规则）</td><td>本版已删除（原「命理纪律」条款移除）</td><td><span class="tag t-good">均已去</span> 不混入决策</td></tr>
+  </table>
+  <div class="hl"><b>综合：</b>8686 = 执行层（图形+纪律+覆盖广），method.html = 公开层（仓位系统+因子底稿+可访问）。两者缝合即最优：用方案C 定「拿多少」、用 8686 规则定「往哪放/何时动手」、用九因子作板块研究底稿。</div>
+</div>
+
+<!-- 二、组合建模 -->
+<div class="card">
+  <h2>二、如何组合两系统 → 构建「低点买 / 高点卖」最优模型</h2>
+  <p>落地口径：把方案C、8686 规则、九因子分别放在「仓位 / 标的 / 底稿」三层，互不重复、各管一段。</p>
+  <table>
+    <tr><th style="width:12%">层</th><th style="width:26%">负责</th><th style="width:62%">落地方式（缝合两方）</th></tr>
+    <tr><td><b>L1 仓位</b></td><td>方案C·股债比价（method.html）</td><td>四约束链定总仓上限（满/高/中/低/空 + Kelly + 双杀熔断），解决 8686 缺系统化仓位的问题</td></tr>
+    <tr><td><b>L2 标的</b></td><td>8686「低点买ETF·高点卖ETF」规则</td><td>五维（估值极值/深跌/动量/成交冰点/政策底）→ Tc 温度；买档 PE≤11.5/Tc≥65 → 主买 PE≤11/Tc≥72 → 极致 PE≤10.5；卖档 PE≥13警戒/≥14减仓/≥15.5清仓；恒科回撤≥60/70/75 三档</td></tr>
+    <tr><td><b>L3 底稿</b></td><td>九因子板块轮动（sector_system）</td><td>作为板块领涨识别的补充研究，不与 L2 冲突；L2 负责纪律执行，L3 负责「哪类板块更可能领涨」的定性参考</td></tr>
+    <tr><td><b>叠加</b></td><td>加息闸 + Tc 89/30 经验带</td><td>加息期总仓封顶 3 成、科技禁买；Tc 89 买点带（极端便宜区可重手）、Tc 30 卖点带（极端昂贵区该收手），勾选「显示 Tc 曲线」可见</td></tr>
+  </table>
+  <div class="hl ok"><b>闭环：</b>① 方案C 判总仓上限 → ② 8686 规则判「是否进入底部区/买哪只」→ ③ 在区内挑「深跌+低分位+催化」的 ETF → ④ 持有至 PE/分位触发顶部区 → ⑤ 先减泡沫最高者（分位≥90%）、按纪律兑现。</div>
+</div>
+
+<!-- 三、真实回测 -->
+<div class="card">
+  <h2>三、真实历史数据回测（沪深300 日/月线、恒生科技、12 只 ETF NAV，2005–2026）</h2>
+  <h3>3.1 A 股择时三变体 vs 买入持有（月频、月末调仓）</h3>
+  <table>
+    <tr><th>策略</th><th>CAGR</th><th>终值(倍)</th><th>买入持有 CAGR</th><th>交易次数</th><th>胜率</th><th>最大回撤</th><th>在市时间</th></tr>
+    <tr><td>基准：买入持有</td><td class="num">6.91%</td><td>4.28x</td><td>—</td><td>—</td><td>—</td><td>≈ −70%</td><td>100%</td></tr>
+    <tr><td>A 基础（纯估值+周期）</td><td class="neg">1.60%</td><td>1.41x</td><td rowspan="3">6.91%</td><td>11</td><td>27.3%</td><td class="neg">−36.4%</td><td>53.8%</td></tr>
+    <tr><td>A 精炼（估值+动量确认）</td><td class="neg">1.77%</td><td>1.47x</td><td>8</td><td>37.5%</td><td class="neg">−36.7%</td><td>51.1%</td></tr>
+    <tr><td><b>A 紧（极低估买+修复兑现）</b></td><td class="num pos">3.47%</td><td>2.10x</td><td>6</td><td class="pos">50.0%</td><td class="pos">−24.8%</td><td>26.7%</td></tr>
+  </table>
+  <div class="hl warn"><b>关键发现（反直觉）：</b>在沪深300 宽基上，<b>任何估值择时都跑不赢买入持有</b>（CAGR 1.6%–3.5% vs 6.9%）。但纪律化紧版本的回撤从约 −37% 降到 −24.8%、胜率翻倍到 50%——价值在「控风险」而非「增厚收益」。结论：模型当 TILT 工具（底部区部署、顶部区剔除），不当开关。</div>
+
+  <h3>3.2 底部/顶部「区」识别准确率（模型最强项）</h3>
+  <table>
+    <tr><th>指标</th><th>数值</th><th>说明</th></tr>
+    <tr><td>真实底部区命中</td><td class="pos num">11 / 12</td><td>真实大底（回撤≥25%）：2008-10、2010-06、2011-12、2012-11、2014-03、2015-09、2018-12、2020-03、2022-04、2024-01、2025-04、2026-10；模型在 11 个附近触发</td></tr>
+    <tr><td>真实顶部区命中</td><td class="pos num">4 / 6</td><td>顶（局部极大且 PE≥14）：2007-10、2015-05、2018-01、2021-01 命中；漏 2009-07、2010-10 两个快速反弹顶</td></tr>
+  </table>
+
+  <h3>3.3 ETF 买侧优选验证（真实底部后 24 月最大涨幅）</h3>
+  <table>
+    <tr><th>ETF</th><th>代码</th><th>当前回撤</th><th>当前分位</th><th>历史底部后24月最大涨幅</th><th>判定</th></tr>
+    <tr><td>酒</td><td>512690</td><td>−73.8%</td><td class="pos">1.8%</td><td class="pos">+196%</td><td>买侧首选</td></tr>
+    <tr><td>恒生科技</td><td>513180</td><td>−52.9%</td><td>11.5%</td><td>+65%（2022-10 后）</td><td>买侧首选</td></tr>
+    <tr><td>医药</td><td>512010</td><td>−59.5%</td><td>31.7%</td><td class="pos">+150%</td><td>买侧</td></tr>
+    <tr><td>半导体</td><td>512760</td><td>−43.8%</td><td class="neg">91.7%</td><td>+180%（2019）</td><td><b>卖侧风险</b></td></tr>
+    <tr><td>红利</td><td>510880</td><td>−36.2%</td><td class="neg">92.7%</td><td>+22%</td><td><b>卖侧风险</b></td></tr>
+  </table>
+  <div class="hl ok"><b>验证结论：</b>「买深跌+低分位+催化」的 ETF 在真实底部兑现 +150%~+200%（酒 +196%、医药 +150%）；当前分位最高的红利(92.7%)、半导体(91.7%) 正是下一轮顶部该先减的「泡沫」候选——卖侧逻辑成立。</div>
+</div>
+
+<!-- 四、4+方案优缺点 + 最优筛选 -->
+<div class="card">
+  <h2>四、候选解决方案 × 优缺点 × 最优筛选（≥4 方案）</h2>
+  <p>为选出最优解，先列出 4 个（含 1 个基线）候选方案，逐个给优缺点，再据「回测支撑 + 互补性 + 可部署 + 诚实局限」四项标准筛出最优。</p>
+
+  <h3>方案 A：纯「方案C·股债比价」（method.html 原方案，只管大盘仓位）</h3>
+  <table>
+    <tr><th style="width:50%">优点</th><th style="width:50%">缺点</th></tr>
+    <tr><td>· 系统化四约束链，仓位纪律清晰<br>· 公开可访问、可部署<br>· 不依赖个股/ETF 选股</td><td>· <b>不管"买哪只"</b>，用户仍不知往哪放<br>· 宽基择时跑不赢买入持有（CAGR 1.6%–3.5% vs 6.9%）<br>· 缺少图形化与触发指引</td></tr>
+  </table>
+
+  <h3>方案 B：纯「8686 低点买ETF 规则」（只管标的，无系统化仓位）</h3>
+  <table>
+    <tr><th style="width:50%">优点</th><th style="width:50%">缺点</th></tr>
+    <tr><td>· 底部区识别 11/12、ETF 优选 +150%~+200%<br>· 图形化、可缩放、62 只逐只判定<br>· 加息闸等硬纪律</td><td>· <b>无独立大盘仓位引擎</b>，总仓靠 PE/ret_250 间接判断，不够系统<br>· 仅本机 localhost，无法公开部署<br>· 顶部识别仅 4/6，需补分位/泡沫兜底</td></tr>
+  </table>
+
+  <h3>方案 C：纯「九因子板块轮动」（sector_system，只管板块）</h3>
+  <table>
+    <tr><th style="width:50%">优点</th><th style="width:50%">缺点</th></tr>
+    <tr><td>· 留一交叉回测 Top1 命中 2/3、高分组超额 +0.468<br>· 板块领涨识别能力强</td><td>· 只识别"哪类板块领涨"，<b>不解决买点/卖点纪律</b><br>· 样本 241 时点，过拟合风险<br>· 需与买卖纪律配合才有执行力</td></tr>
+  </table>
+
+  <h3>方案 D：买入持有（基线，作为对照）</h3>
+  <table>
+    <tr><th style="width:50%">优点</th><th style="width:50%">缺点</th></tr>
+    <tr><td>· CAGR 6.91%、终值 4.28x，长期最优<br>· 零交易成本、零执行负担</td><td>· 回撤 ≈ −70%，绝大多数人拿不住<br>· 不解决"当前该不该加/减"的现实焦虑</td></tr>
+  </table>
+
+  <h3>方案 E（采用）：<b>缝合方案 = 方案C 仓位 + 方案B 标的规则 + 方案C底稿</b></h3>
+  <table>
+    <tr><th style="width:50%">优点</th><th style="width:50%">缺点 / 剩余风险</th></tr>
+    <tr><td>
+      · 三方互补，无能力盲区：方案C 管"拿多少"、方案B 管"往哪放/何时动手"、九因子作板块底稿<br>
+      · <b>回测支撑</b>：底部区 11/12、ETF +150%~+200%、纪律化紧版 CAGR 3.47%/回撤 −24.8%/胜率 50%<br>
+      · 图形化（数形结合 SVG + Tc 89/30 经验带）、62 只逐只判定、可标记备忘<br>
+      · 公开可部署（静态快照嵌入 method.html）<br>
+      · 命理已移除，纯规则、诚实局限已标注
+    </td><td>
+      · 顶部识别仅 4/6 → 已用"分位≥90% 泡沫先减"兜底，但快速反弹顶仍可能踏空卖点<br>
+      · 宽基择时仍跑不赢买入持有 → 已定位为 TILT 工具而非开关，不宣称增厚收益<br>
+      · 底部样本仅 5–6 个、ETF 回测≤3 大底，统计弱、参数微调即变（过拟合风险）<br>
+      · 盈利下修会使 PE 低位失真；加息直接打掉高久期科技估值<br>
+      · 静态快照需定期（每月）更新；非实时
+    </td></tr>
+  </table>
+
+  <div class="hl ok"><b>为什么 E 是最优解（四项筛选标准）：</b>
+  <ol>
+    <li><b>回测支撑度</b>：A/B/C 各自只解决一段且都有"跑不赢买入持有/不解决买哪只/不解决买卖纪律"的硬伤；E 把三者缝合，既保留 E 的 TILT 价值（底部 11/12、ETF +150~200%）又补上仓位系统化。</li>
+    <li><b>互补性</b>：A 缺"买哪只"、B 缺"系统化仓位"、C 缺"买卖纪律"——E 恰好互填盲区，无重复。</li>
+    <li><b>可部署性</b>：E 以静态快照形式嵌入公开 method.html，公网可访问；A/C 本就可部署，B 的本机限制被快照化解决。</li>
+    <li><b>诚实局限</b>：E 完整标注了"宽基跑不赢买入持有""顶部 4/6""样本过短"等局限，不夸大。</li>
+  </ol>
+  </div>
+</div>
+
+<div class="disc">
+  免责声明：本页为基于公开数据与真实历史序列（沪深300 日/月线、恒生科技、12 只 ETF NAV，来源 akshare/交易所/腾讯行情）的量化回测与研究，所有回测结论均为<b>历史样本统计，非未来承诺</b>。模型在宽基上未跑赢买入持有是样本内事实，但存在样本过短、参数标定（walk-forward）等局限；ETF 优选历史样本极少（≤3 个大底），结论弱。实操请以实时行情与持牌机构意见为准，结合个人风险承受能力独立判断。市场有风险，投资需谨慎。
+</div>
+</div>
+</body>
+</html>

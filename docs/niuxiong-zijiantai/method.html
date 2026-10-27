@@ -59,7 +59,7 @@
       "logo": { "@type": "ImageObject", "url": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/assets/img/favicon.svg" }
     },
     "datePublished": "2026-10-11",
-    "dateModified": "2026-10-25",
+    "dateModified": "2026-10-27",
     "inLanguage": "zh-CN",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://niuxiong123.github.io/-2026/niuxiong-zijiantai/method.html" }
   }
@@ -128,7 +128,6 @@
             <li><b>阶梯档位</b>：按 R 分位给满仓 / 高 / 中 / 低 / 空五档；用「双阈值滞回」防抖——市场小幅震荡时不会一天满仓一天空仓地乱跳。</li>
             <li><b>凯利微调</b>：用过去约 3 年实际波动，波动大时自动收一收，防止「一把梭」。</li>
             <li><b>股债双杀熔断</b>：股票、债券 20 日同时大跌，说明可能是流动性危机，直接压到 20 成，先活下来。</li>
-            <li><b>命理纪律（可选）</b>：2026–2027 地板区设上限，避免过度悲观踏空；条件修复后可回升，不是一次性判死刑。</li>
           </ul>
           <p class="prose" style="max-width:760px"><b>看哪里：</b>今日具体仓位由 GitHub Actions 写入 <code>stockbond.json</code>，在首页「当前执行档位」实时展示，本页不写死。</p>
           <p class="prose" style="max-width:760px"><b>单位提醒（务必看清）：</b>本站「成」= 百分点。100 成 = 满仓（100%），50 成 = 半仓（50%），显示保留两位小数。它<b>不是</b>旧式「一成 = 10%」——50.00 成就是半仓，不是 5%。</p>
@@ -180,6 +179,36 @@
           </div>
         </section>
 
+        <!-- 四、标的决策·实跑决策页（最优解） -->
+        <section class="card" aria-labelledby="m4">
+          <div class="section-head"><h2 id="m4">四、标的决策·实跑决策页（最优解 · 8686 规则 + Tc 89/30 经验带）</h2></div>
+          <p class="prose" style="max-width:760px"><b>大白话：</b>上面两节解决了「拿多少」「往哪放（板块）」，这一节给<b>具体买哪只、卖哪只的执行页</b>——也就是把前面模块里反复出现的最优解（缝合方案 E：仓位用方案 C + 标的用 8686 实跑规则 + 九因子底稿互补）直接跑出来。下面的嵌入页是<b>自包含静态快照</b>（2026-10-27 收盘数据），无需后端即可打开，可上 GitHub Pages。</p>
+
+          <h3>图中规律（回测里反复出现的六条，照着用）</h3>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr><th>规律</th><th>怎么用</th></tr></thead>
+              <tbody>
+                <tr><td><b>① 底部区极准</b></td><td>估值分位 ≤ 15% 的历史底部区，后续 24 个月 ETF 普遍 +150% ~ +200%；12 个底部识别对 11 个。</td></tr>
+                <tr><td><b>② Tc 经验带（绿 / 红虚线）</b></td><td>勾选「显示 Tc 曲线」可见：<span style="color:#1a9e56;font-weight:700">绿 Tc 89 买点带</span>= 历史极端便宜 / 超卖，可重手；<span style="color:#d94040;font-weight:700">红 Tc 30 卖点带</span>= 历史极端昂贵 / 泡沫，该收手。</td></tr>
+                <tr><td><b>③ 买卖档位线（PE）</b></td><td>试探 PE≤11.5 或 Tc≥65；主买 PE≤11 或 Tc≥72；极致 PE≤10.5。警戒 PE≥13；减仓 PE≥14 且回落≥10%；清仓 PE≥15.5 且回落≥15%。</td></tr>
+                <tr><td><b>④ 加息熔断闸</b></td><td>美联储加息期（fed_hiking）自动「科技禁买、总仓封顶 3 成」，页面可一键开关；属防守纪律。</td></tr>
+                <tr><td><b>⑤ 买卖分层（回撤 + 分位）</b></td><td>主买区 = 自峰回撤 ≤ −50% 且分位 ≤ 15%；浅买区 = 回撤 ≤ −40% 且分位 ≤ 25%；接近买区 = 回撤 ≤ −25% 且分位 ≤ 35%；卖侧 = 分位 ≥ 90%。</td></tr>
+                <tr><td><b>⑥ 港股领先确认</b></td><td>恒生科技回撤 ≥ 60% / 70% / 75% 为三档买点参考，常领先 A 股见底，可作择时佐证。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="embed-frame">
+            <iframe id="decision-frame" src="decision.html" loading="lazy" title="标的决策·实跑决策页（最优解 · 8686 规则 + Tc 89/30 带）" scrolling="no"></iframe>
+          </div>
+          <div class="footer__cta">
+            <a class="btn btn--primary" href="decision.html" target="_blank" rel="noopener">新窗口全屏打开决策页</a>
+            <a class="btn btn--secondary" href="method_compare_report.html" target="_blank" rel="noopener">看模块对比与优缺点（回测论证）</a>
+          </div>
+          <p class="section-note">嵌入页内：三卡片（结论 / 关键信号 / 纪律）+ 数形结合图（Tc 温度曲线 + 绿 Tc 89 / 红 Tc 30 经验带，勾选「显示 Tc 曲线」可见）+ 综合判断 8 项 + 62 只标的全清单。快照数据为 2026-10-27 收盘，需定期用 8686 服务重新生成 `decision_data.js` 覆盖以保持时效。决策页内分组信号为量化研究演示，<b>不构成投资建议</b>。</p>
+        </section>
+
         <!-- 技术原理（可展开审计，默认隐藏运算逻辑） -->
         <details class="card" aria-labelledby="mtech" style="max-width:980px">
           <summary style="cursor:pointer;font-weight:600;font-size:16px;padding:4px 0">▸ 技术原理（想深究可展开 · 公开可审计）</summary>
@@ -190,7 +219,7 @@
             <p class="section-note">四维（趋势 / 估值 / 流动性 / 情绪）各由若干指标锚点插值成 0–10 分，再按 0.30 / 0.30 / 0.20 / 0.20 合成「温度」；温度越高越热、越该降仓（≤3 偏冷、3–5 中性、5–7 偏热、≥7 过热）。该模型自 2026-10-24 起已降级为历史方法与解读参考，不再作为执行依据。</p>
 
             <h3>② 方案C · 股债比价四约束链（现行执行口径）</h3>
-            <p class="section-note">核心：R = 沪深300全收益 ÷ 债腿（中证全债×80% + 沪深300全收益×20%，按月再平衡 + 终点校准 5.03）；全样本分位自 2007-01 起算。四条约束依次下拧，最终仓位取最保守的一档：① 滞回阶梯（满/高/中/低/空，双阈值防抖，单一真源 hyst_core.py）；② 动态 Kelly 微调（插值 μ/λ + 滚动 σ 156 周 + cn10y）；③ 股债双杀熔断（股20日≤−5% 且 债20日≤−1% → 压到 20 成）；④ 命理纪律（可选，2026–2027 地板区上限 80 成）。<b>诚实局限：</b>债腿是有意偏乐观的假设（让 R 整体偏「股更便宜」），分位样本含指数成分调整偏差。</p>
+            <p class="section-note">核心：R = 沪深300全收益 ÷ 债腿（中证全债×80% + 沪深300全收益×20%，按月再平衡 + 终点校准 5.03）；全样本分位自 2007-01 起算。四条约束依次下拧，最终仓位取最保守的一档：① 滞回阶梯（满/高/中/低/空，双阈值防抖，单一真源 hyst_core.py）；② 动态 Kelly 微调（插值 μ/λ + 滚动 σ 156 周 + cn10y）；③ 股债双杀熔断（股20日≤−5% 且 债20日≤−1% → 压到 20 成）。<b>诚实局限：</b>债腿是有意偏乐观的假设（让 R 整体偏「股更便宜」），分位样本含指数成分调整偏差。</p>
 
             <h3>③ 降级 / 兜底规则（万一数据断了怎么办）</h3>
             <ol class="prose" style="font-size:14px">
@@ -268,12 +297,17 @@
     closeBtn && closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drawer.classList.contains('open')) close(); });
   </script>
-  <!-- 看板同源自适应高度：接收 sector_system.html 广播的内容高度 -->
+  <!-- 看板 / 决策页同源自适应高度：按 id 分流，互不串扰 -->
   <script>
-    (function(){var f=document.getElementById("sq-frame");if(!f)return;
+    (function(){
       window.addEventListener("message",function(e){
-        if(e.data&&e.data.type==="sq-height"){f.style.height=Math.max(600,e.data.h+24)+"px";}
-      });})();
+        if(e.data&&e.data.type==="sq-height"){
+          var id=e.data.id, h=e.data.h||0;
+          if(id==="decision-frame"){var g=document.getElementById("decision-frame"); if(g) g.style.height=Math.max(760,h+24)+"px";}
+          else {var f=document.getElementById("sq-frame"); if(f) f.style.height=Math.max(600,h+24)+"px";}
+        }
+      });
+    })();
   </script>
 </body>
 </html>
