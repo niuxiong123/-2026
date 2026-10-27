@@ -254,10 +254,22 @@ function tg(el){ /* 分组折叠: 点击组标题切换展开/折叠(纯本地JS
    独立打开(window.parent===window)时自动禁用, 不影响本页任何行为。 */
 (function () {
   if (window.parent === window) return;
-  function send() { parent.postMessage({type: "sq-height", h: document.documentElement.scrollHeight}, "*"); }
+  function send() {
+    try {
+      var b = document.body, cs = getComputedStyle(b);
+      /* 用 body 实测高度（含内边距+外边距），避免 documentElement.scrollHeight 在字体/图表
+         加载时序中虚高，导致 iframe 底部出现大段空白 */
+      var h = Math.ceil(Math.max(b.getBoundingClientRect().height, b.scrollHeight))
+              + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+      parent.postMessage({type: "sq-height", h: h}, "*");
+    } catch (e) {}
+  }
   send();
+  window.addEventListener("load", send);
   window.addEventListener("resize", send);
-  setTimeout(send, 300); setTimeout(send, 1500); /* 折叠交互后高度变化由resize覆盖 */
+  setTimeout(send, 300); setTimeout(send, 1000); setTimeout(send, 2500);
+  /* 内容尺寸任何变化（折叠/图表/字体）都实时回传，iframe 高度始终贴合内容 */
+  if (window.ResizeObserver) { try { new ResizeObserver(send).observe(document.body); } catch (e) {} }
 })();
 </script>
 </body>

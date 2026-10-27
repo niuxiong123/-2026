@@ -597,8 +597,8 @@ bindChart();
 if(D){ try{ render(); }catch(e){ console.error(e); } }
 
 /* 嵌入 method.html 时广播内容高度，自动适配 iframe（复用 sq-height 协议） */
-function postHeight(){ try{ var h=document.body.scrollHeight||document.documentElement.scrollHeight; window.parent&&window.parent!==window&&window.parent.postMessage({type:"sq-height",id:"decision-frame",h:h},"*"); }catch(e){} }
-if(D){ postHeight(); window.addEventListener("resize",postHeight); setTimeout(postHeight,600); }
+function postHeight(){ try{ var b=document.body,cs=getComputedStyle(b); var h=Math.ceil(Math.max(b.getBoundingClientRect().height,b.scrollHeight))+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0); window.parent&&window.parent!==window&&window.parent.postMessage({type:"sq-height",id:"decision-frame",h:h},"*"); }catch(e){} }
+if(D){ postHeight(); window.addEventListener("load",postHeight); window.addEventListener("resize",postHeight); setTimeout(postHeight,600); setTimeout(postHeight,2000); if(window.ResizeObserver){try{new ResizeObserver(postHeight).observe(document.body);}catch(e){}} }
 </script>
 </body>
 </html>
