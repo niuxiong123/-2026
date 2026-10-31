@@ -1,8 +1,8 @@
 {
   "data": {
     "pmi": {
-      "value": 50.1,
-      "asOf": "2026-09-01",
+      "value": 49.3,
+      "asOf": "2026-10-01",
       "src": "akshare·macro_china_pmi"
     },
     "m1_yoy": {
@@ -36,18 +36,18 @@
       "src": "基线(FRED)"
     },
     "hs300_pe": {
-      "value": 12.37,
-      "asOf": "2026-10-29",
+      "value": 12.17,
+      "asOf": "2026-10-30",
       "src": "akshare·stock_index_pe_lg"
     },
     "hs300_pe_pct": {
-      "value": 54.5,
-      "asOf": "2026-10-29",
+      "value": 47.5,
+      "asOf": "2026-10-30",
       "src": "akshare·stock_index_pe_lg·10年分位"
     },
     "hs300_pb_pct": {
-      "value": 28.9,
-      "asOf": "2026-10-29",
+      "value": 27.5,
+      "asOf": "2026-10-30",
       "src": "akshare·stock_index_pb_lg·10年分位"
     },
     "hsi_pe_pct": {
@@ -61,8 +61,8 @@
       "src": "基线(计算)"
     },
     "margin_yi": {
-      "value": 24042.8,
-      "asOf": "2026-10-28",
+      "value": 23773.8,
+      "asOf": "2026-10-29",
       "src": "akshare·沪深交易所两融余额合计"
     },
     "northbound": {
@@ -146,7 +146,7 @@
       "src": "推导(70城二手房同比)"
     }
   },
-  "generated_at": "2026-10-29 23:33:10",
+  "generated_at": "2026-10-31 02:13:51",
   "real_fields": [
     "hs300_pb_pct",
     "hs300_pe",
