@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-07",
+  "as_of": "2026-11-08",
   "source": "real",
   "M_t": 39.7,
   "generated_by": "sector_rollup.py",
@@ -17,17 +17,17 @@
       "p": 100.0,
       "regime": "high"
     },
-    "tech": {
-      "C": 35.1,
-      "signal": "watch",
-      "p": 52.4,
-      "regime": "neutral"
-    },
     "baijiu": {
       "C": 69.4,
       "signal": "sell",
       "p": 95.2,
       "regime": "high"
+    },
+    "tech": {
+      "C": 35.1,
+      "signal": "watch",
+      "p": 52.4,
+      "regime": "neutral"
     },
     "hstech": {
       "C": 33.9,
@@ -35,16 +35,16 @@
       "p": 47.6,
       "regime": "neutral"
     },
-    "small": {
-      "C": 37.1,
-      "signal": "watch",
-      "p": 57.1,
-      "regime": "neutral"
-    },
     "fin": {
       "C": 45.7,
       "signal": "watch",
       "p": 71.4,
+      "regime": "neutral"
+    },
+    "small": {
+      "C": 37.1,
+      "signal": "watch",
+      "p": 57.1,
       "regime": "neutral"
     },
     "resource": {
@@ -107,16 +107,16 @@
       "p": 28.6,
       "regime": "neutral"
     },
-    "li": {
-      "C": 21.6,
-      "signal": "buy",
-      "p": 14.3,
-      "regime": "neutral"
-    },
     "nev": {
       "C": 20.0,
       "signal": "buy",
       "p": 9.5,
+      "regime": "neutral"
+    },
+    "li": {
+      "C": 21.6,
+      "signal": "buy",
+      "p": 14.3,
       "regime": "neutral"
     },
     "nasdaq": {
