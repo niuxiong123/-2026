@@ -205,45 +205,109 @@
 <h1>萧沐川丨川流不息</h1>
 <div class="note" style="margin-top:8px;border-left-color:var(--yellow);font-size:12px">⚠️ 量化模型自测结果，<b>仅供参考，不构成任何投资建议</b>；投资有风险，决策须独立判断。</div>
 
-<!-- B8：四约束链权威卡（股债比价·每日自动生成 stockbond.json，与子站同源同值） -->
-<div class="fanhero" id="sbHero" aria-label="今日建议仓位·四约束链股债比价">
-  <div class="fh-top">
-    <div class="fh-item"><div class="fh-k">🎯 今日建议仓位（四约束链·股债比价）</div><div class="fh-v" id="sbPos">—</div></div>
-    <div class="fh-item"><div class="fh-k">数据日期</div><div class="fh-v" id="sbDate" style="font-size:18px">—</div></div>
-    <div class="fh-item"><div class="fh-k">模型状态</div><div class="fh-tag sig-hold" id="sbStatus">载入中</div></div>
-  </div>
-  <div class="sub" id="sbNote" style="margin-top:8px;font-size:12px">由 GitHub Actions 每日自动生成 <code>stockbond.json</code>，与子站（niuxiong-zijiantai）同源同值；含命理纪律（2026 财杀年地板区上限 80 成）。</div>
-  <div id="sbBreakdown" style="margin-top:8px;font-size:13px;line-height:1.85">约束分解加载中…</div>
-</div>
+<!-- 用户要求移除：B8 四约束链权威卡「今日建议仓位（四约束链·股债比价）」。命理铁律：2026 财杀年地板区上限 80 成仍由子站模型维护。 -->
 
-<!-- ETF 越跌越买双周期工作台 · 嵌入块（置顶卡片之后 / 粉丝总览之前） -->
-<div class="fanhero" id="etfWbHero" aria-label="ETF 越跌越买双周期工作台">
-  <div class="fh-top" style="align-items:center">
-    <div class="fh-item" style="flex:1 1 320px">
-      <div class="fh-k">📊 ETF 越跌越买双周期工作台（周 + 月共振）</div>
-      <div class="sub" style="font-size:12px;margin-top:4px;line-height:1.7">40 只 ETF 真实行情快照 · 数据日期 2026-11-03（月线截至 2026-10）｜ 页面内「↻ 刷新实时」可更新。数据仅供参考，不构成投资建议。</div>
+<!-- ETF 周线+月线 双周期买卖信号工作台 · 常显实时 KPI + 可折叠下拉完整工作台 -->
+<div class="fanhero" id="etfWbHero" aria-label="ETF 周线+月线 双周期买卖信号工作台">
+  <div class="fh-top" style="align-items:center;flex-wrap:wrap;gap:10px">
+    <div class="fh-item" style="flex:1 1 300px">
+      <div class="fh-k">📊 ETF 周线+月线 双周期买卖信号工作台（周 + 月共振）</div>
+      <div class="sub" id="etfLiveLine" style="font-size:12px;margin-top:5px;line-height:1.75">正在连接实时行情…</div>
     </div>
-    <button type="button" id="etfWbToggle" style="padding:7px 14px;border-radius:9px;border:1px solid var(--acc,#3b82f6);background:transparent;color:var(--acc,#3b82f6);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">收起</button>
-    <a href="etf-workbench.html" target="_blank" rel="noopener" style="padding:7px 14px;border-radius:9px;background:var(--acc,#3b82f6);color:#fff;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">新窗口打开 ↗</a>
+    <button type="button" id="etfWbToggle" style="padding:7px 14px;border-radius:9px;border:1px solid var(--acc,#3b82f6);background:transparent;color:var(--acc,#3b82f6);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">▾ 展开完整工作台（可下拉）</button>
+    <a href="etf-workbench.html" target="_blank" rel="noopener" style="padding:7px 12px;border-radius:9px;border:1px solid var(--acc,#3b82f6);color:var(--acc,#3b82f6);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">新窗口打开 ↗</a>
   </div>
-  <div class="sub" style="font-size:11px;margin-top:6px;word-break:break-all">链接：<a href="etf-workbench.html" target="_blank" rel="noopener" style="color:var(--acc,#3b82f6)">https://niuxiong123.github.io/-2026/etf-workbench.html</a></div>
-  <div id="etfWbFrameWrap" style="margin-top:10px">
-    <iframe src="etf-workbench.html" title="ETF 越跌越买双周期工作台" style="width:100%;height:1080px;border:1px solid var(--acc,#3b82f6);border-radius:10px;background:#fff;display:block"></iframe>
+
+  <!-- 常显内容：实时 KPI 卡片（与工作台同源，点卡片可下拉并直达对应买卖区） -->
+  <div id="etfKpiStrip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-top:12px"></div>
+  <div id="etfResoLine" class="sub" style="font-size:12px;margin-top:10px;line-height:1.75"></div>
+
+  <!-- 折叠项：点击下拉展开完整工作台（周线/月线/共振三分区） -->
+  <div id="etfWbPanel" style="display:none;margin-top:12px">
+    <iframe id="etfWbFrame" src="etf-workbench.html" title="ETF 周线+月线 双周期买卖信号工作台" style="width:100%;height:1150px;border:1px solid var(--acc,#3b82f6);border-radius:10px;background:#fff;display:block"></iframe>
   </div>
 </div>
 <style>
   #etfWbHero .fh-k{font-size:15px;font-weight:700}
-  @media(max-width:700px){#etfWbFrameWrap iframe{height:70vh}}
+  #etfKpiStrip .ek{background:#fff;color:#1b2330;border-radius:12px;padding:14px 16px;border-left:4px solid #cbd5e1;box-shadow:0 2px 10px rgba(0,0,0,.14);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+  #etfKpiStrip .ek:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.22)}
+  #etfKpiStrip .ek.buy{border-left-color:#e03131}
+  #etfKpiStrip .ek.total{border-left-color:#0f9d58}
+  #etfKpiStrip .ek .v{font-size:28px;font-weight:800;line-height:1.1}
+  #etfKpiStrip .ek .l{font-size:13px;margin-top:6px;color:#334155}
+  #etfKpiStrip .ek .s{font-size:11px;color:#7c8798;margin-top:2px}
+  #etfKpiStrip .ek .go{font-size:10px;color:#9aa5b5;margin-top:6px;text-align:right}
+  @media(max-width:700px){#etfWbPanel iframe{height:70vh}}
 </style>
 <script>
 (function(){
-  var b=document.getElementById('etfWbToggle'), w=document.getElementById('etfWbFrameWrap');
-  if(!b||!w)return;
-  b.onclick=function(){
-    var hidden=(w.style.display==='none');
-    w.style.display=hidden?'':'none';
-    b.textContent=hidden?'收起':'展开';
-  };
+  var strip=document.getElementById('etfKpiStrip');
+  var line=document.getElementById('etfLiveLine');
+  var resoLine=document.getElementById('etfResoLine');
+  var toggle=document.getElementById('etfWbToggle');
+  var panel=document.getElementById('etfWbPanel');
+  var frame=document.getElementById('etfWbFrame');
+  if(!strip||!toggle||!panel)return;
+  var CARDS=[
+    {k:'total',   l:'纳入 ETF',      s:'双周期跟踪池',        cls:'total', jump:'sec-all'},
+    {k:'monthBuy',l:'月线买入信号',  s:'强买/加/买/底/定买',  cls:'buy',   jump:'sec-month'},
+    {k:'weekBuy', l:'周线买入信号',  s:'周线级超跌',          cls:'buy',   jump:'sec-week'},
+    {k:'reso',    l:'周月共振',      s:'周+月同时买入',       cls:'buy',   jump:'sec-reso'},
+    {k:'coldAvg', l:'估值分位均值',  s:'越低越便宜',          cls:'',      jump:'sec-all', suffix:'%'}
+  ];
+  function setOpen(show){
+    panel.style.display=show?'block':'none';
+    toggle.textContent=show?'▴ 收起完整工作台':'▾ 展开完整工作台（可下拉）';
+  }
+  function jump(target){
+    setOpen(true);
+    if(target&&frame&&frame.contentWindow){
+      setTimeout(function(){
+        try{frame.contentWindow.postMessage({type:'etf-jump',target:target},'*');}catch(e){}
+      },700);
+    }
+    var hero=document.getElementById('etfWbHero');
+    if(hero&&hero.scrollIntoView)hero.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  toggle.onclick=function(){setOpen(panel.style.display==='none');};
+  function render(sum){
+    strip.innerHTML=CARDS.map(function(c){
+      var v=(sum[c.k]==null)?'—':sum[c.k];
+      return '<div class="ek '+c.cls+'" data-jump="'+c.jump+'" role="button" tabindex="0">'
+        +'<div class="v">'+v+(c.suffix||'')+'</div><div class="l">'+c.l+'</div>'
+        +'<div class="s">'+c.s+'</div><div class="go">↘ 下拉直达</div></div>';
+    }).join('');
+    var d=sum.dataDate||{};
+    var badge=(sum.status==='live')?'🟢 已直连实时行情':'🟢 服务端当日快照';
+    line.innerHTML='<b>'+badge+'</b> ｜ 月线 '+(d.month||'—')+' · 周线 '+(d.week||'—')
+      +' ｜ 更新 '+(sum.generated||'—')
+      +'<br>每天下午自动刷新；<b style="color:#ffd166">★ 每周五 14:30 为重点扫描</b>（页面内自动重算）。数据仅供参考，不构成投资建议。';
+    var rl=sum.resoList||[];
+    resoLine.innerHTML=rl.length
+      ? '🎯 周+月共振（越跌越买）：'+rl.slice(0,3).map(function(r){
+          return '<b>'+r.code+' '+r.name+'</b> 力度 '+r.force+' '+r.tier+' ｜ '+r.ladder;
+        }).join('　/　')
+      : '🎯 当前无「周+月共振」标的，按纪律观望，不强行买。';
+    Array.prototype.forEach.call(strip.querySelectorAll('.ek'),function(node){
+      node.onclick=function(){jump(node.getAttribute('data-jump'));};
+    });
+  }
+  window.addEventListener('message',function(e){
+    var d=e&&e.data;
+    if(d&&d.type==='etf-summary'&&d.payload)render(d.payload);
+  });
+  function load(){
+    fetch('etf_snapshot.json?ts='+Date.now(),{cache:'no-store'})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(function(j){
+        var s=j.summary;if(!s)throw new Error('无 summary');
+        render({total:s.total,monthBuy:s.monthBuy,weekBuy:s.weekBuy,reso:s.reso,
+          coldAvg:s.coldAvg,resoList:s.resoList||[],status:'server',
+          dataDate:j.dataDate||{},generated:(j.generated||'').slice(0,16).replace('T',' ')});
+      })
+      .catch(function(e){line.textContent='⚠️ 实时快照读取失败（'+e.message+'）；可点「新窗口打开 ↗」查看内置真实数据。';});
+  }
+  load();setOpen(false);
 })();
 </script>
 
