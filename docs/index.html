@@ -338,9 +338,12 @@
         +'<div class="s">'+c.s+'</div><div class="go">↘ 下拉直达</div></div>';
     }).join('');
     var d=sum.dataDate||{};
+    var gen=String(sum.generated||'');
+    var gm=gen.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    var genTxt=gm?(gm[2]+'-'+gm[3]+' '+gm[4]+':'+gm[5]):(gen.slice(0,16)||'—');
     var badge=(sum.status==='live')?'🟢 已直连实时行情':'🟢 服务端当日快照';
     line.innerHTML='<b>'+badge+'</b> ｜ 月线 '+(d.month||'—')+' · 周线 '+(d.week||'—')
-      +' ｜ 更新 '+(sum.generated||'—')
+      +' ｜ 更新 '+genTxt
       +'<br>每天下午自动刷新；<b style="color:#ffd166">★ 每周五 14:30 为重点扫描</b>（页面内自动重算）。数据仅供参考，不构成投资建议。';
     var rl=sum.resoList||[];
     resoLine.innerHTML=rl.length
