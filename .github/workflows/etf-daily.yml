@@ -1,0 +1,91 @@
+name: ETF 双周期实时快照（每日下午 / 周五14:30重点）
+
+# 北京时间 = UTC+8；GitHub Actions 的 cron 固定按 UTC 计时，故手动换算。
+#   06:10 UTC = 14:10 北京（每天）     主刷新，确保 14:30 前数据已上线
+#   06:30 UTC = 14:30 北京（每周五）   ★重点扫描，用户最看重的时点
+#   07:30 UTC = 15:30 北京（工作日）   收盘后终版数据
+# 注意：GitHub 定时任务高峰期可能延迟，因此页面本身在打开时也会直连腾讯行情
+#       拉取真实周/月线（浏览器侧实时），本任务是「服务端兜底 + 每天下午固定存档」。
+on:
+  schedule:
+    - cron: "10 6 * * *"
+    - cron: "30 6 * * 5"
+    - cron: "30 7 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: etf-snapshot
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - name: 取出代码
+        uses: actions/checkout@v4
+
+      - name: 装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 判定本次扫描类型
+        id: kind
+        run: |
+          case "${{ github.event.schedule }}" in
+            "30 6 * * 5")   echo "kind=friday-1430" >> "$GITHUB_OUTPUT" ;;
+            "30 7 * * 1-5") echo "kind=close-1530"  >> "$GITHUB_OUTPUT" ;;
+            *)              echo "kind=daily-1410"  >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: 抓取 40 只 ETF 真实周/月线并复算信号
+        env:
+          ETF_SCAN: ${{ steps.kind.outputs.kind }}
+        run: node scripts/etf_fetch.mjs
+
+      - name: 快照契约自检（防键名漂移 / 坏数据上线）
+        run: |
+          node -e '
+            const fs = require("fs");
+            const j = JSON.parse(fs.readFileSync("docs/etf_snapshot.json", "utf8"));
+            const need = (c, m) => { if (!c) { console.error("X " + m); process.exit(1); } console.log("OK " + m); };
+            need(!!j.generated, "含 generated");
+            need(!!j.summary, "含 summary");
+            need(j.summary.total >= 30, "ETF 数 >= 30");
+            need(typeof j.summary.weekBuy === "number", "含周线买入数");
+            need(Object.keys(j.MARKET_DATA || {}).length >= 30, "含 >=30 只周/月线");
+            const k = Object.keys(j.MARKET_DATA)[0];
+            const d = j.MARKET_DATA[k];
+            need(d && d.m && d.w && d.m.length >= 8 && d.w.length >= 8, "单只含月线+周线");
+          '
+
+      - name: 提交并推送快照
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f docs/etf_snapshot.json
+          if git diff --cached --quiet; then
+            echo "数据无变化，跳过提交"
+          else
+            git commit -m "data(etf): 双周期实时快照 $(date +%F_%H:%M) CST"
+            git pull --rebase origin main || { git rebase --abort; exit 1; }
+            git push
+          fi
+
+      - name: 失败告警
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN=$(gh issue list --state open --search "ETF快照失败 in:title" --json number --jq length 2>/dev/null || echo 0)
+          if [ "$OPEN" = "0" ]; then
+            gh issue create --title "🚨 ETF 双周期快照失败 run #${{ github.run_number }}" \
+              --body "时间：$(date -u '+%F %H:%M') UTC。请到 Actions 查看日志并手动补跑（Run workflow）。页面浏览器侧实时抓取不受影响。" \
+              --repo niuxiong123/-2026 || true
+          fi
