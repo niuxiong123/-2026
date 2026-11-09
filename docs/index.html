@@ -207,7 +207,7 @@
 
 <!-- 用户要求移除：B8 四约束链权威卡「今日建议仓位（四约束链·股债比价）」。命理铁律：2026 财杀年地板区上限 80 成仍由子站模型维护。 -->
 
-<!-- ETF 周线+月线 双周期买卖信号工作台 · 常显实时 KPI + 可折叠下拉完整工作台 -->
+<!-- ETF 周线+月线 双周期买卖信号工作台 · 常显实时 KPI + 手机全屏下拉完整工作台 -->
 <div class="fanhero" id="etfWbHero" aria-label="ETF 周线+月线 双周期买卖信号工作台">
   <div class="fh-top" style="align-items:center;flex-wrap:wrap;gap:10px">
     <div class="fh-item" style="flex:1 1 300px">
@@ -222,9 +222,10 @@
   <div id="etfKpiStrip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-top:12px"></div>
   <div id="etfResoLine" class="sub" style="font-size:12px;margin-top:10px;line-height:1.75"></div>
 
-  <!-- 折叠项：点击下拉展开完整工作台（周线/月线/共振三分区） -->
+  <!-- 折叠项：桌面内联下拉；手机端为全屏浮层（独立滚动，避免嵌套滚动） -->
   <div id="etfWbPanel" style="display:none;margin-top:12px">
-    <iframe id="etfWbFrame" src="etf-workbench.html" title="ETF 周线+月线 双周期买卖信号工作台" style="width:100%;height:1150px;border:1px solid var(--acc,#3b82f6);border-radius:10px;background:#fff;display:block"></iframe>
+    <div class="wb-mobile-bar"><span>📊 ETF 双周期工作台 · 周+月共振</span><button type="button" id="etfWbClose">✕ 收起</button></div>
+    <iframe id="etfWbFrame" src="etf-workbench.html?embed=1" title="ETF 周线+月线 双周期买卖信号工作台" style="width:100%;height:1150px;border:1px solid var(--acc,#3b82f6);border-radius:10px;background:#fff;display:block"></iframe>
   </div>
 </div>
 <style>
@@ -237,7 +238,44 @@
   #etfKpiStrip .ek .l{font-size:13px;margin-top:6px;color:#334155}
   #etfKpiStrip .ek .s{font-size:11px;color:#7c8798;margin-top:2px}
   #etfKpiStrip .ek .go{font-size:10px;color:#9aa5b5;margin-top:6px;text-align:right}
-  @media(max-width:700px){#etfWbPanel iframe{height:70vh}}
+  #etfWbPanel .wb-mobile-bar{display:none}
+
+  /* ===== 手机浏览器优化（≤700px）：桌面版式完全不变 ===== */
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  @media(max-width:700px){
+    /* 站点全局：紧凑排版 + 防 iOS 聚焦缩放 + 触摸目标 */
+    body{padding:10px;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right));padding-bottom:max(10px,env(safe-area-inset-bottom))}
+    h1{font-size:19px}
+    .pos{font-size:38px}
+    table{font-size:11.5px}
+    th,td{padding:5px 4px;word-break:break-word}
+    input[type=date],input[type=number],input[type=text],select,textarea{font-size:16px}
+    .btn{min-height:44px;padding:11px 14px}
+    .navlinks a{padding:5px 8px;min-height:32px;display:inline-flex;align-items:center}
+    .dec-v{font-size:26px}
+    /* ETF 模块 */
+    #etfWbHero{padding:12px;border-radius:12px;margin-top:12px}
+    #etfWbHero .fh-top{gap:8px!important}
+    #etfWbHero .fh-item{flex:1 1 100%!important;min-width:0}
+    #etfWbHero .fh-k{font-size:14px;line-height:1.45}
+    #etfWbToggle{flex:1 1 calc(50% - 5px)!important;min-height:44px!important;font-size:14px!important;white-space:normal!important}
+    #etfWbHero a[target="_blank"]{flex:1 1 calc(50% - 5px)!important;min-height:44px!important;display:flex!important;align-items:center;justify-content:center;white-space:normal!important;text-align:center}
+    #etfKpiStrip{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-top:10px!important}
+    #etfKpiStrip .ek{padding:10px 12px;min-height:76px}
+    #etfKpiStrip .ek .v{font-size:24px}
+    #etfKpiStrip .ek .l{font-size:12px;margin-top:4px}
+    #etfKpiStrip .ek .s{font-size:10px;line-height:1.4}
+    #etfKpiStrip .ek .go{font-size:10px;margin-top:2px}
+    #etfKpiStrip .ek:last-child{grid-column:1/-1}
+    #etfResoLine{font-size:12px!important;line-height:1.7}
+    /* 全屏下拉层：fixed 覆盖整屏，iframe 独占滚动，背景锁定 */
+    #etfWbPanel{position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:0!important;z-index:300;margin:0!important;padding:0!important;background:#fff;display:none!important;flex-direction:column}
+    #etfWbPanel.wb-open{display:flex!important}
+    #etfWbPanel .wb-mobile-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));background:#0f1419;color:#fff;font-size:13px;font-weight:700}
+    #etfWbPanel .wb-mobile-bar button{min-height:40px;padding:6px 14px;border-radius:8px;border:1px solid #8fa3bd;background:transparent;color:#fff;font-size:13px;white-space:nowrap}
+    #etfWbPanel iframe{flex:1 1 auto;min-height:0;height:auto!important;width:100%!important;border:0!important;border-radius:0!important}
+    body.wb-locked{overflow:hidden}
+  }
 </style>
 <script>
 (function(){
@@ -247,17 +285,28 @@
   var toggle=document.getElementById('etfWbToggle');
   var panel=document.getElementById('etfWbPanel');
   var frame=document.getElementById('etfWbFrame');
+  var closeBtn=document.getElementById('etfWbClose');
   if(!strip||!toggle||!panel)return;
-  var CARDS=[
-    {k:'total',   l:'纳入 ETF',      s:'双周期跟踪池',        cls:'total', jump:'sec-all'},
-    {k:'monthBuy',l:'月线买入信号',  s:'强买/加/买/底/定买',  cls:'buy',   jump:'sec-month'},
-    {k:'weekBuy', l:'周线买入信号',  s:'周线级超跌',          cls:'buy',   jump:'sec-week'},
-    {k:'reso',    l:'周月共振',      s:'周+月同时买入',       cls:'buy',   jump:'sec-reso'},
-    {k:'coldAvg', l:'估值分位均值',  s:'越低越便宜',          cls:'',      jump:'sec-all', suffix:'%'}
-  ];
+  var mq=window.matchMedia?window.matchMedia('(max-width:700px)'):{matches:false};
+  var isOpen=false;
+  function isMobile(){return !!mq.matches;}
+  function label(show){
+    return isMobile()
+      ? (show?'▴ 收起工作台':'▾ 展开工作台')
+      : (show?'▴ 收起完整工作台':'▾ 展开完整工作台（可下拉）');
+  }
   function setOpen(show){
-    panel.style.display=show?'block':'none';
-    toggle.textContent=show?'▴ 收起完整工作台':'▾ 展开完整工作台（可下拉）';
+    isOpen=!!show;
+    if(isMobile()){
+      panel.classList.toggle('wb-open',isOpen);
+      document.body.classList.toggle('wb-locked',isOpen);
+      panel.style.display='';
+    }else{
+      panel.classList.remove('wb-open');
+      document.body.classList.remove('wb-locked');
+      panel.style.display=isOpen?'block':'none';
+    }
+    toggle.textContent=label(isOpen);
   }
   function jump(target){
     setOpen(true);
@@ -267,9 +316,20 @@
       },700);
     }
     var hero=document.getElementById('etfWbHero');
-    if(hero&&hero.scrollIntoView)hero.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!isMobile()&&hero&&hero.scrollIntoView)hero.scrollIntoView({behavior:'smooth',block:'start'});
   }
-  toggle.onclick=function(){setOpen(panel.style.display==='none');};
+  toggle.onclick=function(){setOpen(!isOpen);};
+  if(closeBtn)closeBtn.onclick=function(){setOpen(false);};
+  window.addEventListener('resize',function(){
+    if(isMobile()){
+      if(isOpen){panel.classList.add('wb-open');document.body.classList.add('wb-locked');panel.style.display='';}
+    }else{
+      panel.classList.remove('wb-open');
+      document.body.classList.remove('wb-locked');
+      panel.style.display=isOpen?'block':'none';
+    }
+    toggle.textContent=label(isOpen);
+  });
   function render(sum){
     strip.innerHTML=CARDS.map(function(c){
       var v=(sum[c.k]==null)?'—':sum[c.k];
@@ -292,6 +352,13 @@
       node.onclick=function(){jump(node.getAttribute('data-jump'));};
     });
   }
+  var CARDS=[
+    {k:'total',   l:'纳入 ETF',      s:'双周期跟踪池',        cls:'total', jump:'sec-all'},
+    {k:'monthBuy',l:'月线买入信号',  s:'强买/加/买/底/定买',  cls:'buy',   jump:'sec-month'},
+    {k:'weekBuy', l:'周线买入信号',  s:'周线级超跌',          cls:'buy',   jump:'sec-week'},
+    {k:'reso',    l:'周月共振',      s:'周+月同时买入',       cls:'buy',   jump:'sec-reso'},
+    {k:'coldAvg', l:'估值分位均值',  s:'越低越便宜',          cls:'',      jump:'sec-all', suffix:'%'}
+  ];
   window.addEventListener('message',function(e){
     var d=e&&e.data;
     if(d&&d.type==='etf-summary'&&d.payload)render(d.payload);
@@ -310,7 +377,6 @@
   load();setOpen(false);
 })();
 </script>
-
 <div class="fanhero" id="fanHero" aria-label="粉丝总览：市场高低点与买卖信号">
   <div class="fh-top">
     <div class="fh-item"><div class="fh-k">📍 当前市场高低点</div><div class="fh-v" id="fhLoc">—</div></div>
