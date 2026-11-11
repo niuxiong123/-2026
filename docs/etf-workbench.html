@@ -129,6 +129,14 @@ tbody tr:last-child td{border-bottom:none}
 canvas{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--rule);border-radius:10px;margin-top:6px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.7rem;color:var(--muted);margin-top:6px}
 .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+/* 双周期图：三条线准确标注 */
+.chart-legend{display:flex;flex-wrap:wrap;gap:5px 12px;font-size:.72rem;color:var(--muted);margin:6px 0 2px;align-items:center}
+.chart-legend b{font-weight:700;color:var(--txt)}
+.chart-legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.chart-note{font-size:.71rem;color:var(--muted);line-height:1.7;background:var(--panel2);border:1px solid var(--rule);border-radius:8px;padding:.55rem .7rem;margin:8px 0 10px}
+.chart-note b{color:var(--accent)}
+.chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:700px){.chart-wrap canvas{min-width:760px}.chart-legend{font-size:.68rem;gap:5px 10px}}
 textarea{width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;border:1px solid var(--rule2);border-radius:8px;padding:.6rem;color:var(--txt)}
 .note{font-size:.72rem;color:var(--muted);line-height:1.7;margin-top:8px}
 footer{margin-top:16px;font-size:.72rem;color:var(--muted);line-height:1.8}
@@ -785,20 +793,25 @@ function openDetail(code){
       <div style="grid-column:1/3;font-weight:700;color:var(--muted);font-size:.82rem;margin-top:6px">估值 / 动能</div>
       ${m('估值分位 cold',s.meta.cold.toFixed(0)+'%（估算）')} ${m('动能 m2',(s.meta.m2>0?'+':'')+s.meta.m2.toFixed(0))}
     </div>
-    <div class="chart-title">月线走势 + 风险/趋势双线（归一化）</div>
-    <canvas id="dChartM" width="760" height="260"></canvas>
-    <div class="chart-title">周线走势 + 风险/趋势双线（归一化）</div>
-    <canvas id="dChartW" width="760" height="260"></canvas>
-    <div class="legend">
-      <span><i style="background:#0f766e"></i>收盘价(归一化)</span>
-      <span><i style="background:#d92e2e"></i>风险振荡</span>
-      <span><i style="background:#1d4ed8"></i>趋势</span>
-      <span><i style="background:#16a34a"></i>买入区(≤10)</span>
-      <span><i style="background:#d92e2e;opacity:.5"></i>卖出区(≥88)</span>
-    </div>`;
+    <div class="chart-title">① 月线 · 三条线对照（近 60 根月K）</div>
+    ${chartLegend()}
+    <div class="chart-wrap"><canvas id="dChartM" width="760" height="260"></canvas></div>
+    <div class="chart-title">② 周线 · 三条线对照（近 60 根周K）</div>
+    ${chartLegend()}
+    <div class="chart-wrap"><canvas id="dChartW" width="760" height="260"></canvas></div>
+    <div class="chart-note">📌 <b>三条线怎么读</b>：纵轴 0–100 对<b>红线 / 蓝线</b>是通达信指标的真实数值（≤10 买入区、≥88 卖出区只对这两条有效）；对<b>深绿线</b>是把近 60 根 K 线的收盘价压缩到 0–100（区间最低=0、最高=100），<b>不是基金净值、也不是涨跌幅 %</b>，只表示价格在这段区间里的相对高低。三条线共用一根纵轴，只是方便对照「指标到低位时，价格处在什么位置」。<b>颜色仅用于区分曲线，不代表涨跌方向</b>（红≠涨、绿≠跌）。末端圆点＝最新一根 K 线。</div>`;
   drawChart(document.getElementById('dChartM'),s,'m');
   drawChart(document.getElementById('dChartW'),s,'w');
   document.getElementById('detailMask').classList.add('show');
+}
+function chartLegend(){
+  return '<div class="chart-legend">'
+    +'<span><i style="background:#0f766e"></i><b>深绿＝ETF 收盘价走势（基金走势线·归一化）</b></span>'
+    +'<span><i style="background:#d92e2e"></i>红＝风险振荡 0–100</span>'
+    +'<span><i style="background:#1d4ed8"></i>蓝＝趋势 0–100</span>'
+    +'<span><i style="background:#16a34a"></i>绿虚线＝买入区 ≤10</span>'
+    +'<span><i style="background:#d92e2e;opacity:.55"></i>红虚线＝卖出区 ≥88</span>'
+    +'</div>';
 }
 function drawChart(cv,s,tf){
   const ctx=cv.getContext('2d');const W=cv.width,H=cv.height,pad=28;
@@ -809,23 +822,42 @@ function drawChart(cv,s,tf){
   const closes=slice.map(b=>b[2]);
   const cmin=Math.min(...closes),cmax=Math.max(...closes);
   const yOf=v=>pad+(1-v/100)*(H-2*pad);
+  const RW=W-pad-56;                       /* 右侧留 56px 放线名，避免压住曲线 */
+  const clamp=v=>{const n=Number(v);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):0;};
   ctx.strokeStyle='#eef1f5';ctx.lineWidth=1;
-  for(let g=0;g<=100;g+=20){const y=yOf(g);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();ctx.fillStyle='#9aa3b2';ctx.font='10px sans-serif';ctx.fillText(g,2,y+3);}
-  ctx.fillStyle='rgba(22,163,74,.06)';ctx.fillRect(pad,yOf(10),W-2*pad,yOf(0)-yOf(10));
-  ctx.fillStyle='rgba(217,46,46,.06)';ctx.fillRect(pad,yOf(100),W-2*pad,yOf(88)-yOf(100));
-  ctx.setLineDash([4,4]);ctx.strokeStyle='#16a34a';ctx.beginPath();ctx.moveTo(pad,yOf(10));ctx.lineTo(W-pad,yOf(10));ctx.stroke();
-  ctx.strokeStyle='#d92e2e';ctx.beginPath();ctx.moveTo(pad,yOf(88));ctx.lineTo(W-pad,yOf(88));ctx.stroke();ctx.setLineDash([]);
-  const xOf=i=>pad+(i/(win-1))*(W-2*pad);
+  for(let g=0;g<=100;g+=20){const y=yOf(g);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(RW,y);ctx.stroke();ctx.fillStyle='#9aa3b2';ctx.font='10px sans-serif';ctx.fillText(g,2,y+3);}
+  ctx.fillStyle='rgba(22,163,74,.06)';ctx.fillRect(pad,yOf(10),RW-pad,yOf(0)-yOf(10));
+  ctx.fillStyle='rgba(217,46,46,.06)';ctx.fillRect(pad,yOf(100),RW-pad,yOf(88)-yOf(100));
+  ctx.setLineDash([4,4]);ctx.strokeStyle='#16a34a';ctx.beginPath();ctx.moveTo(pad,yOf(10));ctx.lineTo(RW,yOf(10));ctx.stroke();
+  ctx.strokeStyle='#d92e2e';ctx.beginPath();ctx.moveTo(pad,yOf(88));ctx.lineTo(RW,yOf(88));ctx.stroke();ctx.setLineDash([]);
+  const xOf=i=>pad+(i/(win-1))*(RW-pad);
   const pn=closes.map(c=>cmax===cmin?50:((c-cmin)/(cmax-cmin))*100);
   ctx.strokeStyle='#0f766e';ctx.lineWidth=1.6;ctx.beginPath();pn.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
   const ind=tf==='m'?s.mInd:s.wInd;
   const series=[['风险',ind.风险,'#d92e2e'],['趋势',ind.趋势,'#1d4ed8']];
+  const ends=[['价格',pn[win-1],'#0f766e']];
   for(const [name,arr,col] of series){
     const sub=arr.slice(arr.length-win);
     ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();
-    sub.forEach((v,i)=>{const x=xOf(i),y=yOf(Math.max(0,Math.min(100,v)));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+    sub.forEach((v,i)=>{const x=xOf(i),y=yOf(clamp(v));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+    ends.push([name,sub[win-1],col]);
   }
-  const li=win-1;ctx.fillStyle='#0f766e';ctx.beginPath();ctx.arc(xOf(li),yOf(pn[li]),3.5,0,7);ctx.fill();
+  const li=win-1,xe=xOf(li);
+  ends.forEach(function(e){ctx.fillStyle=e[2];ctx.beginPath();ctx.arc(xe,yOf(clamp(e[1])),3,0,7);ctx.fill();});
+  /* 图内线名：跟随每条线末端，纵向避让防重叠 */
+  const labels=ends.map(function(e){return [e[0],yOf(clamp(e[1])),e[2]];}).sort(function(a,b){return a[1]-b[1];});
+  let prev=-99;ctx.font='11px sans-serif';ctx.textBaseline='middle';
+  for(const [name,y0,col] of labels){
+    const y=Math.max(y0,prev+13);prev=y;
+    ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(xe+4,y);ctx.lineTo(RW+2,y);ctx.stroke();
+    ctx.fillStyle=col;ctx.fillText(name,RW+5,y);
+  }
+  ctx.textBaseline='alphabetic';
+  /* 阈值线名称：贴在虚线左端 */
+  ctx.font='10px sans-serif';ctx.lineWidth=3;ctx.strokeStyle='#fff';
+  ctx.strokeText('卖出区 88',pad+5,yOf(88)-6);ctx.fillStyle='#d92e2e';ctx.fillText('卖出区 88',pad+5,yOf(88)-6);
+  ctx.strokeText('买入区 10',pad+5,yOf(10)-6);ctx.fillStyle='#16a34a';ctx.fillText('买入区 10',pad+5,yOf(10)-6);
+  ctx.lineWidth=1;
 }
 
 /* 弹窗控制 */
