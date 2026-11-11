@@ -137,6 +137,32 @@ canvas{width:100%;height:auto;display:block;background:#fff;border:1px solid var
 .chart-note b{color:var(--accent)}
 .chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media(max-width:700px){.chart-wrap canvas{min-width:760px}.chart-legend{font-size:.68rem;gap:5px 10px}}
+/* 价格位置低位速览 */
+.pos-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}
+.pos-card{background:var(--panel2);border:1px solid var(--rule);border-radius:10px;padding:.65rem .75rem}
+.pos-top{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;color:var(--muted);font-weight:700}
+.pos-tier{font-size:.66rem;font-weight:800;padding:.12rem .5rem;border-radius:5px}
+.pos-tier.low{background:#d7f0ea;color:#0b5f59}
+.pos-tier.midlow{background:#e8f4f1;color:#0f766e}
+.pos-tier.mid{background:#eef1f5;color:#64748b}
+.pos-tier.high{background:#fff1e6;color:#b45309}
+.pos-num{font-size:1.8rem;font-weight:800;color:#0f766e;line-height:1.25;font-family:ui-monospace,Menlo,Consolas,monospace}
+.pos-num span{font-size:.8rem;color:var(--muted);font-weight:600;margin-left:4px}
+.pos-bar{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(15,118,110,.30) 0 20%,rgba(15,118,110,.10) 20% 40%,#e9edf2 40% 100%);margin:6px 0 3px}
+.pos-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:rgba(11,95,89,.55)}
+.pos-bar b{position:absolute;top:-4px;width:3px;height:20px;border-radius:2px;background:#0b5f59;box-shadow:0 0 0 2px #fff}
+.pos-scale{display:flex;justify-content:space-between;font-size:.6rem;color:var(--muted)}
+.pos-detail{font-size:.68rem;color:var(--muted);line-height:1.7;margin-top:4px}
+.pos-detail b{color:var(--txt)}
+.pos-note{font-size:.7rem;color:var(--muted);line-height:1.65;background:var(--accentbg);border:1px solid #bfe3dd;border-radius:8px;padding:.5rem .7rem;margin:6px 0 10px}
+.pos-note b{color:var(--accent)}
+@media(max-width:620px){.pos-strip{grid-template-columns:1fr}}
+.pos-chip{display:inline-block;margin-top:4px;font-size:.62rem;font-weight:700;padding:.1rem .4rem;border-radius:4px;white-space:nowrap}
+.pos-chip.low{background:#d7f0ea;color:#0b5f59;border:1px solid #9dd6c9}
+.pos-chip.midlow{background:#e8f4f1;color:#0f766e}
+.pos-chip.mid{background:#eef1f5;color:#64748b}
+.pos-chip.high{background:#fff1e6;color:#b45309}
+@media(max-width:700px){.pos-chip{font-size:.6rem}}
 textarea{width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;border:1px solid var(--rule2);border-radius:8px;padding:.6rem;color:var(--txt)}
 .note{font-size:.72rem;color:var(--muted);line-height:1.7;margin-top:8px}
 footer{margin-top:16px;font-size:.72rem;color:var(--muted);line-height:1.8}
@@ -241,6 +267,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <label>排序
       <select id="sortBy">
         <option value="force">买入力度（越跌越买优先）</option>
+        <option value="pos">价格位置（低→高）</option>
         <option value="signal">信号强度</option>
         <option value="cold">估值分位（低→高）</option>
         <option value="m2">动能 m2（低→高）</option>
@@ -634,7 +661,15 @@ function coldClass(v){return v<25?'cold-low':v>60?'cold-high':'cold-mid';}
 function sigCell(main){return `<span class="sig ${SIG_CLASS[main]||'sig-hold'}">${main}</span>`;}
 function resoCell(r){return r?'<span class="reso-yes">共振 ✔</span>':'<span class="reso-no">—</span>';}
 function srcTag(s){return s==='sim'?' <span class="muted" title="模拟/占位数据">·模</span>':s==='import'?' <span class="muted" title="手动导入">·导</span>':'';}
-function nameCell(s){return `<span class="name">${s.meta.name}</span><br><span class="code">${s.meta.code}</span>${srcTag(s.src)}`;}
+function nameCell(s){
+  const pm=pricePos(s,'m'),pw=pricePos(s,'w');
+  const lo=Math.min(pm.last,pw.last);
+  const cls=lo<=20?'low':lo<=40?'midlow':lo<=70?'mid':'high';
+  const tip='月线价格位置 '+pm.last.toFixed(0)+'/100（'+pm.tier+'）｜周线 '+pw.last.toFixed(0)+'/100（'+pw.tier+'）；0=近60根K线最低、100=最高';
+  const txt=(lo<=20?'低位 ':'位置 ')+'月'+pm.last.toFixed(0)+'·周'+pw.last.toFixed(0);
+  return `<span class="name">${s.meta.name}</span><br><span class="code">${s.meta.code}</span>${srcTag(s.src)}`
+    +'<span class="pos-chip '+cls+'" title="'+tip+'">'+txt+'</span>';
+}
 
 function getFilters(){
   return {
@@ -659,6 +694,7 @@ const SIG_RANK={'强买':9,'加':9,'买':9,'底':8,'G1底':8,'定买':7,'持有'
 function sortRows(rows,f){
   const sf=(s)=>{
     if(f.sort==='force')return -s.force;
+    if(f.sort==='pos')return Math.min(pricePos(s,'m').last,pricePos(s,'w').last);
     if(f.sort==='signal')return -(Math.max(SIG_RANK[s.mSig.main]||0,SIG_RANK[s.wSig.main]||0));
     if(f.sort==='cold')return s.meta.cold;
     if(f.sort==='m2')return s.meta.m2;
@@ -779,6 +815,8 @@ function openDetail(code){
   document.getElementById('dBody').innerHTML=`
     <div class="reason">${reason}</div>
     <div class="reason" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">📝 研究备注：${s.meta.note}</div>
+    ${posCards(s)}
+    <div class="pos-note">📉 <b>怎么一眼看低位</b>：上方大数字＝ETF 收盘价在「近 60 根 K 线」里的位置分位（0＝区间最低、100＝区间最高）；<b>≤20 低位 / 20–40 偏低 / 40–70 中位 / &gt;70 偏高</b>。进度条深色段是低位区，竖线是当前位置；「距最高收盘」是真实价格回撤，比归一化数字更贴近「越跌越买」。<b>价格分位与红/蓝指标的 10 / 88 买卖区是两套口径，不能混用；位置低 ≠ 发出买入信号，仍以月/周共振信号为准</b>。图中深绿加粗段＝处于低位的那几根 K 线。</div>
     <div class="detail-grid">
       <div style="grid-column:1/3;font-weight:700;color:var(--muted);font-size:.82rem">月线指标</div>
       ${m('风险 振荡',s.mSig.r.toFixed(2),riskTagM)} ${m('趋势',s.mSig.t.toFixed(2),trendTagM)}
@@ -799,10 +837,38 @@ function openDetail(code){
     <div class="chart-title">② 周线 · 三条线对照（近 60 根周K）</div>
     ${chartLegend()}
     <div class="chart-wrap"><canvas id="dChartW" width="760" height="260"></canvas></div>
-    <div class="chart-note">📌 <b>三条线怎么读</b>：纵轴 0–100 对<b>红线 / 蓝线</b>是通达信指标的真实数值（≤10 买入区、≥88 卖出区只对这两条有效）；对<b>深绿线</b>是把近 60 根 K 线的收盘价压缩到 0–100（区间最低=0、最高=100），<b>不是基金净值、也不是涨跌幅 %</b>，只表示价格在这段区间里的相对高低。三条线共用一根纵轴，只是方便对照「指标到低位时，价格处在什么位置」。<b>颜色仅用于区分曲线，不代表涨跌方向</b>（红≠涨、绿≠跌）。末端圆点＝最新一根 K 线。</div>`;
+    <div class="chart-note">📌 <b>三条线怎么读</b>：纵轴 0–100 对<b>红线 / 蓝线</b>是通达信指标的真实数值（≤10 买入区、≥88 卖出区只对这两条有效）；对<b>深绿线</b>是把近 60 根 K 线的收盘价压缩到 0–100（区间最低=0、最高=100），<b>不是基金净值、也不是涨跌幅 %</b>，只表示价格在这段区间里的相对高低。三条线共用一根纵轴，只是方便对照「指标到低位时，价格处在什么位置」。<b>颜色仅用于区分曲线，不代表涨跌方向</b>（红≠涨、绿≠跌）。末端圆点＝最新一根 K 线；深绿线加粗段＝价格分位 ≤20 的低位区。</div>`;
   drawChart(document.getElementById('dChartM'),s,'m');
   drawChart(document.getElementById('dChartW'),s,'w');
   document.getElementById('detailMask').classList.add('show');
+}
+function pricePos(s,tf){
+  const bars=tf==='m'?s.dw.m:s.dw.w;
+  const win=Math.min(60,bars.length),sl=bars.slice(bars.length-win);
+  const cs=sl.map(b=>b[2]);
+  const mn=Math.min(...cs),mx=Math.max(...cs);
+  const pn=cs.map(c=>mx===mn?50:(c-mn)/(mx-mn)*100);
+  const last=pn[pn.length-1],cur=cs[cs.length-1];
+  const drop=mx>0?(cur-mx)/mx*100:0;
+  const rise=mn>0?(cur-mn)/mn*100:0;
+  const tier=last<=20?['低位','low']:last<=40?['偏低','midlow']:last<=70?['中位','mid']:['偏高','high'];
+  return {pn:pn,last:last,drop:drop,rise:rise,tier:tier[0],cls:tier[1],win:win};
+}
+function posCards(s){
+  const card=function(label,pp,sig){
+    const pct=Math.max(0,Math.min(100,pp.last));
+    const d=(pp.drop>=0?'+':'')+pp.drop.toFixed(1)+'%';
+    const r='+'+pp.rise.toFixed(1)+'%';
+    return '<div class="pos-card">'
+      +'<div class="pos-top"><span>'+label+' · 价格位置</span><span class="pos-tier '+pp.cls+'">'+pp.tier+'</span></div>'
+      +'<div class="pos-num">'+pp.last.toFixed(0)+'<span>/100</span></div>'
+      +'<div class="pos-bar"><i style="width:'+pct.toFixed(1)+'%"></i><b style="left:'+pct.toFixed(1)+'%"></b></div>'
+      +'<div class="pos-scale"><span>0 低位</span><span>20</span><span>40</span><span>70</span><span>100 高位</span></div>'
+      +'<div class="pos-detail">距近 '+pp.win+' 根最高收盘 <b>'+d+'</b> ｜ 距最低 <b>'+r+'</b></div>'
+      +'<div class="pos-detail">指标：风险 '+sig.r.toFixed(1)+' / 趋势 '+sig.t.toFixed(1)+'（≤10 才进买入区）</div>'
+      +'</div>';
+  };
+  return '<div class="pos-strip">'+card('月线',pricePos(s,'m'),s.mSig)+card('周线',pricePos(s,'w'),s.wSig)+'</div>';
 }
 function chartLegend(){
   return '<div class="chart-legend">'
@@ -810,6 +876,7 @@ function chartLegend(){
     +'<span><i style="background:#d92e2e"></i>红＝风险振荡 0–100</span>'
     +'<span><i style="background:#1d4ed8"></i>蓝＝趋势 0–100</span>'
     +'<span><i style="background:#16a34a"></i>绿虚线＝买入区 ≤10</span>'
+    +'<span><i style="background:#0b5f59;height:5px"></i>深绿加粗段＝价格低位（≤20）</span>'
     +'<span><i style="background:#d92e2e;opacity:.55"></i>红虚线＝卖出区 ≥88</span>'
     +'</div>';
 }
@@ -818,11 +885,9 @@ function drawChart(cv,s,tf){
   ctx.clearRect(0,0,W,H);
   const bars=tf==='m'?s.dw.m:s.dw.w;
   const win=Math.min(60,bars.length);
-  const slice=bars.slice(bars.length-win);
-  const closes=slice.map(b=>b[2]);
-  const cmin=Math.min(...closes),cmax=Math.max(...closes);
+  const PP=pricePos(s,tf),pn=PP.pn;
   const yOf=v=>pad+(1-v/100)*(H-2*pad);
-  const RW=W-pad-56;                       /* 右侧留 56px 放线名，避免压住曲线 */
+  const RW=W-pad-96;                       /* 右侧留 96px 放线名 + 数值 */
   const clamp=v=>{const n=Number(v);return Number.isFinite(n)?Math.max(0,Math.min(100,n)):0;};
   ctx.strokeStyle='#eef1f5';ctx.lineWidth=1;
   for(let g=0;g<=100;g+=20){const y=yOf(g);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(RW,y);ctx.stroke();ctx.fillStyle='#9aa3b2';ctx.font='10px sans-serif';ctx.fillText(g,2,y+3);}
@@ -831,20 +896,29 @@ function drawChart(cv,s,tf){
   ctx.setLineDash([4,4]);ctx.strokeStyle='#16a34a';ctx.beginPath();ctx.moveTo(pad,yOf(10));ctx.lineTo(RW,yOf(10));ctx.stroke();
   ctx.strokeStyle='#d92e2e';ctx.beginPath();ctx.moveTo(pad,yOf(88));ctx.lineTo(RW,yOf(88));ctx.stroke();ctx.setLineDash([]);
   const xOf=i=>pad+(i/(win-1))*(RW-pad);
-  const pn=closes.map(c=>cmax===cmin?50:((c-cmin)/(cmax-cmin))*100);
+  /* 深绿：ETF 收盘价走势（基金走势线） */
   ctx.strokeStyle='#0f766e';ctx.lineWidth=1.6;ctx.beginPath();pn.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+  /* 价格低位段（分位 ≤20）加粗：不用读刻度也能看出哪几根 K 线在低位 */
+  ctx.strokeStyle='#0b5f59';ctx.lineWidth=3.4;ctx.lineCap='round';
+  let inSeg=false;
+  for(let i=0;i<pn.length;i++){
+    if(pn[i]<=20){if(!inSeg){ctx.beginPath();ctx.moveTo(xOf(i),yOf(pn[i]));inSeg=true;}else ctx.lineTo(xOf(i),yOf(pn[i]));}
+    else if(inSeg){ctx.stroke();inSeg=false;}
+  }
+  if(inSeg)ctx.stroke();
+  ctx.lineCap='butt';
   const ind=tf==='m'?s.mInd:s.wInd;
   const series=[['风险',ind.风险,'#d92e2e'],['趋势',ind.趋势,'#1d4ed8']];
-  const ends=[['价格',pn[win-1],'#0f766e']];
+  const ends=[['价格 '+PP.last.toFixed(0)+'·'+PP.tier,pn[win-1],'#0f766e']];
   for(const [name,arr,col] of series){
     const sub=arr.slice(arr.length-win);
     ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();
     sub.forEach((v,i)=>{const x=xOf(i),y=yOf(clamp(v));i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-    ends.push([name,sub[win-1],col]);
+    ends.push([name+' '+clamp(sub[win-1]).toFixed(1),sub[win-1],col]);
   }
   const li=win-1,xe=xOf(li);
   ends.forEach(function(e){ctx.fillStyle=e[2];ctx.beginPath();ctx.arc(xe,yOf(clamp(e[1])),3,0,7);ctx.fill();});
-  /* 图内线名：跟随每条线末端，纵向避让防重叠 */
+  /* 图内线名（带当前数值）：纵向避让防重叠 */
   const labels=ends.map(function(e){return [e[0],yOf(clamp(e[1])),e[2]];}).sort(function(a,b){return a[1]-b[1];});
   let prev=-99;ctx.font='11px sans-serif';ctx.textBaseline='middle';
   for(const [name,y0,col] of labels){
