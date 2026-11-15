@@ -146,13 +146,11 @@
       "src": "推导(70城二手房同比)"
     }
   },
-  "generated_at": "2026-11-14 02:59:39",
+  "generated_at": "2026-11-15 02:30:10",
   "real_fields": [
     "hs300_pb_pct",
     "hs300_pe",
     "hs300_pe_pct",
-    "lpr1y",
-    "margin_yi",
     "pmi",
     "re_yoy"
   ],
