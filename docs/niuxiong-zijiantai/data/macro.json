@@ -106,8 +106,8 @@
       "src": "基线(纳指20日)"
     },
     "re_yoy": {
-      "value": -0.85,
-      "asOf": "2026-09-01",
+      "value": 0.35,
+      "asOf": "2026-10-01",
       "src": "akshare·70城二手住宅同比(akshare·macro_china_new_house_price)"
     },
     "vix": {
@@ -146,7 +146,7 @@
       "src": "推导(70城二手房同比)"
     }
   },
-  "generated_at": "2026-11-15 02:30:10",
+  "generated_at": "2026-11-16 02:39:55",
   "real_fields": [
     "hs300_pb_pct",
     "hs300_pe",
