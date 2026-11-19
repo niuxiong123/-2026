@@ -1,104 +1,104 @@
 {
-  "as_of": "2026-11-18",
+  "as_of": "2026-11-19",
   "source": "real",
-  "M_t": 36.8,
+  "M_t": 38.4,
   "generated_by": "sector_rollup.py",
   "note": "由 crowding_system 单 ETF 输出聚合而成（真实拥挤度）。ETF→板块映射见脚本顶部 ETF_MAP，请按你的 ETF 池校准。网页需经 http(s) 访问。",
   "sectors": {
     "semi": {
-      "C": 35.3,
+      "C": 44.0,
       "signal": "watch",
-      "p": 61.9,
+      "p": 66.7,
       "regime": "neutral"
     },
     "cons_def": {
-      "C": 84.4,
+      "C": 83.5,
       "signal": "sell",
       "p": 100.0,
       "regime": "high"
     },
     "baijiu": {
-      "C": 70.3,
+      "C": 71.0,
       "signal": "sell",
       "p": 95.2,
       "regime": "high"
     },
     "tech": {
-      "C": 35.7,
+      "C": 40.9,
       "signal": "watch",
-      "p": 66.7,
+      "p": 57.1,
       "regime": "neutral"
     },
     "hstech": {
-      "C": 23.1,
+      "C": 26.2,
       "signal": "watch",
-      "p": 23.8,
+      "p": 28.6,
       "regime": "neutral"
     },
     "small": {
-      "C": 29.4,
+      "C": 34.7,
       "signal": "watch",
-      "p": 52.4,
+      "p": 57.1,
       "regime": "neutral"
     },
     "fin": {
-      "C": 50.3,
+      "C": 52.2,
       "signal": "watch",
-      "p": 76.2,
+      "p": 81.0,
       "regime": "neutral"
     },
     "resource": {
-      "C": 14.9,
+      "C": 15.2,
       "signal": "buy",
-      "p": 4.8,
-      "regime": "neutral"
+      "p": 0.0,
+      "regime": "low"
     },
     "realestate": {
-      "C": 31.9,
+      "C": 33.9,
       "signal": "watch",
       "p": 52.4,
       "regime": "neutral"
     },
     "dividend": {
-      "C": 59.0,
+      "C": 57.6,
+      "signal": "sell",
+      "p": 90.5,
+      "regime": "high"
+    },
+    "med_etf": {
+      "C": 53.6,
       "signal": "sell",
       "p": 85.7,
       "regime": "high"
     },
-    "med_etf": {
-      "C": 50.7,
-      "signal": "sell",
-      "p": 81.0,
-      "regime": "high"
-    },
     "util": {
-      "C": 27.2,
+      "C": 27.9,
       "signal": "watch",
       "p": 38.1,
       "regime": "neutral"
     },
     "gold": {
-      "C": 25.5,
-      "signal": "watch",
-      "p": 33.3,
+      "C": 25.3,
+      "signal": "buy",
+      "p": 23.8,
       "regime": "neutral"
     },
     "cash": {
-      "C": 52.6,
+      "C": 50.9,
       "signal": "watch",
-      "p": 85.7,
+      "p": 76.2,
       "regime": "neutral"
     },
     "mil": {
-      "C": 16.6,
+      "C": 17.1,
       "signal": "buy",
       "p": 4.8,
       "regime": "neutral"
     },
     "hs300": {
-      "C": 25.0,
+      "C": 27.2,
       "signal": "watch",
-      "p": 28.6,
+      "p": 33.3,
       "regime": "neutral"
     },
     "pv": {
@@ -108,25 +108,25 @@
       "regime": "neutral"
     },
     "li": {
-      "C": 22.1,
-      "signal": "watch",
+      "C": 21.1,
+      "signal": "buy",
       "p": 19.0,
       "regime": "neutral"
     },
     "nev": {
-      "C": 24.5,
+      "C": 25.0,
       "signal": "watch",
-      "p": 28.6,
+      "p": 23.8,
       "regime": "neutral"
     },
     "nasdaq": {
-      "C": 27.4,
+      "C": 30.0,
       "signal": "watch",
-      "p": 47.6,
+      "p": 42.9,
       "regime": "neutral"
     },
     "hk_growth": {
-      "C": 46.1,
+      "C": 48.2,
       "signal": "watch",
       "p": 71.4,
       "regime": "neutral"
