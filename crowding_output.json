@@ -2,7 +2,15 @@
   {
     "code": "588200",
     "name": "科创芯片ETF",
-    "C": 33.1,
+    "C": 41.1,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 76.3
+  },
+  {
+    "code": "159995",
+    "name": "芯片ETF",
+    "C": 36.6,
     "signal": "watch",
     "regime": "neutral",
     "p": 64.4
@@ -10,50 +18,34 @@
   {
     "code": "512760",
     "name": "半导体ETF",
-    "C": 37.9,
+    "C": 38.3,
     "signal": "watch",
     "regime": "neutral",
     "p": 72.9
   },
   {
-    "code": "159995",
-    "name": "芯片ETF",
-    "C": 29.8,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 54.2
-  },
-  {
-    "code": "512690",
-    "name": "酒ETF",
-    "C": 64.2,
-    "signal": "sell",
-    "regime": "high",
-    "p": 94.9
-  },
-  {
     "code": "159928",
     "name": "主要消费ETF",
-    "C": 81.8,
+    "C": 79.2,
     "signal": "sell",
     "regime": "high",
-    "p": 100.0
+    "p": 98.3
   },
   {
     "code": "159915",
     "name": "创业板ETF",
-    "C": 28.4,
+    "C": 34.2,
     "signal": "watch",
     "regime": "neutral",
-    "p": 47.5
+    "p": 61.0
   },
   {
-    "code": "588080",
-    "name": "科创50ETF",
-    "C": 38.3,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 74.6
+    "code": "512690",
+    "name": "酒ETF",
+    "C": 63.7,
+    "signal": "sell",
+    "regime": "high",
+    "p": 94.9
   },
   {
     "code": "588000",
@@ -61,15 +53,15 @@
     "C": 32.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 59.3
+    "p": 55.9
   },
   {
-    "code": "513180",
-    "name": "恒生科技ETF",
-    "C": 18.6,
+    "code": "588080",
+    "name": "科创50ETF",
+    "C": 38.3,
     "signal": "watch",
     "regime": "neutral",
-    "p": 23.7
+    "p": 72.9
   },
   {
     "code": "513130",
@@ -78,6 +70,14 @@
     "signal": "buy",
     "regime": "neutral",
     "p": 16.9
+  },
+  {
+    "code": "513180",
+    "name": "恒生科技ETF",
+    "C": 18.5,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 23.7
   },
   {
     "code": "513330",
@@ -98,7 +98,7 @@
   {
     "code": "512100",
     "name": "中证1000ETF",
-    "C": 26.4,
+    "C": 26.1,
     "signal": "watch",
     "regime": "neutral",
     "p": 44.1
@@ -117,7 +117,7 @@
     "C": 37.1,
     "signal": "watch",
     "regime": "neutral",
-    "p": 67.8
+    "p": 66.1
   },
   {
     "code": "512070",
@@ -130,10 +130,10 @@
   {
     "code": "510230",
     "name": "金融ETF",
-    "C": 80.1,
+    "C": 80.2,
     "signal": "sell",
     "regime": "high",
-    "p": 98.3
+    "p": 100.0
   },
   {
     "code": "512900",
@@ -141,7 +141,7 @@
     "C": 32.3,
     "signal": "watch",
     "regime": "neutral",
-    "p": 57.6
+    "p": 54.2
   },
   {
     "code": "512400",
@@ -154,7 +154,7 @@
   {
     "code": "515220",
     "name": "煤炭ETF",
-    "C": 22.9,
+    "C": 23.3,
     "signal": "watch",
     "regime": "neutral",
     "p": 39.0
@@ -170,7 +170,7 @@
   {
     "code": "512200",
     "name": "房地产ETF",
-    "C": 25.6,
+    "C": 25.7,
     "signal": "watch",
     "regime": "neutral",
     "p": 42.4
@@ -181,7 +181,7 @@
     "C": 29.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 52.5
+    "p": 50.8
   },
   {
     "code": "510880",
@@ -192,20 +192,20 @@
     "p": 96.6
   },
   {
-    "code": "561580",
-    "name": "央企红利ETF",
-    "C": 63.3,
-    "signal": "sell",
-    "regime": "high",
-    "p": 93.2
-  },
-  {
     "code": "515080",
     "name": "红利ETF",
     "C": 47.0,
     "signal": "sell",
     "regime": "neutral",
     "p": 83.1
+  },
+  {
+    "code": "561580",
+    "name": "央企红利ETF",
+    "C": 63.3,
+    "signal": "sell",
+    "regime": "high",
+    "p": 93.2
   },
   {
     "code": "515180",
@@ -237,7 +237,7 @@
     "C": 35.0,
     "signal": "watch",
     "regime": "neutral",
-    "p": 66.1
+    "p": 62.7
   },
   {
     "code": "512290",
@@ -245,7 +245,7 @@
     "C": 39.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 76.3
+    "p": 74.6
   },
   {
     "code": "159611",
@@ -253,7 +253,7 @@
     "C": 33.0,
     "signal": "watch",
     "regime": "neutral",
-    "p": 62.7
+    "p": 59.3
   },
   {
     "code": "561700",
@@ -261,7 +261,7 @@
     "C": 29.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 52.5
+    "p": 50.8
   },
   {
     "code": "561160",
@@ -293,7 +293,7 @@
     "C": 32.7,
     "signal": "watch",
     "regime": "neutral",
-    "p": 61.0
+    "p": 57.6
   },
   {
     "code": "511010",
@@ -346,7 +346,7 @@
   {
     "code": "510300",
     "name": "沪深300ETF",
-    "C": 20.4,
+    "C": 20.3,
     "signal": "watch",
     "regime": "neutral",
     "p": 27.1
@@ -376,28 +376,12 @@
     "p": 25.4
   },
   {
-    "code": "516850",
-    "name": "光伏ETF",
-    "C": 14.7,
-    "signal": "buy",
-    "regime": "neutral",
-    "p": 11.9
-  },
-  {
     "code": "516180",
     "name": "光伏ETF",
     "C": 9.8,
     "signal": "buy",
     "regime": "neutral",
     "p": 5.1
-  },
-  {
-    "code": "515030",
-    "name": "新能源车ETF",
-    "C": 23.8,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 40.7
   },
   {
     "code": "159840",
@@ -408,20 +392,28 @@
     "p": 10.2
   },
   {
+    "code": "516850",
+    "name": "光伏ETF",
+    "C": 14.7,
+    "signal": "buy",
+    "regime": "neutral",
+    "p": 11.9
+  },
+  {
+    "code": "515030",
+    "name": "新能源车ETF",
+    "C": 23.8,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 40.7
+  },
+  {
     "code": "516390",
     "name": "新能源车ETF",
     "C": 16.2,
     "signal": "buy",
     "regime": "neutral",
     "p": 15.3
-  },
-  {
-    "code": "513100",
-    "name": "纳指ETF",
-    "C": 16.7,
-    "signal": "buy",
-    "regime": "neutral",
-    "p": 18.6
   },
   {
     "code": "501057",
@@ -432,20 +424,20 @@
     "p": 6.8
   },
   {
+    "code": "513100",
+    "name": "纳指ETF",
+    "C": 16.7,
+    "signal": "buy",
+    "regime": "neutral",
+    "p": 18.6
+  },
+  {
     "code": "161128",
     "name": "纳指LOF",
     "C": 28.8,
     "signal": "watch",
     "regime": "neutral",
-    "p": 49.2
-  },
-  {
-    "code": "513060",
-    "name": "恒生医疗ETF",
-    "C": 37.7,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 71.2
+    "p": 47.5
   },
   {
     "code": "161130",
@@ -453,7 +445,15 @@
     "C": 31.7,
     "signal": "watch",
     "regime": "neutral",
-    "p": 55.9
+    "p": 52.5
+  },
+  {
+    "code": "513060",
+    "name": "恒生医疗ETF",
+    "C": 37.7,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 69.5
   },
   {
     "code": "513660",
@@ -461,7 +461,7 @@
     "C": 37.5,
     "signal": "watch",
     "regime": "neutral",
-    "p": 69.5
+    "p": 67.8
   },
   {
     "code": "159920",
