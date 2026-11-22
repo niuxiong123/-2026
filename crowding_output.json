@@ -2,15 +2,7 @@
   {
     "code": "588200",
     "name": "科创芯片ETF",
-    "C": 41.1,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 76.3
-  },
-  {
-    "code": "159995",
-    "name": "芯片ETF",
-    "C": 36.6,
+    "C": 33.1,
     "signal": "watch",
     "regime": "neutral",
     "p": 64.4
@@ -18,58 +10,42 @@
   {
     "code": "512760",
     "name": "半导体ETF",
-    "C": 38.3,
+    "C": 37.9,
     "signal": "watch",
     "regime": "neutral",
     "p": 72.9
+  },
+  {
+    "code": "159995",
+    "name": "芯片ETF",
+    "C": 29.8,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 54.2
   },
   {
     "code": "159928",
     "name": "主要消费ETF",
-    "C": 79.2,
+    "C": 81.8,
     "signal": "sell",
     "regime": "high",
-    "p": 98.3
+    "p": 100.0
   },
   {
     "code": "159915",
     "name": "创业板ETF",
-    "C": 34.2,
+    "C": 28.4,
     "signal": "watch",
     "regime": "neutral",
-    "p": 61.0
+    "p": 47.5
   },
   {
     "code": "512690",
     "name": "酒ETF",
-    "C": 63.7,
+    "C": 64.2,
     "signal": "sell",
     "regime": "high",
     "p": 94.9
-  },
-  {
-    "code": "588000",
-    "name": "科创50ETF",
-    "C": 32.6,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 55.9
-  },
-  {
-    "code": "588080",
-    "name": "科创50ETF",
-    "C": 38.3,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 72.9
-  },
-  {
-    "code": "513130",
-    "name": "恒生科技ETF",
-    "C": 16.4,
-    "signal": "buy",
-    "regime": "neutral",
-    "p": 16.9
   },
   {
     "code": "513180",
@@ -80,12 +56,28 @@
     "p": 23.7
   },
   {
-    "code": "513330",
-    "name": "恒生科技ETF",
-    "C": 21.5,
+    "code": "588000",
+    "name": "科创50ETF",
+    "C": 32.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 33.9
+    "p": 59.3
+  },
+  {
+    "code": "588080",
+    "name": "科创50ETF",
+    "C": 38.3,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 74.6
+  },
+  {
+    "code": "513130",
+    "name": "恒生科技ETF",
+    "C": 16.4,
+    "signal": "buy",
+    "regime": "neutral",
+    "p": 16.9
   },
   {
     "code": "159740",
@@ -96,12 +88,12 @@
     "p": 20.3
   },
   {
-    "code": "512100",
-    "name": "中证1000ETF",
-    "C": 26.1,
+    "code": "513330",
+    "name": "恒生科技ETF",
+    "C": 21.5,
     "signal": "watch",
     "regime": "neutral",
-    "p": 44.1
+    "p": 33.9
   },
   {
     "code": "159845",
@@ -112,12 +104,28 @@
     "p": 45.8
   },
   {
+    "code": "512100",
+    "name": "中证1000ETF",
+    "C": 26.1,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 44.1
+  },
+  {
     "code": "512000",
     "name": "券商ETF",
     "C": 37.1,
     "signal": "watch",
     "regime": "neutral",
-    "p": 66.1
+    "p": 67.8
+  },
+  {
+    "code": "510230",
+    "name": "金融ETF",
+    "C": 80.2,
+    "signal": "sell",
+    "regime": "high",
+    "p": 98.3
   },
   {
     "code": "512070",
@@ -128,20 +136,12 @@
     "p": 84.7
   },
   {
-    "code": "510230",
-    "name": "金融ETF",
-    "C": 80.2,
-    "signal": "sell",
-    "regime": "high",
-    "p": 100.0
-  },
-  {
     "code": "512900",
     "name": "证券ETF",
     "C": 32.3,
     "signal": "watch",
     "regime": "neutral",
-    "p": 54.2
+    "p": 57.6
   },
   {
     "code": "512400",
@@ -168,20 +168,20 @@
     "p": 3.4
   },
   {
+    "code": "160218",
+    "name": "地产ETF",
+    "C": 29.6,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 52.5
+  },
+  {
     "code": "512200",
     "name": "房地产ETF",
     "C": 25.7,
     "signal": "watch",
     "regime": "neutral",
     "p": 42.4
-  },
-  {
-    "code": "160218",
-    "name": "地产ETF",
-    "C": 29.6,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 50.8
   },
   {
     "code": "510880",
@@ -237,7 +237,7 @@
     "C": 35.0,
     "signal": "watch",
     "regime": "neutral",
-    "p": 62.7
+    "p": 66.1
   },
   {
     "code": "512290",
@@ -245,7 +245,7 @@
     "C": 39.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 74.6
+    "p": 76.3
   },
   {
     "code": "159611",
@@ -253,7 +253,7 @@
     "C": 33.0,
     "signal": "watch",
     "regime": "neutral",
-    "p": 59.3
+    "p": 62.7
   },
   {
     "code": "561700",
@@ -261,7 +261,7 @@
     "C": 29.6,
     "signal": "watch",
     "regime": "neutral",
-    "p": 50.8
+    "p": 52.5
   },
   {
     "code": "561160",
@@ -293,7 +293,7 @@
     "C": 32.7,
     "signal": "watch",
     "regime": "neutral",
-    "p": 57.6
+    "p": 61.0
   },
   {
     "code": "511010",
@@ -384,20 +384,20 @@
     "p": 5.1
   },
   {
-    "code": "159840",
-    "name": "锂电池ETF",
-    "C": 14.5,
-    "signal": "buy",
-    "regime": "neutral",
-    "p": 10.2
-  },
-  {
     "code": "516850",
     "name": "光伏ETF",
     "C": 14.7,
     "signal": "buy",
     "regime": "neutral",
     "p": 11.9
+  },
+  {
+    "code": "159840",
+    "name": "锂电池ETF",
+    "C": 14.5,
+    "signal": "buy",
+    "regime": "neutral",
+    "p": 10.2
   },
   {
     "code": "515030",
@@ -437,15 +437,7 @@
     "C": 28.8,
     "signal": "watch",
     "regime": "neutral",
-    "p": 47.5
-  },
-  {
-    "code": "161130",
-    "name": "纳斯达克100ETF",
-    "C": 31.7,
-    "signal": "watch",
-    "regime": "neutral",
-    "p": 52.5
+    "p": 49.2
   },
   {
     "code": "513060",
@@ -453,7 +445,15 @@
     "C": 37.7,
     "signal": "watch",
     "regime": "neutral",
-    "p": 69.5
+    "p": 71.2
+  },
+  {
+    "code": "161130",
+    "name": "纳斯达克100ETF",
+    "C": 31.7,
+    "signal": "watch",
+    "regime": "neutral",
+    "p": 55.9
   },
   {
     "code": "513660",
@@ -461,7 +461,7 @@
     "C": 37.5,
     "signal": "watch",
     "regime": "neutral",
-    "p": 67.8
+    "p": 69.5
   },
   {
     "code": "159920",
